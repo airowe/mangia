@@ -1,72 +1,160 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "../lib/supabase";
+import { getCurrentUser } from "../lib/auth";
 import { Product } from "../models/Product";
 
-const STORAGE_KEY = "PANTRY_ITEMS";
+export const addProduct = async (product: Omit<Product, "id" | "user_id">) => {
+  const { data: userData } = await getCurrentUser();
+  if (!userData?.user) throw new Error("Not signed in");
 
-export const getPantry = async (): Promise<Product[]> => {
-  const json = await AsyncStorage.getItem(STORAGE_KEY);
-  return json ? JSON.parse(json) : [];
+  const fullProduct = {
+    ...product,
+    user_id: userData.user.id,
+  };
+
+  const { data, error } = await supabase.from("products").insert([fullProduct]);
+  if (error) throw error;
+  return data;
 };
 
-export const clearPantry = async () => {
-  await AsyncStorage.removeItem(STORAGE_KEY);
+export const getProductsForCurrentUser = async () => {
+  const { data: userData } = await getCurrentUser();
+  if (!userData?.user) return [];
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("user_id", userData.user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data;
 };
 
-export const deleteProduct = async (id: string) => {
-  const pantry = await getPantry();
-  const newPantry = pantry.filter((item) => item.id !== id);
-  await savePantry(newPantry);
-};
+export const getProductsForUser = async (userId: string) => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("user_id", userId);
 
+  if (error) throw error;
+  return data;
+};
 export const updateProduct = async (product: Product) => {
-  const pantry = await getPantry();
-  const index = pantry.findIndex((item) => item.id === product.id);
-  if (index !== -1) {
-    pantry[index] = product;
-    await savePantry(pantry);
-  }
-};
-export const getProduct = async (id: string): Promise<Product | null> => {
-  const pantry = await getPantry();
-  const product = pantry.find((item) => item.id === id);
-  return product ? product : null;
-};
+  const { data, error } = await supabase
+    .from("products")
+    .update(product)
+    .eq("id", product.id);
 
-export const getProductByName = async (
-  name: string
-): Promise<Product | null> => {
-  const pantry = await getPantry();
-  const product = pantry.find((item) => item.name === name);
-  return product ? product : null;
+  if (error) throw error;
+  return data;
 };
+export const deleteProduct = async (productId: string) => {
+  const { data, error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", productId);
 
-export const getProductsByCategory = async (
+  if (error) throw error;
+  return data;
+};
+export const getPantry = async () => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("category", "Pantry");
+
+  if (error) throw error;
+  return data;
+};
+export const getFridge = async () => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("category", "Fridge");
+
+  if (error) throw error;
+  return data;
+};
+export const getFreezer = async () => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("category", "Freezer");
+
+  if (error) throw error;
+  return data;
+};
+export const getSpiceDrawer = async () => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("category", "Spice Drawer");
+
+  if (error) throw error;
+  return data;
+};
+export const getAllProducts = async () => {
+  const { data, error } = await supabase.from("products").select("*");
+
+  if (error) throw error;
+  return data;
+};
+export const getProductsByCategory = async (category: string) => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("category", category);
+
+  if (error) throw error;
+  return data;
+};
+export const getProductsByUserId = async (userId: string) => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("user_id", userId);
+
+  if (error) throw error;
+  return data;
+};
+export const getProductsByUserIdAndCategory = async (
+  userId: string,
   category: string
-): Promise<Product[]> => {
-  const pantry = await getPantry();
-  return pantry.filter((item) => item.category === category);
-};
+) => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("category", category);
 
-export const savePantry = async (items: Product[]) => {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  if (error) throw error;
+  return data;
 };
+export const getProductsByUserIdAndName = async (
+  userId: string,
+  name: string
+) => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("user_id", userId)
+    .ilike("name", `%${name}%`);
 
-export const savePantryItem = async (item: Product) => {
-  const pantry = await getPantry();
-  const index = pantry.findIndex((i) => i.id === item.id);
-  if (index !== -1) {
-    pantry[index] = item;
-  } else {
-    pantry.push(item);
-  }
-  await savePantry(pantry);
+  if (error) throw error;
+  return data;
 };
+export const getProductsByUserIdAndCategoryAndName = async (
+  userId: string,
+  category: string,
+  name: string
+) => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("category", category)
+    .ilike("name", `%${name}%`);
 
-export const addProduct = async (product: Product) => {
-  console.log("adding product" + JSON.stringify(product));
-  const pantry = await getPantry();
-  console.log(JSON.stringify(pantry));
-  pantry.push(product);
-  console.log(JSON.stringify(product));
-  await savePantry(pantry);
+  if (error) throw error;
+  return data;
 };
