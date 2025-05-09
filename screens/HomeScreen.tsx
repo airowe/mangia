@@ -6,11 +6,16 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Welcome to Pantry Planner</Text>
-      <Button
-        title="Add Items Manually"
-        onPress={() => navigation.navigate("ManualEntry")}
-      />
-
+      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+        <Button
+          title="Manual"
+          onPress={() => navigation.navigate("ManualEntry")}
+        />
+        <Button
+          title="Barcode Scanner"
+          onPress={() => navigation.navigate("BarcodeScanner")}
+        />
+      </View>
       <PantryScreen />
     </ScrollView>
   );

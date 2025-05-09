@@ -1,3 +1,5 @@
+import { supabase } from "./supabase";
+
 export type AIRecipe = {
   title: string;
   ingredients: { name: string; quantity: number; unit: string }[];
@@ -20,18 +22,14 @@ Respond ONLY in the following JSON format:
 ]
 `;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-    }),
-  });
+const response = await fetch('https://grosheries-api.vercel.app/api/generate-meal-plan', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    user_id: (await supabase.auth.getUser()).data.user?.id,
+    pantryItems,
+  }),
+});
 
   const json = await response.json();
   const content = json.choices?.[0]?.message?.content;
