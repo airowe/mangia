@@ -4,6 +4,8 @@ import { supabase } from './supabase';
 export const signUp = async (email: string, password: string) =>
   supabase.auth.signUp({ email, password });
 
+export const signInAnonymously = async () => supabase.auth.signInAnonymously();
+
 export const signIn = async (email: string, password: string) =>
   supabase.auth.signInWithPassword({ email, password });
 

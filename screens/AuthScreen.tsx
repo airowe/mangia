@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, Alert } from 'react-native';
-import { signIn, signUp } from '../lib/auth';
+import { signIn, signInAnonymously, signUp } from '../lib/auth';
 
 export const AuthScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -16,9 +16,16 @@ export const AuthScreen = ({ navigation }: any) => {
   };
 
   const handleSignUp = async () => {
-    const { data, error } = await signUp(email, password);
-    if (error) {
-      Alert.alert('Sign Up Error', error.message);
+    let signUpError;
+    if (!email || !password) {
+      const {data, error} = await signInAnonymously();
+      signUpError = error;
+    } else {
+      const { data, error } = await signUp(email, password);
+      signUpError = error;
+    }
+    if (signUpError) {
+      Alert.alert('Sign Up Error', signUpError.message);
     } else {
       Alert.alert('Check your email to confirm your account.');
     }
