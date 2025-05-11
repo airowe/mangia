@@ -16,4 +16,3 @@ const lookupBarcode = async (barcode: string) => {
 
   return data;
 };
-
