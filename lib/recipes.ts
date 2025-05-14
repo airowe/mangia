@@ -29,7 +29,9 @@ export const addRecipe = async (recipe: Omit<Recipe, 'id' | 'user_id'>) => {
   return insertedRecipe;
 };
 
-const BASE_URL = 'https://your-nextjs-api.vercel.app/api/recipes'; // Update with your actual Vercel URL
+const apiURL =
+    process.env.EXPO_PUBLIC_API_URL ||
+    "https://your-vercel-app.vercel.app/api/lookup-barcode";
 
 interface FetchRecipesParams {
   search?: string;
@@ -39,13 +41,13 @@ interface FetchRecipesParams {
 
 export async function fetchRecipes(params: FetchRecipesParams = {}): Promise<Recipe[]> {
   const query = new URLSearchParams(params as Record<string, string>).toString();
-  const response = await fetch(`${BASE_URL}?${query}`);
+  const response = await fetch(`${apiURL}?${query}`);
   if (!response.ok) throw new Error('Failed to fetch recipes');
   return await response.json();
 }
 
 export async function fetchRecipeById(id: string): Promise<Recipe> {
-  const response = await fetch(`${BASE_URL}/${id}`);
+  const response = await fetch(`${apiURL}/${id}`);
   if (!response.ok) throw new Error('Failed to fetch recipe');
   return await response.json();
 }
