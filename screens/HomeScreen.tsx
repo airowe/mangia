@@ -1,19 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Button } from "react-native";
-import { PantryScreen } from "./PantryScreen";
+import AddProductModal from "../components/AddProductModal";
+import PrimaryButton from "../components/PrimaryButton";
+import PantryScreen from "./PantryScreen";
 
 export const HomeScreen = ({ navigation }: { navigation: any }) => {
+  const [modalVisible, setModalVisible] = useState(false);
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Welcome to Pantry Planner</Text>
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <Button
-          title="Manual"
-          onPress={() => navigation.navigate("ManualEntry")}
+        <AddProductModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
         />
-        <Button
-          title="Barcode Scanner"
-          onPress={() => navigation.navigate("BarcodeScanner")}
+        <PrimaryButton
+          title="Add Manually"
+          onPress={() => setModalVisible(true)}
+        />
+        <PrimaryButton
+          title="Scan Barcode"
+          onPress={() => navigation.navigate("ScanBarcode")}
         />
       </View>
       <PantryScreen />

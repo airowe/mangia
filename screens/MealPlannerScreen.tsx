@@ -25,8 +25,6 @@ export default function MealPlannerScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>Your Pantry</Text>
-      <Text>{pantryItems.join(', ')}</Text>
 
       <Button title="Generate Meal Plan" onPress={handleGenerate} disabled={loading} />
       {loading && <ActivityIndicator style={{ marginTop: 20 }} />}

@@ -1,7 +1,5 @@
-// This component displays a product with its image, name, and price.
-
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { Product } from "../models/Product";
 
 interface ProductDisplayProps {

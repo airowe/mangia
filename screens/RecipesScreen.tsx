@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Button } from 'react-native';
-import { getRecipes } from '../lib/recipes';
+import { fetchRecipes } from '../lib/recipes';
 
 export const RecipesScreen = () => {
   const [recipes, setRecipes] = useState<any[]>([]);
@@ -8,7 +8,7 @@ export const RecipesScreen = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await getRecipes();
+        const data = await fetchRecipes();
         setRecipes(data);
       } catch (e) {
         console.error(e);

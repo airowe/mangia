@@ -16,6 +16,16 @@ export const addProduct = async (product: Omit<Product, "id" | "user_id">) => {
   return data;
 };
 
+export const removeProduct = async (productId: string) => {
+  const { data, error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", productId);
+  if (error) throw error;
+  return data;
+};
+
+
 export const getProductsForCurrentUser = async () => {
   const { data: userData } = await getCurrentUser();
   if (!userData?.user) return [];

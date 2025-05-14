@@ -29,15 +29,23 @@ export const addRecipe = async (recipe: Omit<Recipe, 'id' | 'user_id'>) => {
   return insertedRecipe;
 };
 
-export const getRecipes = async (): Promise<Recipe[]> => {
-  const { data: userData } = await getCurrentUser();
-  if (!userData?.user) throw new Error('Not signed in');
+const BASE_URL = 'https://your-nextjs-api.vercel.app/api/recipes'; // Update with your actual Vercel URL
 
-  const { data, error } = await supabase
-    .from('recipes')
-    .select('*, recipe_ingredients(*)')
-    .eq('user_id', userData.user.id);
+interface FetchRecipesParams {
+  search?: string;
+  ingredient?: string;
+  meal?: string;
+}
 
-  if (error) throw error;
-  return data as Recipe[];
-};
+export async function fetchRecipes(params: FetchRecipesParams = {}): Promise<Recipe[]> {
+  const query = new URLSearchParams(params as Record<string, string>).toString();
+  const response = await fetch(`${BASE_URL}?${query}`);
+  if (!response.ok) throw new Error('Failed to fetch recipes');
+  return await response.json();
+}
+
+export async function fetchRecipeById(id: string): Promise<Recipe> {
+  const response = await fetch(`${BASE_URL}/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch recipe');
+  return await response.json();
+}

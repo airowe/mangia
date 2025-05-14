@@ -1,46 +1,49 @@
-// components/PantryList.tsx
-import React from 'react';
-import { SectionList, View, Text, StyleSheet } from 'react-native';
-import { Product } from '../models/Product';
-import { StorageCategory } from '../models/constants';
-
-type Section = {
-  title: StorageCategory;
-  data: Product[];
-};
+import React from "react";
+import { View, StyleSheet, Text } from "react-native";
+import { Product } from "../models/Product";
+import PantryGroup from "./PantryGroup";
+import { colors } from "../theme/colors";
 
 type Props = {
-  sections: Section[];
+  products?: Product[];
+  onDelete: (id: string) => void;
 };
 
-const CATEGORY_COLORS: Record<StorageCategory, string> = {
-  Fridge: '#E0F7FA',
-  Freezer: '#E8EAF6',
-  Pantry: '#FFF3E0',
-  'Spice Drawer': '#F3E5F5',
-};
+export const PantryList: React.FC<Props> = ({ products, onDelete }) => {
+  const grouped = {
+    Fridge: products?.filter((p) => p.category === "Fridge"),
+    Freezer: products?.filter((p) => p.category === "Freezer"),
+    Pantry: products?.filter((p) => p.category === "Pantry"),
+    "Spice Drawer": products?.filter((p) => p.category === "Spice Drawer"),
+  };
 
-export const PantryList: React.FC<Props> = ({ sections }) => {
+  const categoryColors = {
+    Fridge: colors.secondary,
+    Freezer: "#5DADE2",
+    Pantry: "#CC5500",
+    "Spice Drawer": "#A569BD",
+  };
+
   return (
-    <SectionList
-      sections={sections}
-      keyExtractor={(item) => item.id}
-      renderSectionHeader={({ section: { title } }) => (
-        <View style={[styles.sectionHeader, { backgroundColor: CATEGORY_COLORS[title] }]}>
-          <Text style={styles.sectionHeaderText}>{title}</Text>
+    <View style={{ padding: 16 }}>
+      {products && Object.keys(grouped).length > 0 ? (
+        <View>
+          {Object.entries(grouped).map(([category, items]) => (
+            <PantryGroup
+              key={category}
+              title={category}
+              items={items || []}
+              color={categoryColors[category as keyof typeof categoryColors]}
+              onDelete={onDelete}
+            />
+          ))}
+        </View>
+      ) : (
+        <View style={{ alignItems: "center", marginTop: 20 }}>
+          <Text style={styles.empty}>No items in pantry</Text>
         </View>
       )}
-      renderItem={({ item }) => (
-        <View style={[styles.item, { backgroundColor: CATEGORY_COLORS[item.category] }]}>
-          <View style={styles.row}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.quantity}>{item.quantity} {item.unit}</Text>
-          </View>
-        </View>
-      )}
-      contentContainerStyle={{ paddingBottom: 20 }}
-      ListEmptyComponent={<Text style={styles.empty}>No items yet.</Text>}
-    />
+    </View>
   );
 };
 
@@ -53,29 +56,29 @@ const styles = StyleSheet.create({
   },
   sectionHeaderText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   item: {
     padding: 12,
     marginTop: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   name: {
-    fontWeight: '500',
+    fontWeight: "500",
   },
   quantity: {
-    color: '#555',
+    color: "#555",
   },
   empty: {
-    textAlign: 'center',
-    fontStyle: 'italic',
+    textAlign: "center",
+    fontStyle: "italic",
     marginTop: 20,
-    color: '#777',
+    color: "#777",
   },
 });

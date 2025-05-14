@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { HomeScreen } from "./screens/HomeScreen";
-import { ManualEntryScreen } from "./screens/ManualEntryScreen";
 import { supabase } from "./lib/supabase";
 import { AuthScreen } from "./screens/AuthScreen";
-import BarcodeScannerScreen from "./screens/BarcodeScreen";
-import { RecipesScreen } from "./screens/RecipesScreen";
-import RecipeCreateScreen from "./screens/RecipeCreateScreen";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import TabNavigator from "./navigation/TabNavigator";
 
 const Stack = createNativeStackNavigator();
 
@@ -35,15 +33,12 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="ManualEntry" component={ManualEntryScreen} />
-        <Stack.Screen name="ScanBarcode" component={BarcodeScannerScreen} />
-        <Stack.Screen name="Pantry" component={ManualEntryScreen} />
-        <Stack.Screen name="Recipes" component={RecipesScreen} />
-        <Stack.Screen name="RecipeCreateScreen" component={RecipeCreateScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <TabNavigator />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
