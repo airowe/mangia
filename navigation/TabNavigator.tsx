@@ -22,9 +22,9 @@ export default function TabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeStack} />
-      <Tab.Screen name="Meal Planning" component={MealPlanningStack}  />
-      <Tab.Screen name="Recipes" component={RecipeLibraryStack} />
+      <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false }} />
+      <Tab.Screen name="Meal Planning" component={MealPlanningStack} options={{ headerShown: false }}  />
+      <Tab.Screen name="Recipes" component={RecipeLibraryStack} options={{ headerShown: false }} />
     </Tab.Navigator>
   );
 }

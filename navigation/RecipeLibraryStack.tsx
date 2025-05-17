@@ -10,10 +10,10 @@ const Stack = createNativeStackNavigator();
 export default function RecipeLibraryStack() {
   return (
     <Stack.Navigator
-      initialRouteName="SeedRecipes"
+      initialRouteName="RecipesScreen"
       screenOptions={{ headerShown: false }}
     >
-      <Stack.Screen name="Recipes" component={RecipesScreen} />
+      <Stack.Screen name="RecipesScreen" component={RecipesScreen} />
       <Stack.Screen name="RecipeCatalog" component={RecipeCatalogScreen} />
       <Stack.Screen name="RecipeDetail" component={RecipeDetailScreen} />
       <Stack.Screen name="SeedRecipes" component={SeedRecipesScreen} />

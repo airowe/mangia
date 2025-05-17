@@ -11,30 +11,30 @@ import { Picker } from "@react-native-picker/picker";
 import { generateId } from "../utils/id";
 import { addProduct } from "../storage/pantryStorage";
 import { Product } from "../models/Product";
-import { STORAGE_CATEGORIES, StorageCategory } from "../models/constants";
+import { STORAGE_CATEGORIES } from "../models/constants";
 
 export const ProductForm = ({ onAdded }: { onAdded: () => void }) => {
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState<StorageCategory>("Pantry");
+  const [title, setTitle] = useState("");
+  const [location, setLocation] = useState("Pantry");
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("");
   const [showPicker, setShowPicker] = useState(false);
 
   const handleSubmit = async () => {
-    if (!name || !quantity || !unit) return;
+    if (!title || !quantity || !unit) return;
     const newProduct: Product = {
       id: generateId(),
-      name,
-      category,
+      location,
       quantity: parseFloat(quantity),
       unit,
+      title
     };
     await addProduct(newProduct);
     onAdded();
-    setName("");
+    setTitle("");
     setQuantity("");
     setUnit("");
-    setCategory("Pantry");
+    setLocation("Pantry");
     setShowPicker(false);
   };
 
@@ -42,20 +42,20 @@ export const ProductForm = ({ onAdded }: { onAdded: () => void }) => {
     <View>
       <TextInput
         placeholder="Name"
-        value={name}
-        onChangeText={setName}
+        value={title}
+        onChangeText={setTitle}
         style={styles.input}
       />
       <TouchableOpacity
         onPress={() => setShowPicker(!showPicker)}
         style={styles.pickerToggle}
       >
-        <Text style={styles.pickerToggleText}>Category: {category} ▼</Text>
+        <Text style={styles.pickerToggleText}>Location: {location} ▼</Text>
       </TouchableOpacity>
       {showPicker && (
         <Picker
-          selectedValue={category}
-          onValueChange={(value) => setCategory(value)}
+          selectedValue={location}
+          onValueChange={(value) => setLocation(value)}
           style={styles.picker}
         >
           {STORAGE_CATEGORIES.map((cat) => (

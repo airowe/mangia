@@ -19,7 +19,7 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
         />
         <PrimaryButton
           title="Scan Barcode"
-          onPress={() => navigation.navigate("ScanBarcode")}
+          onPress={() => navigation.navigate("BarcodeScreen")}
         />
       </View>
       <PantryScreen />

@@ -1,4 +1,3 @@
-// screens/SeedRecipesScreen.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -13,18 +12,27 @@ export default function SeedRecipesScreen() {
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
 
-  const baseUrl =
-    process.env.EXPO_PUBLIC_API_URL || "https://your-vercel-app.vercel.app/api";
+  const baseUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (!baseUrl) {
+    throw new Error("API URL is not defined");
+  }
 
   const seedRecipes = async () => {
     setLoading(true);
     setResponse(null);
 
     try {
-      const res = await fetch(`${baseUrl}/fetch-recipes`);
-      const json = await res.json();
-      console.log('Seeded recipes:', json);
-      if (!res.ok) throw new Error(json.error || "Request failed");
+      const results = [];
+      for (let i = 0; i < 10; i++) {
+        const res = await fetch(`${baseUrl}/recipes/seed-recipes`);
+        results.push(res);
+        if (i < 9) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      }
+      const lastRes = results[results.length - 1];
+      const json = await lastRes.json();
+      if (!lastRes.ok) throw new Error(json.error || "Request failed");
       setResponse(`Seeded ${json.added} recipes for query: ${json.query}`);
     } catch (err: any) {
       console.error(err);

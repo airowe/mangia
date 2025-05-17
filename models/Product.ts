@@ -1,11 +1,12 @@
-import { StorageCategory } from './constants';
+// import { StorageCategory } from './constants';
 
 export interface Product {
+  category: string;
   id: string;
   user_id?: string;
-  name: string;
+  title: string;
   quantity: number;
   unit: string;
-  category: StorageCategory;
+  location: string;
   created_at?: string;
 }
