@@ -4,20 +4,29 @@ import {
   Text,
   StyleSheet,
   RefreshControl,
-  ScrollView,
-  Alert,
+  SectionList,
+  TouchableOpacity,
 } from "react-native";
 import { colors } from "../theme/colors";
 import { Product } from "../models/Product";
-import { getPantry, removeProduct } from "../storage/pantryStorage";
 import PantryGroup from "../components/PantryGroup";
+import { fetchPantryItems } from "../lib/pantry";
 
-export default function PantryScreen() {
+const CATEGORIES = [
+  "Cooking & Baking Ingredients",
+  "Grains, Rice & Cereal",
+  "Pasta & Noodles",
+  "Fruits & Vegetables",
+  "Dips & Spreads",
+  "Soups & Broths",
+];
+
+export default function PantryScreen({ navigation }: { navigation?: any }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadItems = useCallback(async () => {
-    const items = await getPantry();
+    const items = await fetchPantryItems();
     setProducts(items);
   }, []);
 
@@ -28,7 +37,6 @@ export default function PantryScreen() {
   };
 
   const handleDelete = async (id: string) => {
-    await removeProduct(id);
     await loadItems();
   };
 
@@ -36,23 +44,17 @@ export default function PantryScreen() {
     loadItems();
   }, [loadItems]);
 
-  const grouped = {
-    Fridge: products.filter((p) => p.category === "Fridge"),
-    Freezer: products.filter((p) => p.category === "Freezer"),
-    Pantry: products.filter((p) => p.category === "Pantry"),
-    "Spice Drawer": products.filter((p) => p.category === "Spice Drawer"),
-  };
-
-  const categoryColors = {
-    Fridge: colors.secondary,
-    Freezer: "#5DADE2",
-    Pantry: colors.primary,
-    "Spice Drawer": "#A569BD",
-  };
+  // Prepare sections for SectionList
+  const sections = CATEGORIES.map((category) => ({
+    title: category,
+    data: [products.filter((p) => p.category === category)],
+  }));
 
   return (
-    <ScrollView
+    <SectionList
       style={styles.container}
+      sections={sections}
+      keyExtractor={(_, index) => index.toString()}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -60,24 +62,56 @@ export default function PantryScreen() {
           colors={[colors.primary]}
         />
       }
-    >
-      {Object.entries(grouped).map(([category, items]) => (
-        <PantryGroup
-          key={category}
-          title={category}
-          items={items}
-          color={categoryColors[category as keyof typeof categoryColors]}
-          onDelete={handleDelete}
-        />
-      ))}
-    </ScrollView>
+      renderSectionHeader={({ section: { title } }) => (
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() =>
+              navigation?.navigate?.("AddProduct", { category: title })
+            }
+          >
+            <Text style={styles.addButtonText}>+</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      renderItem={({ item }) => (
+        <PantryGroup items={item} onDelete={handleDelete} />
+      )}
+      stickySectionHeadersEnabled={false}
+      contentContainerStyle={{ paddingBottom: 24 }}
+    />
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
     padding: 16,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+    marginTop: 24,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    flex: 1,
+    color: "#000",
+  },
+  addButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 24,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    marginLeft: 12,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });

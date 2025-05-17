@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Image } from 'react-native';
 import { fetchAllRecipes } from '../lib/recipes'; // You need to implement this function
 
-// const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/120x80.png?text=No+Image';
+const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/120x80.png?text=No+Image';
 
 export const AllRecipesScreen = () => {
   const [recipes, setRecipes] = useState<any[]>([]);

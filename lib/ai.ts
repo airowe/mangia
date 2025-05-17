@@ -5,7 +5,7 @@ export const extractTextFromImage = async (uri: string) => {
   return result.data.text;
 };
 
-const lookupBarcode = async (barcode: string) => {
+export const lookupBarcode = async (barcode: string) => {
   const response = await fetch(`https://grosheries-api.vercel.app/api/lookup-barcode?barcode=${barcode}`);
   const data = await response.json();
 
