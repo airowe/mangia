@@ -4,7 +4,7 @@
     "slug": "grosheries",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icons/ios/Icon1024.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -13,7 +13,6 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "icon": "./assets/icons/ios/Icon1024.png",
       "supportsTablet": true,
       "bundleIdentifier": "com.airowe.grosheries",
       "infoPlist": {
@@ -23,8 +22,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icons/android/ic_foreground.png",
-        "backgroundImage": "./assets/icons/android/ic_background.png"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
     },
