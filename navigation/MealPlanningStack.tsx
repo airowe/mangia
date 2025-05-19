@@ -6,8 +6,11 @@ const Stack = createNativeStackNavigator();
 
 export default function MealPlanningStack() {
   return (
-    <Stack.Navigator initialRouteName="Meal Planner" screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Meal Planner" component={MealPlannerScreen} />
+    <Stack.Navigator
+      initialRouteName="MealPlanner"
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen name="MealPlanner" component={MealPlannerScreen} />
     </Stack.Navigator>
   );
 }

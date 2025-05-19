@@ -8,17 +8,17 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import TabNavigator from "./navigation/TabNavigator";
 import * as Updates from "expo-updates";
 import LogRocket from "@logrocket/react-native";
-import { Alert } from "react-native";
+import { ActivityIndicator, StatusBar, StyleSheet, View } from "react-native";
+import { colors } from "./theme/colors";
 
 const Stack = createNativeStackNavigator();
 
-export default function App() {
+// Main app container with safe area handling
+function AppContent() {
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
-    Alert.alert("App started");
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    Alert.alert("Current user", JSON.stringify(supabase.auth.getUser()));
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -34,23 +34,65 @@ export default function App() {
     });
   }, []);
 
-  if (!session) {
+  if (session === null) {
+    // Show loading state
     return (
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Auth">
-          <Stack.Screen name="Auth" component={AuthScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <View style={styles.loadingContainer}>
+        <StatusBar barStyle="dark-content" />
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
     );
   }
 
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
+  if (!session) {
+    // Not logged in - show auth screen
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" />
         <NavigationContainer>
-          <TabNavigator />
+          <Stack.Navigator 
+            screenOptions={{
+              headerShown: false,
+            }}
+          >
+            <Stack.Screen name="Auth" component={AuthScreen} />
+          </Stack.Navigator>
         </NavigationContainer>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+      </View>
+    );
+  }
+
+  // Logged in - show main app
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <NavigationContainer>
+        <TabNavigator />
+      </NavigationContainer>
+    </View>
   );
 }
+
+// Main app component with necessary providers
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AppContent />
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+});

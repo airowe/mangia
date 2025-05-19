@@ -6,11 +6,13 @@ import {
   RefreshControl,
   SectionList,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { colors } from "../theme/colors";
 import { Product } from "../models/Product";
 import PantryGroup from "../components/PantryGroup";
 import { fetchPantryItems } from "../lib/pantry";
+import { Screen } from "../components/Screen";
 
 const CATEGORIES = [
   "Cooking & Baking Ingredients",
@@ -51,43 +53,69 @@ export default function PantryScreen({ navigation }: { navigation?: any }) {
   }));
 
   return (
-    <SectionList
-      style={styles.container}
-      sections={sections}
-      keyExtractor={(_, index) => index.toString()}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={[colors.primary]}
-        />
-      }
-      renderSectionHeader={({ section: { title } }) => (
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{title}</Text>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() =>
-              navigation?.navigate?.("AddProduct", { category: title })
+    <Screen noPadding>
+      <View style={styles.container}>
+        {products.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>Your pantry is empty</Text>
+            <Text style={styles.emptySubtext}>Add items to get started</Text>
+          </View>
+        ) : (
+          <SectionList
+            sections={sections}
+            keyExtractor={(_, index) => index.toString()}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[colors.primary]}
+              />
             }
-          >
-            <Text style={styles.addButtonText}>+</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-      renderItem={({ item }) => (
-        <PantryGroup items={item} onDelete={handleDelete} />
-      )}
-      stickySectionHeadersEnabled={false}
-      contentContainerStyle={{ paddingBottom: 24 }}
-    />
+            renderSectionHeader={({ section: { title } }) => (
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>{title}</Text>
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={() =>
+                    navigation?.navigate?.("AddProduct", { category: title })
+                  }
+                >
+                  <Text style={styles.addButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            renderItem={({ item }) => (
+              <PantryGroup items={item} onDelete={handleDelete} />
+            )}
+            stickySectionHeadersEnabled={false}
+            contentContainerStyle={{ paddingBottom: 24 }}
+          />
+        )}
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    backgroundColor: colors.background,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.secondary,
   },
   sectionHeader: {
     flexDirection: "row",

@@ -1,9 +1,9 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 import HomeStack from './HomeStack';
 import MealPlanningStack from './MealPlanningStack';
 import RecipeLibraryStack from './RecipeLibraryStack';
-import { Ionicons } from '@expo/vector-icons';
 
 const Tab = createBottomTabNavigator();
 
@@ -15,16 +15,31 @@ export default function TabNavigator() {
           let iconName: keyof typeof Ionicons.glyphMap = 'home';
 
           if (route.name === 'Home') iconName = 'home';
-          else if (route.name === 'Meal Planning') iconName = 'restaurant';
+          else if (route.name === 'MealPlanner') iconName = 'restaurant';
           else if (route.name === 'Recipes') iconName = 'book';
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
+        headerShown: false,
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: 'gray',
       })}
     >
-      <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false }} />
-      <Tab.Screen name="Meal Planning" component={MealPlanningStack} options={{ headerShown: false }}  />
-      <Tab.Screen name="Recipes" component={RecipeLibraryStack} options={{ headerShown: false }} />
+      <Tab.Screen 
+        name="Home" 
+        component={HomeStack} 
+        options={{ title: 'Home' }} 
+      />
+      <Tab.Screen 
+        name="MealPlanner" 
+        component={MealPlanningStack} 
+        options={{ title: 'Meal Planner' }} 
+      />
+      <Tab.Screen 
+        name="Recipes" 
+        component={RecipeLibraryStack} 
+        options={{ title: 'Recipes' }} 
+      />
     </Tab.Navigator>
   );
 }

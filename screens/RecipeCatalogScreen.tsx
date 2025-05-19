@@ -1,6 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, TextInput, FlatList, TouchableOpacity, Image, StyleSheet,
+  View, 
+  Text, 
+  TextInput, 
+  FlatList, 
+  TouchableOpacity, 
+  Image, 
+  StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { fetchRecipes, fetchRecipeById } from '../lib/recipes';
@@ -8,107 +16,287 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { Recipe } from '../models/Recipe';
+import { Screen } from '../components/Screen';
+import { colors } from '../theme/colors';
 
 export default function RecipeCatalogScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'RecipeCatalog'>>();
   const [mealFilter, setMealFilter] = useState('');
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
 
-  const load = async () => {
-    const data = await fetchRecipes({ search, meal_type: mealFilter });
-    setRecipes(data);
+  const loadRecipes = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+      const data = await fetchRecipes({ search, meal_type: mealFilter });
+      setRecipes(data);
+    } catch (error) {
+      console.error('Failed to load recipes:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [search, mealFilter]);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadRecipes(false);
   };
 
   useEffect(() => {
-    load();
-  }, [search, mealFilter]);
+    loadRecipes();
+  }, [loadRecipes]);
 
-  const grouped = recipes.reduce<Record<string, Recipe[]>>((acc, recipe) => {
-    const category = recipe.meal_type || 'Other';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(recipe);
-    return acc;
-  }, {});
+  const grouped = React.useMemo(() => {
+    return recipes.reduce<Record<string, Recipe[]>>((acc, recipe) => {
+      const category = recipe.meal_type?.charAt(0).toUpperCase() + recipe.meal_type?.slice(1) || 'Other';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(recipe);
+      return acc;
+    }, {});
+  }, [recipes]);
 
   return (
-    <View style={{ flex: 1, padding: 12 }}>
-      <TextInput
-        style={styles.input}
-        placeholder="Search recipes..."
-        value={search}
-        onChangeText={setSearch}
-      />
-      <DropDownPicker
-        items={[
-          { label: 'Breakfast', value: 'breakfast' },
-          { label: 'Lunch', value: 'lunch' },
-          { label: 'Dinner', value: 'dinner' },
-        ]}
-        open={open}
-        setOpen={setOpen}
-        value={mealFilter}
-        setValue={setMealFilter}
-        multiple={false}
-      />
-      {Object.entries(grouped).map(([category, items]) => (
-        <View key={category}>
-          <Text style={styles.categoryTitle}>{category}</Text>
-          <FlatList
-            data={items}
-            numColumns={2}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.card}
-                onPress={() => navigation.navigate('RecipeDetail', { id: item.id })}
-              >
-                <Image source={{ uri: item.image_url }} style={styles.image} />
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.subtitle}>{item.description}</Text>
-              </TouchableOpacity>
-            )}
+    <Screen>
+      <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Search recipes..."
+            placeholderTextColor={colors.textSecondary}
+            value={search}
+            onChangeText={setSearch}
+          />
+          <DropDownPicker
+            items={[
+              { label: 'All Meals', value: '' },
+              { label: 'Breakfast', value: 'breakfast' },
+              { label: 'Lunch', value: 'lunch' },
+              { label: 'Dinner', value: 'dinner' },
+              { label: 'Snack', value: 'snack' },
+              { label: 'Dessert', value: 'dessert' },
+            ]}
+            open={open}
+            value={mealFilter}
+            setOpen={setOpen}
+            setValue={setMealFilter}
+            placeholder="Filter by meal type"
+            style={styles.dropdown}
+            dropDownContainerStyle={styles.dropdownContainer}
+            textStyle={styles.dropdownText}
+            placeholderStyle={styles.dropdownPlaceholder}
+            selectedItemLabelStyle={styles.selectedItemLabel}
+            listMode="SCROLLVIEW"
+            zIndex={1000}
+            zIndexInverse={1000}
           />
         </View>
-      ))}
-    </View>
+
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : (
+          <FlatList
+            data={Object.entries(grouped)}
+            keyExtractor={([category]) => category}
+            renderItem={({ item: [category, items] }) => (
+              <View style={styles.categoryContainer}>
+                <Text style={styles.categoryHeader}>{category}</Text>
+                {items.map((recipe) => {
+                  const imageUrl = recipe.image_url || recipe.image;
+                  return (
+                    <TouchableOpacity
+                      key={recipe.id}
+                      style={styles.recipeCard}
+                      onPress={() => navigation.navigate('RecipeDetail', { id: recipe.id })}
+                    >
+                      {imageUrl ? (
+                        <Image
+                          source={{ uri: imageUrl }}
+                          style={styles.recipeImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View style={styles.placeholderImage}>
+                          <Text style={styles.placeholderText}>No Image</Text>
+                        </View>
+                      )}
+                      <View style={styles.recipeInfo}>
+                        <Text style={styles.recipeTitle} numberOfLines={1}>
+                          {recipe.title || recipe.name}
+                        </Text>
+                        {recipe.description && (
+                          <Text style={styles.recipeDescription} numberOfLines={2}>
+                            {recipe.description}
+                          </Text>
+                        )}
+                        {recipe.cook_time && (
+                          <Text style={styles.recipeMeta}>
+                            {recipe.cook_time} min • {recipe.servings || 2} servings
+                          </Text>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={[colors.primary]}
+                tintColor={colors.primary}
+              />
+            }
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No recipes found</Text>
+                <Text style={styles.emptySubtext}>Try adjusting your search or filters</Text>
+              </View>
+            }
+          />
+        )}
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  input: {
-    padding: 8,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  categoryTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginVertical: 8,
-  },
-  card: {
+  container: {
     flex: 1,
-    margin: 5,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    elevation: 3,
-    padding: 8,
   },
-  image: {
-    width: '100%',
+  searchContainer: {
+    padding: 16,
+    paddingBottom: 8,
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  input: {
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: colors.card,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.text,
+    fontSize: 16,
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.card,
+    minHeight: 48,
+  },
+  dropdownContainer: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    marginTop: 4,
+    backgroundColor: colors.card,
+  },
+  dropdownText: {
+    color: colors.text,
+    fontSize: 16,
+  },
+  dropdownPlaceholder: {
+    color: colors.textSecondary,
+  },
+  selectedItemLabel: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoryContainer: {
+    paddingHorizontal: 16,
+    marginTop: 16,
+  },
+  categoryHeader: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  recipeCard: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    marginBottom: 12,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  recipeImage: {
+    width: 100,
     height: 100,
-    borderRadius: 8,
   },
-  title: {
-    fontWeight: 'bold',
-    marginTop: 5,
+  placeholderImage: {
+    width: 100,
+    height: 100,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  subtitle: {
+  placeholderText: {
+    color: colors.textSecondary,
     fontSize: 12,
-    color: '#666',
+  },
+  recipeInfo: {
+    flex: 1,
+    padding: 12,
+  },
+  recipeTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  recipeDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 4,
+    lineHeight: 18,
+  },
+  recipeMeta: {
+    fontSize: 12,
+    color: colors.textTertiary,
+    marginTop: 4,
+  },
+  listContent: {
+    paddingBottom: 24,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 });
