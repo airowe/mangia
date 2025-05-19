@@ -34,6 +34,7 @@
       "eas": {
         "projectId": "63a6b1d7-6ebf-4b68-b2ff-79f8915e8ce8"
       }
-    }
+    },
+    "plugins": [["expo-build-properties"], ["@logrocket/react-native"]]
   }
 }
