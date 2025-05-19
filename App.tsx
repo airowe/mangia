@@ -6,6 +6,8 @@ import { AuthScreen } from "./screens/AuthScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import TabNavigator from "./navigation/TabNavigator";
+import * as Updates from "expo-updates";
+import LogRocket from "@logrocket/react-native";
 
 const Stack = createNativeStackNavigator();
 
@@ -20,6 +22,13 @@ export default function App() {
       }
     );
     return () => listener?.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    LogRocket.init("ceqmhr/grosheries", {
+      updateId: Updates.isEmbeddedLaunch ? null : Updates.updateId,
+      expoChannel: Updates.channel,
+    });
   }, []);
 
   if (!session) {

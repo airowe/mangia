@@ -121,8 +121,7 @@ export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScree
   };
 
   const apiURL =
-    process.env.EXPO_PUBLIC_API_URL ||
-    "https://your-vercel-app.vercel.app/api/lookup-barcode";
+    process.env.EXPO_PUBLIC_API_URL;
 
   useEffect(() => {
     (async () => {
