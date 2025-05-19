@@ -89,16 +89,20 @@ const mapCategoryToStorage = (apiCategory: string): string => {
   return STORAGE_CATEGORIES[0];
 };
 
-interface BarcodeProduct {
-  title?: string;
+import type { Product } from '../models/Product';
+
+interface BarcodeProduct extends Omit<Product, 'id' | 'created_at' | 'user_id'> {
   brand?: string;
-  category?: string;
-  barcode?: string;
+  barcode: string;
   image?: string;
-  quantity?: number;
+  error?: string;
 }
 
-export default function BarcodeScannerScreen() {
+interface BarcodeScannerScreenProps {
+  navigation: any; // You might want to properly type this with your navigation types
+}
+
+export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScreenProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [product, setProduct] = useState<BarcodeProduct | null>(null);
@@ -128,84 +132,136 @@ export default function BarcodeScannerScreen() {
   }, []);
 
   const handleBarCodeScanned = async ({ data: barcode }: { data: string }) => {
-    if (scanned) return;
+    if (scanned || !barcode) return;
     
     setScanned(true);
     setLoading(true);
     
+    // Set a minimal product to show loading state
+    setProduct({
+      title: 'Loading...',
+      barcode,
+      quantity: 1,
+      unit: 'pcs',
+      category: STORAGE_CATEGORIES[0] as string, // Type assertion since STORAGE_CATEGORIES is readonly
+      location: 'Pantry'
+    });
+    
     try {
-      // First, set a minimal product to prevent undefined errors
-      setProduct({
-        title: 'Loading...',
-        barcode,
-        quantity: 1,
-        category: STORAGE_CATEGORIES[0]
-      });
+      if (!apiURL) {
+        throw new Error('API URL is not configured');
+      }
       
-      const response = await fetch(`${apiURL}/lookup-barcode?barcode=${barcode}`);
+      const response = await fetch(`${apiURL}/lookup-barcode?barcode=${encodeURIComponent(barcode)}`);
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || "Product not found");
+        let errorMessage = 'Product not found';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // If we can't parse the error, use the status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
       
+      if (!data) {
+        throw new Error('No data returned from API');
+      }
+      
       // Map API response to our product model with proper null checks
       const mappedProduct: BarcodeProduct = {
-        title: data?.title || data?.product_name || 'Unknown Product',
-        brand: data?.brand || 'Unknown Brand',
+        title: data?.title || data?.product_name || `Product ${barcode}`,
+        ...(data?.brand && { brand: data.brand }),
         barcode: barcode,
-        image: data?.image || data?.image_url || undefined,
-        category: mapCategoryToStorage(data?.category) || STORAGE_CATEGORIES[0],
-        quantity: 1
+        ...(data?.image || data?.image_url) && { image: data.image || data.image_url },
+        category: mapCategoryToStorage(data?.category) || 'Pantry',
+        quantity: 1,
+        unit: data?.unit || 'pcs',
+        location: 'Pantry'
       };
 
       setProduct(mappedProduct);
     } catch (err) {
-      Alert.alert("Error", "Failed to fetch product info.");
+      console.error('Barcode scan error:', err);
+      
+      // Show error but keep the barcode scanned state
+      setProduct({
+        title: `Barcode: ${barcode}`,
+        barcode,
+        quantity: 1,
+        unit: 'pcs',
+        category: 'Pantry',
+        location: 'Pantry',
+        error: err instanceof Error ? err.message : 'Unknown error occurred'
+      });
+      
+      Alert.alert(
+        'Product Not Found', 
+        'No product information found for this barcode. You can still add it manually.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const saveToPantry = async () => {
-    if (!product) return;
-
-    const { data: user } = await supabase.auth.getUser();
-    const userId = user?.user?.id;
-
-    if (!userId) {
-      Alert.alert("Not logged in");
+    if (!product || !product.title || !product.barcode) {
+      Alert.alert("Error", "Product information is incomplete");
       return;
     }
 
-    const categoryGuess = (() => {
-      const c = product.category?.toLowerCase();
-      if (!c) return "Pantry";
-      if (c.includes("frozen")) return "Freezer";
-      if (c.includes("spice")) return "Spice Drawer";
-      if (c.includes("dairy") || c.includes("refrigerated")) return "Fridge";
-      return "Pantry";
-    })();
+    setSaving(true);
+    
+    try {
+      const { data: user, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user?.user?.id) {
+        throw new Error(userError?.message || "Not authenticated");
+      }
 
-    const { error } = await supabase.from("products").insert([
-      {
+      const userId = user.user.id;
+      const categoryGuess = mapCategoryToStorage(product.category || '');
+      
+      const productToSave: Omit<Product, 'id' | 'created_at'> = {
         title: product.title,
-        brand: product.brand,
-        category: categoryGuess,
-        barcode: product.barcode,
-        image: product.image,
-        quantity: 1,
+        category: STORAGE_CATEGORIES.includes(categoryGuess as any) ? categoryGuess : 'Pantry',
+        quantity: product.quantity || 1,
+        unit: product.unit || 'pcs',
+        location: 'Pantry',
         user_id: userId,
-      },
-    ]);
+        // Additional fields that might be in the database
+        ...(product.brand && { brand: product.brand }),
+        ...(product.barcode && { barcode: product.barcode }),
+        ...(product.image && { image: product.image })
+      };
 
-    if (error) {
-      console.error("Supabase insert error:", error);
-      Alert.alert("Error saving to pantry");
-    } else {
-      Alert.alert("Success", `${product.title} saved to pantry.`);
+      const { error } = await supabase
+        .from('products')
+        .insert(productToSave);
+
+      if (error) throw error;
+      
+      Alert.alert(
+        "Success", 
+        `${product.title} has been added to your pantry`,
+        [{
+          text: "OK",
+          onPress: () => navigation.goBack()
+        }]
+      );
+    } catch (error) {
+      console.error('Error saving product:', error);
+      Alert.alert(
+        "Error", 
+        error instanceof Error ? error.message : "Failed to save product"
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
