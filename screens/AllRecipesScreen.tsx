@@ -34,7 +34,7 @@ export const AllRecipesScreen = () => {
           renderItem={({ item }) => (
             <View style={styles.card}>
               <Image
-                source={{ uri: item.image || PLACEHOLDER_IMAGE }}
+                source={{ uri: item.image }}
                 style={styles.image}
                 resizeMode="cover"
               />
