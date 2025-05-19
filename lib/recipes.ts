@@ -34,6 +34,7 @@ const apiURL = process.env.EXPO_PUBLIC_API_URL;
 interface FetchRecipesParams {
   search?: string;
   user_id?: string;
+  meal_type?: string;
 }
 
 export async function fetchRecipes(

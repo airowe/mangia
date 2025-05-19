@@ -17,7 +17,7 @@ export default function RecipeCatalogScreen() {
   const [open, setOpen] = useState(false);
 
   const load = async () => {
-    const data = await fetchRecipes({ search, meal: mealFilter });
+    const data = await fetchRecipes({ search, meal_type: mealFilter });
     setRecipes(data);
   };
 

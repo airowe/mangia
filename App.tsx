@@ -8,6 +8,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import TabNavigator from "./navigation/TabNavigator";
 import * as Updates from "expo-updates";
 import LogRocket from "@logrocket/react-native";
+import { Alert } from "react-native";
 
 const Stack = createNativeStackNavigator();
 
@@ -15,7 +16,9 @@ export default function App() {
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
+    Alert.alert("App started");
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    Alert.alert("Current user", JSON.stringify(supabase.auth.getUser()));
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);

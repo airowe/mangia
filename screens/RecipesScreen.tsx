@@ -1,46 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Image } from 'react-native';
 import { fetchRecipes } from '../lib/recipes';
+import { Recipe, RecipeIngredient } from '../models/Recipe';
 
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/120x80.png?text=No+Image';
+// const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/120x80.png?text=No+Image';
 
 export const RecipesScreen = () => {
-  const [recipes, setRecipes] = useState<any[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await fetchRecipes();
-        setRecipes(data);
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    load();
-  }, []);
+  // useEffect(() => {
+  //   const load = async () => {
+  //     try {
+  //       const data = await fetchRecipes();
+  //       setRecipes(data);
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   };
+  //   load();
+  // }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Your Recipes</Text>
-      <FlatList
+      {/* <FlatList
         data={recipes}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Image
-              source={{ uri: item.image || PLACEHOLDER_IMAGE }}
+              source={{ uri: item.image_url }}
               style={styles.image}
               resizeMode="cover"
             />
             <Text style={styles.title}>{item.title}</Text>
-            {item.recipe_ingredients?.map((ing: any) => (
+            {item.ingredients?.map((ing: RecipeIngredient) => (
               <Text key={ing.id}>
                 - {ing.quantity} {ing.unit} {ing.name}
               </Text>
             ))}
           </View>
         )}
-      />
+      /> */}
       {recipes.length === 0 && (
         <Text style={{ textAlign: 'center', marginTop: 20 }}>
           No recipes found. Please add some!

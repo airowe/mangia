@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
-import { getProductsForCurrentUser } from '../storage/pantryStorage';
+import { fetchPantryItems } from '../lib/pantry';
 import { generateMealPlan, AIRecipe } from '../lib/mealPlanner';
+import { Product } from '../models/Product';
 
 export default function MealPlannerScreen() {
-  const [pantryItems, setPantryItems] = useState<string[]>([]);
+  const [pantryItems, setPantryItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [recipes, setRecipes] = useState<AIRecipe[]>([]);
 
   useEffect(() => {
     const loadItems = async () => {
-      const items = await getProductsForCurrentUser();
-      setPantryItems(items.map((item) => item.name));
+      const items = await fetchPantryItems();
+      setPantryItems(items.map((item: Product) => item.title));
     };
     loadItems();
   }, []);

@@ -34,6 +34,10 @@ export default function RecipeCreateScreen({ navigation }: any) {
         title,
         instructions,
         ingredients,
+        main_ingredient: '',
+        meal_type: '',
+        description: '',
+        image_url: ''
       });
       navigation.goBack();
     } catch (e) {
