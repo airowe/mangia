@@ -87,11 +87,11 @@ function AppContent() {
         const currentSession = await getSession();
 
         if (isMounted) {
-          console.log("Initial session:", currentSession);
+          Alert.alert(`Initial session: ${currentSession}`);
           setSession(currentSession);
         }
       } catch (err) {
-        console.error("Unexpected error:", err);
+        Alert.alert(`Unexpected error: ${err}`);
         if (isMounted) {
           setError("An unexpected error occurred");
         }
@@ -105,7 +105,7 @@ function AppContent() {
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
-      console.log("Auth state changed:", event, newSession);
+      Alert.alert(`Auth state changed: ${event} ${newSession}`);
       if (isMounted) {
         setSession(newSession);
         setError(null);
@@ -146,19 +146,15 @@ function AppContent() {
   }
 
   // Debug log current state
-  console.log('App rendering with state:', {
-    isLoading,
-    hasSession: !!session,
-    error: error || 'No error'
-  });
+  Alert.alert(`App rendering with state: ${isLoading} ${session} ${error}`);
 
   // Show auth screen if no session, otherwise show main app
   return (
     <Screen noPadding style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <NavigationContainer
-        onReady={() => console.log('Navigation container is ready')}
-        onStateChange={(state) => console.log('Navigation state changed:', state)}
+        onReady={() => Alert.alert('Navigation container is ready')}
+        onStateChange={(state) => Alert.alert('Navigation state changed: ' + state)}
       >
         <ErrorBoundary>
           {session ? (
@@ -168,7 +164,7 @@ function AppContent() {
               screenOptions={{ headerShown: false }}
               screenListeners={{
                 state: (e) => {
-                  console.log('Navigation state changed:', e.data.state);
+                  Alert.alert('Navigation state changed: ' + e.data.state);
                 },
               }}
             >
@@ -176,8 +172,8 @@ function AppContent() {
                 name="Auth" 
                 component={AuthScreen} 
                 listeners={{
-                  focus: () => console.log('Auth screen focused'),
-                  blur: () => console.log('Auth screen blurred'),
+                  focus: () => Alert.alert('Auth screen focused'),
+                  blur: () => Alert.alert('Auth screen blurred'),
                 }}
               />
             </Stack.Navigator>
@@ -225,11 +221,10 @@ const DebugButton = () => {
 // Main app component with necessary providers
 export default function App() {
   // Log app start
-  console.log('App component mounted');
+  Alert.alert('App component mounted');
   
   // Add global error handler
   const handleGlobalError = (error: Error, isFatal: boolean) => {
-    console.error('Global error:', { error, isFatal });
     Alert.alert(
       'Unexpected Error',
       'An unexpected error occurred. Please restart the app.\n\n' + 
