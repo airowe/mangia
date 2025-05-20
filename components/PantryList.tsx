@@ -1,84 +1,148 @@
-import React from "react";
-import { View, StyleSheet, Text } from "react-native";
-import { Product } from "../models/Product";
-import PantryGroup from "./PantryGroup";
-import { colors } from "../theme/colors";
+import React, { useMemo, useEffect } from 'react';
+import { View, StyleSheet, Text, ScrollView, RefreshControl } from 'react-native';
+import { Product } from '../models/Product';
+import PantryItem from './PantryItem';
+import { colors } from '../theme/colors';
 
-type Props = {
+interface PantryListProps {
   products?: Product[];
-  onDelete: (id: string) => void;
-};
+  collections: Record<string, Product[]>;
+  onAddToPantry: (product: Product) => void;
+  onQuantityChange: (productId: string, change: number) => void;
+  pantryItems: Product[];
+  onRefresh?: () => void;
+  refreshing?: boolean;
+}
 
-export const PantryList: React.FC<Props> = ({ products, onDelete }) => {
-  const grouped = {
-    Fridge: products?.filter((p) => p.category === "Fridge"),
-    Freezer: products?.filter((p) => p.category === "Freezer"),
-    Pantry: products?.filter((p) => p.category === "Pantry"),
-    "Spice Drawer": products?.filter((p) => p.category === "Spice Drawer"),
+const PantryList: React.FC<PantryListProps> = ({
+  collections,
+  onAddToPantry,
+  onQuantityChange,
+  pantryItems,
+  onRefresh,
+  refreshing = false,
+}) => {
+  // Check if a product is in the pantry
+  const isInPantry = (productId: string) => {
+    return pantryItems.some(item => item.id === productId);
   };
 
-  const categoryColors = {
-    Fridge: colors.secondary,
-    Freezer: "#5DADE2",
-    Pantry: "#CC5500",
-    "Spice Drawer": "#A569BD",
-  };
+  // Check if there are any products in any collection
+  const hasProducts = useMemo(() => {
+    if (!collections) {
+      return false;
+    }
+    
+    return Object.values(collections).some(collection => 
+      Array.isArray(collection) && collection.length > 0
+    );
+  }, [collections]);
+
+  // If collections is undefined or null, show a loading state
+  if (!collections) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.debugText}>Loading products...</Text>
+      </View>
+    );
+  }
+
+  // If there are no products, show an empty state
+  if (!hasProducts) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>No products available</Text>
+        <Text style={styles.debugText}>Collections keys: {Object.keys(collections).join(', ')}</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={{ padding: 16 }}>
-      {products && Object.keys(grouped).length > 0 ? (
-        <View>
-          {Object.entries(grouped).map(([category, items]) => (
-            <PantryGroup
-              key={category}
-              title={category}
-              items={items || []}
-              color={categoryColors[category as keyof typeof categoryColors]}
-              onDelete={onDelete}
-            />
-          ))}
-        </View>
-      ) : (
-        <View style={{ alignItems: "center", marginTop: 20 }}>
-          <Text style={styles.empty}>No items in pantry</Text>
-        </View>
-      )}
-    </View>
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+          />
+        ) : undefined
+      }
+    >
+      {Object.entries(collections).map(([title, products]) => {
+        if (!products || products.length === 0) return null;
+        
+        return (
+          <View key={title} style={styles.collectionContainer}>
+            <Text style={styles.collectionTitle}>{title}</Text>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.productsContainer}
+            >
+              {products.map((product) => (
+                <PantryItem
+                  key={product.id}
+                  product={product}
+                  isInPantry={isInPantry(product.id)}
+                  onAddToPantry={onAddToPantry}
+                  onQuantityChange={onQuantityChange}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        );
+      })}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  sectionHeader: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    marginTop: 10,
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
   },
-  sectionHeaderText: {
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#f0f0f0',
+  },
+  debugText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 5,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
     fontSize: 16,
-    fontWeight: "700",
+    color: colors.secondary,
+    textAlign: 'center',
   },
-  item: {
-    padding: 12,
-    marginTop: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
+  collectionContainer: {
+    marginBottom: 24,
   },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  collectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    marginHorizontal: 16,
+    color: colors.text,
   },
-  name: {
-    fontWeight: "500",
-  },
-  quantity: {
-    color: "#555",
-  },
-  empty: {
-    textAlign: "center",
-    fontStyle: "italic",
-    marginTop: 20,
-    color: "#777",
+  productsContainer: {
+    paddingHorizontal: 8,
   },
 });
+
+export default PantryList;

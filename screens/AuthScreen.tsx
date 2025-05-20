@@ -12,7 +12,7 @@ export const AuthScreen = ({ navigation }: any) => {
     if (error) {
       Alert.alert('Sign In Error', error.message);
     } else {
-      navigation.replace('Home');
+      navigation.replace('HomeScreen');
     }
   };
 

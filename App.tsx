@@ -6,10 +6,9 @@ import { AuthScreen } from "./screens/AuthScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import TabNavigator from "./navigation/TabNavigator";
-import * as Updates from "expo-updates";
-import LogRocket from "@logrocket/react-native";
-import { ActivityIndicator, StatusBar, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StatusBar, StyleSheet, View, Text } from "react-native";
 import { colors } from "./theme/colors";
+import { Screen } from "./components/Screen";
 
 const Stack = createNativeStackNavigator();
 
@@ -18,36 +17,26 @@ function AppContent() {
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+    // Always use real Supabase auth in both dev and production
+    supabase.auth.getSession().then(({ data }) => {
+      console.log('Initial session:', data.session);
+      setSession(data.session);
+    });
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state changed:', event, session);
         setSession(session);
       }
     );
-    return () => listener?.subscription.unsubscribe();
+    
+    return () => subscription.unsubscribe();
   }, []);
-
-  useEffect(() => {
-    LogRocket.init("ceqmhr/grosheries", {
-      updateId: Updates.isEmbeddedLaunch ? null : Updates.updateId,
-      expoChannel: Updates.channel,
-    });
-  }, []);
-
-  if (session === null) {
-    // Show loading state
-    return (
-      <View style={styles.loadingContainer}>
-        <StatusBar barStyle="dark-content" />
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
 
   if (!session) {
     // Not logged in - show auth screen
     return (
-      <View style={styles.container}>
+      <Screen noPadding style={styles.container}>
         <StatusBar barStyle="dark-content" />
         <NavigationContainer>
           <Stack.Navigator 
@@ -58,18 +47,18 @@ function AppContent() {
             <Stack.Screen name="Auth" component={AuthScreen} />
           </Stack.Navigator>
         </NavigationContainer>
-      </View>
+      </Screen>
     );
   }
 
   // Logged in - show main app
   return (
-    <View style={styles.container}>
+    <Screen noPadding style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <NavigationContainer>
         <TabNavigator />
       </NavigationContainer>
-    </View>
+    </Screen>
   );
 }
 
@@ -87,12 +76,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
 });
