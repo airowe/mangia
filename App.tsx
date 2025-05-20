@@ -16,97 +16,96 @@ import {
 } from "react-native";
 import { colors } from "./theme/colors";
 import { Screen } from "./components/Screen";
+import { getSession } from "./lib/auth";
 
 const Stack = createNativeStackNavigator();
 
 // Main app container with safe area handling
 function AppContent() {
-  function AppContent() {
-    const [session, setSession] = useState<any>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [session, setSession] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-      let isMounted = true;
+  useEffect(() => {
+    let isMounted = true;
 
-      const initializeAuth = async () => {
-        try {
-          const { data, error: sessionError } =
-            await supabase.auth.getSession();
-
-          if (isMounted) {
-            if (sessionError) {
-              console.error("Error getting session:", sessionError);
-              setError("Failed to check authentication status");
-              return;
-            }
-            console.log("Initial session:", data.session);
-            setSession(data.session);
-          }
-        } catch (err) {
-          console.error("Unexpected error:", err);
-          if (isMounted) {
-            setError("An unexpected error occurred");
-          }
-        } finally {
-          if (isMounted) {
-            setIsLoading(false);
-          }
-        }
-      };
-
-      initializeAuth();
-
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange((event, session) => {
-        console.log("Auth state changed:", event, session);
+    const initializeAuth = async () => {
+      try {
+        // Get the current session from Supabase
+        // This will use the persisted session from AsyncStorage if available
+        const currentSession = await getSession();
+        
         if (isMounted) {
-          setSession(session);
-          setError(null);
+          console.log("Initial session:", currentSession);
+          setSession(currentSession);
         }
-      });
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        if (isMounted) {
+          setError("An unexpected error occurred");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
 
-      return () => {
-        isMounted = false;
-        subscription.unsubscribe();
-      };
-    }, []);
+    initializeAuth();
 
-    if (isLoading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      );
-    }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      console.log("Auth state changed:", event, newSession);
+      if (isMounted) {
+        setSession(newSession);
+        setError(null);
+      }
+    });
 
-    if (error) {
-      return (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <Button
-            title="Retry"
-            onPress={() => {
-              setError(null);
-              setIsLoading(true);
-              supabase.auth.getSession().then(({ data }) => {
-                setSession(data.session);
-                setIsLoading(false);
-              });
-            }}
-          />
-        </View>
-      );
-    }
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
-  // Logged in - show main app
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <Button
+          title="Retry"
+          onPress={() => {
+            setError(null);
+            setIsLoading(true);
+            supabase.auth.getSession().then(({ data }) => {
+              setSession(data.session);
+              setIsLoading(false);
+            });
+          }}
+        />
+      </View>
+    );
+  }
+
+  // Show auth screen if no session, otherwise show main app
   return (
     <Screen noPadding style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <NavigationContainer>
-        <TabNavigator />
+        {session ? (
+          <TabNavigator />
+        ) : (
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Auth" component={AuthScreen} />
+          </Stack.Navigator>
+        )}
       </NavigationContainer>
     </Screen>
   );

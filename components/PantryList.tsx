@@ -12,6 +12,7 @@ interface PantryListProps {
   pantryItems: Product[];
   onRefresh?: () => void;
   refreshing?: boolean;
+  contentContainerStyle?: object;
 }
 
 const PantryList: React.FC<PantryListProps> = ({
@@ -21,6 +22,7 @@ const PantryList: React.FC<PantryListProps> = ({
   pantryItems,
   onRefresh,
   refreshing = false,
+  contentContainerStyle,
 }) => {
   // Check if a product is in the pantry
   const isInPantry = (productId: string) => {
@@ -60,7 +62,7 @@ const PantryList: React.FC<PantryListProps> = ({
   return (
     <ScrollView 
       style={styles.container}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
       refreshControl={
         onRefresh ? (
           <RefreshControl
@@ -103,6 +105,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  contentContainer: {
+    paddingBottom: 24,
   },
   scrollContent: {
     paddingBottom: 24,

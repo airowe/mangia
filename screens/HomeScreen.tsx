@@ -48,25 +48,17 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
   }, [loadPantryItems]);
 
   return (
-    <Screen>
+    <Screen noPadding>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Grosheries</Text>
-          <Text style={styles.greeting}>Good morning,</Text>
-          <Text style={styles.userName}>User</Text>
-        </View>
-
-        {/* Product Collections */}
-        <View style={{ flex: 1 }}>
-          <PantryList
-            collections={collections}
-            onAddToPantry={handleAddToPantry}
-            onQuantityChange={handleQuantityChange}
-            pantryItems={pantryItems}
-            onRefresh={onRefresh}
-            refreshing={refreshing}
-          />
-        </View>
+        <PantryList
+          collections={collections}
+          onAddToPantry={handleAddToPantry}
+          onQuantityChange={handleQuantityChange}
+          pantryItems={pantryItems}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+          contentContainerStyle={styles.listContent}
+        />
       </View>
     </Screen>
   );
@@ -76,27 +68,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    flexDirection: "column",
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: colors.text,
-    marginBottom: 8,
-  },
-  header: {
-    padding: 24,
-    paddingBottom: 8,
-  },
-  greeting: {
-    fontSize: 24,
-    color: colors.text,
-    opacity: 0.8,
-  },
-  userName: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: colors.text,
-    marginTop: 4,
+  listContent: {
+    padding: 16,
+    paddingTop: 8,
   },
 });
