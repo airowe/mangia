@@ -9,8 +9,11 @@ export const signInAnonymously = () =>
 export const signIn = (email: string, password: string) =>
   supabase.auth.signInWithPassword({ email, password });
 
-export const getCurrentUser = () => 
-  supabase.auth.getUser();
+export const getCurrentUser = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
+  return { data: { user, session } };
+};
 
 export const signOut = () => 
   supabase.auth.signOut();

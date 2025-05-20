@@ -29,7 +29,7 @@ export const addRecipe = async (recipe: Omit<Recipe, "id" | "user_id">) => {
   return insertedRecipe;
 };
 
-const apiURL = process.env.EXPO_PUBLIC_API_URL;
+const apiURL = `${process.env.EXPO_PUBLIC_API_URL}/recipes` || 'http://localhost:3000/recipes';
 
 interface FetchRecipesParams {
   search?: string;
@@ -41,25 +41,63 @@ export async function fetchRecipes(
   params: FetchRecipesParams = {}
 ): Promise<Recipe[]> {
   const { data: userData } = await getCurrentUser();
+  if (!userData?.user || !userData.session) throw new Error("Not signed in");
+  
+  // Build query parameters without user_id
+  const query = new URLSearchParams({
+    ...(params.search && { search: params.search }),
+    ...(params.meal_type && { meal_type: params.meal_type })
+  });
+  
+  const response = await fetch(`${apiURL}?${query}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${userData.session.access_token}`
+    }
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || 'Failed to fetch recipes');
+  }
+  
+  return response.json();
+}
+
+export const fetchRecipeById = async (id: string): Promise<Recipe> => {
+  const { data: userData } = await getCurrentUser();
   if (!userData?.user) throw new Error("Not signed in");
-  const userId = userData.user.id;
-  params.user_id = userId;
-  const query = new URLSearchParams(
-    params as Record<string, string>
-  ).toString();
-  const response = await fetch(`${apiURL}?${query}`);
-  if (!response.ok) throw new Error("Failed to fetch recipes");
-  return await response.json();
-}
+  
+  const response = await fetch(`${apiURL}/${id}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${userData.session?.access_token}`
+    }
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Failed to fetch recipe');
+  }
+  
+  return response.json();
+};
 
-export async function fetchRecipeById(id: string): Promise<Recipe> {
-  const response = await fetch(`${apiURL}/${id}`);
-  if (!response.ok) throw new Error("Failed to fetch recipe");
-  return await response.json();
-}
-
-export async function fetchAllRecipes(): Promise<Recipe[]> {
-  const response = await fetch(`${apiURL}/all`);
-  if (!response.ok) throw new Error("Failed to fetch all recipes");
-  return await response.json();
-}
+export const fetchAllRecipes = async (): Promise<Recipe[]> => {
+  const { data: userData } = await getCurrentUser();
+  if (!userData?.user) throw new Error("Not signed in");
+  
+  const response = await fetch(apiURL, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${userData.session?.access_token}`
+    }
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Failed to fetch recipes');
+  }
+  
+  return response.json();
+};
