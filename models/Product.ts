@@ -1,6 +1,7 @@
 // import { StorageCategory } from './constants';
 
 export interface Product {
+  barcode?: string;
   category: string;
   id: string;
   user_id?: string;
@@ -25,6 +26,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       location: 'pantry',
       price: 1.99,
       imageUrl: 'https://images.unsplash.com/photo-1571575173703-af9689a0ed5c?w=500&auto=format&fit=crop&q=60',
+      barcode: undefined
     },
     {
       id: '2',
@@ -35,6 +37,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       location: 'pantry',
       price: 2.49,
       imageUrl: 'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=500&auto=format&fit=crop&q=60',
+      barcode: undefined
     },
     {
       id: '3',
@@ -45,6 +48,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       location: 'pantry',
       price: 3.99,
       imageUrl: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=500&auto=format&fit=crop&q=60',
+      barcode: undefined
     },
     {
       id: '4',
@@ -55,6 +59,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       location: 'pantry',
       price: 4.49,
       imageUrl: 'https://images.unsplash.com/photo-1498557850523-fd3d8b9e4aaf?w=500&auto=format&fit=crop&q=60',
+      barcode: undefined
     },
   ],
   'Weekly Deals': [
@@ -67,6 +72,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       location: 'fridge',
       price: 1.29,
       imageUrl: 'https://images.unsplash.com/photo-1607623814075-4f29c8915288?w=500&auto=format&fit=crop&q=60',
+      barcode: undefined
     },
     {
       id: '6',
@@ -77,6 +83,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       location: 'fridge',
       price: 5.99,
       imageUrl: 'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=500&auto=format&fit=crop&q=60',
+      barcode: undefined
     },
     {
       id: '7',
@@ -87,6 +94,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       location: 'fridge',
       price: 9.99,
       imageUrl: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500&auto=format&fit=crop&q=60',
+      barcode: undefined
     },
   ],
   'Popular Items': [
@@ -99,6 +107,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       location: 'fridge',
       price: 4.99,
       imageUrl: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&auto=format&fit=crop&q=60',
+      barcode: undefined
     },
     {
       id: '9',
@@ -109,6 +118,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       location: 'fridge',
       price: 3.99,
       imageUrl: 'https://images.unsplash.com/photo-1587486913049-53fc88980dfa?w=500&auto=format&fit=crop&q=60',
+      barcode: undefined
     },
     {
       id: '10',
@@ -119,6 +129,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       location: 'pantry',
       price: 4.49,
       imageUrl: 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=500&auto=format&fit=crop&q=60',
+      barcode: undefined
     },
   ],
 };

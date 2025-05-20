@@ -1,11 +1,13 @@
 import { Product } from "../models/Product";
 import { getCurrentUser } from "./auth";
+import { supabase } from "./supabase";
 
 const apiURL = process.env.EXPO_PUBLIC_API_URL;
 if (!apiURL) {
   throw new Error("API URL is not defined");
 }
 
+// Fetch all products (consider pagination if you have many products)
 export const fetchAllProducts = async () => {
   const response = await fetch(`${apiURL}/products`);
   if (!response.ok) {
@@ -15,153 +17,94 @@ export const fetchAllProducts = async () => {
   return await response.json();
 };
 
-export const saveToPantry = async (userId: string, pantryItem: Product) => {
+// Add a product to the user's pantry
+export const saveToPantry = async (product: Product) => {
+  const userResponse = await getCurrentUser();
+  if (!userResponse?.data?.user?.id) {
+    throw new Error("User not authenticated");
+  }
+
   const response = await fetch(`${apiURL}/pantry/add-pantry-item`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
     },
-    body: JSON.stringify({ userId, pantryItem }),
+    body: JSON.stringify({
+      product_id: product.id,
+      name: product.title,
+      barcode: product.barcode,
+      image_url: product.imageUrl,
+      quantity: product.quantity || 1
+    }),
   });
 
   if (!response.ok) {
-    const json = await response.json();
-    throw new Error(json.error || "Failed to save to pantry");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to save to pantry");
   }
 
   return await response.json();
 };
+
+// Fetch user's pantry items
 export const fetchPantryItems = async () => {
   const userResponse = await getCurrentUser();
-  console.log("Fetching pantry items",userResponse);
-  if (!userResponse || !userResponse.data || !userResponse.data.user) {
+  if (!userResponse?.data?.user?.id) {
     throw new Error("User not authenticated");
   }
+
   const response = await fetch(
-    `${apiURL}/pantry/fetch-pantry?user_id=${userResponse.data.user.id}`
+    `${apiURL}/pantry/fetch-pantry?user_id=${userResponse.data.user.id}`,
+    {
+      headers: {
+        "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+      }
+    }
   );
+
   if (!response.ok) {
     const json = await response.json();
     throw new Error(json.error || "Failed to fetch pantry items");
   }
 
-  console.log("Fetched pantry items:", response);
   return await response.json();
 };
 
-export const fetchPantryItemsByCategory = async (category: string) => {
-  const userResponse = await getCurrentUser();
-  if (!userResponse || !userResponse.data || !userResponse.data.user) {
-    throw new Error("User not authenticated");
-  }
-  const userId = userResponse.data.user.id;
-  const response = await fetch(
-    `${apiURL}/pantry?userId=${userId}&category=${category}`
-  );
+// Update pantry item quantity
+export const updatePantryItemQuantity = async (itemId: string, quantity: number) => {
+  const response = await fetch(`${apiURL}/pantry/update-quantity`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+    },
+    body: JSON.stringify({ itemId, quantity }),
+  });
+
   if (!response.ok) {
     const json = await response.json();
-    throw new Error(json.error || "Failed to fetch pantry item by category");
+    throw new Error(json.error || "Failed to update quantity");
   }
+
   return await response.json();
 };
-export const fetchPantryItemByBrand = async (userId: string, brand: string) => {
-  const response = await fetch(
-    `${apiURL}/pantry?userId=${userId}&brand=${brand}`
-  );
+
+// Remove item from pantry
+export const removeFromPantry = async (itemId: string) => {
+  const response = await fetch(`${apiURL}/pantry/remove-item`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+    },
+    body: JSON.stringify({ itemId }),
+  });
+
   if (!response.ok) {
     const json = await response.json();
-    throw new Error(json.error || "Failed to fetch pantry item by brand");
+    throw new Error(json.error || "Failed to remove item");
   }
-  return await response.json();
-};
-export const fetchPantryItemByExpirationDate = async (
-  userId: string,
-  expirationDate: string
-) => {
-  const response = await fetch(
-    `${apiURL}/pantry?userId=${userId}&expirationDate=${expirationDate}`
-  );
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(
-      json.error || "Failed to fetch pantry item by expiration date"
-    );
-  }
-  return await response.json();
-};
-export const fetchPantryItemByQuantity = async (
-  userId: string,
-  quantity: number
-) => {
-  const response = await fetch(
-    `${apiURL}/pantry?userId=${userId}&quantity=${quantity}`
-  );
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(json.error || "Failed to fetch pantry item by quantity");
-  }
-  return await response.json();
-};
-export const fetchPantryItemByImage = async (userId: string, image: string) => {
-  const response = await fetch(
-    `${apiURL}/pantry?userId=${userId}&image=${image}`
-  );
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(json.error || "Failed to fetch pantry item by image");
-  }
-  return await response.json();
-};
-export const fetchPantryItemByLocation = async (
-  userId: string,
-  location: string
-) => {
-  const response = await fetch(
-    `${apiURL}/pantry?userId=${userId}&location=${location}`
-  );
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(json.error || "Failed to fetch pantry item by location");
-  }
-  return await response.json();
-};
-export const fetchPantryItemByNotes = async (userId: string, notes: string) => {
-  const response = await fetch(
-    `${apiURL}/pantry?userId=${userId}&notes=${notes}`
-  );
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(json.error || "Failed to fetch pantry item by notes");
-  }
-  return await response.json();
-};
-export const fetchPantryItemByPurchaseDate = async (
-  userId: string,
-  purchaseDate: string
-) => {
-  const response = await fetch(
-    `${apiURL}/pantry?userId=${userId}&purchaseDate=${purchaseDate}`
-  );
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(
-      json.error || "Failed to fetch pantry item by purchase date"
-    );
-  }
-  return await response.json();
-};
-export const fetchPantryItemByStorageLocation = async (
-  userId: string,
-  storageLocation: string
-) => {
-  const response = await fetch(
-    `${apiURL}/pantry?userId=${userId}&storageLocation=${storageLocation}`
-  );
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(
-      json.error || "Failed to fetch pantry item by storage location"
-    );
-  }
-  return await response.json();
+
+  return true;
 };
