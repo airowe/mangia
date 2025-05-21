@@ -4,9 +4,22 @@
   "main": "index.tsx",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "build:ios": "eas build --platform ios --profile production",
+    "build:android": "eas build --platform android --profile production",
+    "build:all": "eas build --platform all --profile production",
+    "build:local-ios": "eas build --platform ios --profile development --local",
+    "build:local-ios-prod": "eas build --platform ios --profile production --local",
+    "build:local-android": "eas build --platform android --profile development --local",
+    "build:local-android-prod": "eas build --platform android --profile production --local",
+    "build:local-all": "eas build --platform all --profile development --local",
+    "build:local-all-prod": "eas build --platform all --profile production --local",
+    "prepare:prod": "cp .env.production .env",
+    "prepare:dev": "cp .env.local .env || echo \"No .env.local found, using default .env\"",
+    "preinstall": "npm run prepare:dev",
+    "prebuild": "npm run prepare:prod"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -17,6 +30,7 @@
     "@react-navigation/native": "^7.1.6",
     "@react-navigation/native-stack": "^7.3.10",
     "@supabase/supabase-js": "v2.49.5-next.1",
+    "babel-preset-expo": "^13.1.11",
     "expo": "~53.0.8",
     "expo-build-properties": "~0.14.6",
     "expo-camera": "~16.1.6",
@@ -26,6 +40,7 @@
     "expo-updates": "^0.28.13",
     "react": "19.0.0",
     "react-native": "0.79.2",
+    "react-native-dotenv": "^3.4.11",
     "react-native-dropdown-picker": "^5.4.6",
     "react-native-gesture-handler": "^2.24.0",
     "react-native-get-random-values": "^1.11.0",
@@ -38,9 +53,11 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@react-native-community/cli": "latest",
     "@babel/core": "^7.25.2",
+    "@react-native-community/cli": "latest",
     "@types/react": "~19.0.10",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "dotenv-cli": "^8.0.0",
     "typescript": "~5.8.3"
   },
   "private": true

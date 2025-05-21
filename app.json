@@ -26,7 +26,8 @@
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.airowe.grosheries"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -45,7 +46,9 @@
           }
         }
       ],
-      ["@logrocket/react-native"]
+      [
+        "@logrocket/react-native"
+      ]
     ]
   }
 }
