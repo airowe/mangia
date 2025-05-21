@@ -32,18 +32,33 @@ function AppContent() {
 
     const initializeAuth = async () => {
       try {
-        // Get the current session from Supabase
-        // This will use the persisted session from AsyncStorage if available
-        const currentSession = await getSession();
+        // Get the current session and user
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
         
         if (isMounted) {
-          Alert.alert("Initial session:" + currentSession);
-          setSession(currentSession);
+          // If we have a session, verify the user is still valid
+          if (currentSession) {
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            
+            if (userError || !user) {
+              console.log('Invalid session, signing out...');
+              await supabase.auth.signOut();
+              setSession(null);
+            } else {
+              console.log('Valid session found');
+              setSession(currentSession);
+            }
+          } else {
+            console.log('No session found');
+            setSession(null);
+          }
         }
       } catch (err) {
-        Alert.alert("Unexpected error:" + err);
+        console.error('Auth initialization error:', err);
         if (isMounted) {
-          Alert.alert("An unexpected error occurred");
+          setError('Failed to initialize authentication. Please try again.');
         }
       } finally {
         if (isMounted) {
@@ -54,17 +69,38 @@ function AppContent() {
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
-      Alert.alert("Auth state changed:" + event + newSession);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      console.log('Auth state changed:', event);
+      
       if (isMounted) {
-        setSession(newSession);
+        // On sign out, clear the session
+        if (event === 'SIGNED_OUT') {
+          setSession(null);
+        } 
+        // On token refresh, update the session
+        else if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+          setSession(newSession);
+        }
+        // On other events, validate the session
+        else if (newSession) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            console.log('Invalid user in session, signing out...');
+            await supabase.auth.signOut();
+            setSession(null);
+          } else {
+            setSession(newSession);
+          }
+        } else {
+          setSession(null);
+        }
         setError(null);
       }
     });
 
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
@@ -80,18 +116,47 @@ function AppContent() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Button
-          title="Retry"
-          onPress={() => {
-            setError(null);
-            setIsLoading(true);
-            supabase.auth.getSession().then(({ data }) => {
-              Alert.alert("Session:" + data.session);
-              setSession(data.session);
-              setIsLoading(false);
-            });
-          }}
-        />
+        <View style={styles.buttonContainer}>
+          <Button
+            title="Retry"
+            onPress={async () => {
+              setError(null);
+              setIsLoading(true);
+              try {
+                // Try to get a fresh session
+                const { data: { session: newSession }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError) throw sessionError;
+                
+                if (newSession) {
+                  // Verify the user is still valid
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (user) {
+                    setSession(newSession);
+                  } else {
+                    await supabase.auth.signOut();
+                    setSession(null);
+                  }
+                } else {
+                  setSession(null);
+                }
+              } catch (err) {
+                console.error('Error retrying authentication:', err);
+                setError('Failed to authenticate. Please try logging in again.');
+              } finally {
+                setIsLoading(false);
+              }
+            }}
+          />
+          <View style={styles.buttonSpacer} />
+          <Button
+            title="Sign In"
+            onPress={async () => {
+              await supabase.auth.signOut();
+              setSession(null);
+            }}
+          />
+        </View>
       </View>
     );
   }
@@ -146,5 +211,13 @@ const styles = StyleSheet.create({
     color: colors.error,
     marginBottom: 20,
     textAlign: "center",
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  buttonSpacer: {
+    width: 10,
   },
 });
