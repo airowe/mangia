@@ -19,16 +19,18 @@ export const fetchAllProducts = async () => {
 
 // Add a product to the user's pantry
 export const saveToPantry = async (product: Product) => {
-  const userResponse = await getCurrentUser();
-  if (!userResponse?.data?.user?.id) {
+  const session = await supabase.auth.getSession();
+  const accessToken = session.data.session?.access_token;
+  
+  if (!accessToken) {
     throw new Error("User not authenticated");
   }
 
-  const response = await fetch(`${apiURL}/pantry/add-pantry-item`, {
+  const response = await fetch(`${apiURL}/pantry/add-item`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+      "Authorization": `Bearer ${accessToken}`
     },
     body: JSON.stringify({
       product_id: product.id,
@@ -49,16 +51,18 @@ export const saveToPantry = async (product: Product) => {
 
 // Fetch user's pantry items
 export const fetchPantryItems = async () => {
-  const userResponse = await getCurrentUser();
-  if (!userResponse?.data?.user?.id) {
+  const session = await supabase.auth.getSession();
+  const accessToken = session.data.session?.access_token;
+  
+  if (!accessToken) {
     throw new Error("User not authenticated");
   }
 
   const response = await fetch(
-    `${apiURL}/pantry/fetch-pantry?user_id=${userResponse.data.user.id}`,
+    `${apiURL}/pantry/fetch-pantry`,
     {
       headers: {
-        "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        "Authorization": `Bearer ${accessToken}`
       }
     }
   );
@@ -152,11 +156,18 @@ export const updatePantryItemQuantity = async (productId: string, quantity: numb
 
 // Remove item from pantry
 export const removeFromPantry = async (itemId: string) => {
+  const session = await supabase.auth.getSession();
+  const accessToken = session.data.session?.access_token;
+  
+  if (!accessToken) {
+    throw new Error("User not authenticated");
+  }
+
   const response = await fetch(`${apiURL}/pantry/remove-item`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+      "Authorization": `Bearer ${accessToken}`
     },
     body: JSON.stringify({ itemId }),
   });
