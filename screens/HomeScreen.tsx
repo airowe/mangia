@@ -11,20 +11,20 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 
 type RootStackParamList = {
-  BarcodeScanner: undefined;
+  BarcodeScreen: undefined;
   // Add other screens as needed
 };
 
 type HomeScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "BarcodeScanner"
+  "BarcodeScreen"
 >;
 
 export const HomeScreen = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
   const handleBarcodeScan = () => {
-    navigation.navigate("BarcodeScanner");
+    navigation.navigate("BarcodeScreen");
   };
   const [refreshing, setRefreshing] = useState(false);
   const [pantryItems, setPantryItems] = useState<Product[]>([]);
