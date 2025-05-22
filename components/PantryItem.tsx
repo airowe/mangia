@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Product } from '../models/Product';
 import { colors } from '../theme/colors';
+import { ProductPlaceholder } from './ProductPlaceholder';
 
 interface PantryItemProps {
   product: Product;
@@ -20,19 +21,26 @@ const PantryItem: React.FC<PantryItemProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
-        <View style={[styles.imageContainer, styles.imageFallback]}>
-          <Image
-            source={{ 
-              uri: product.imageUrl || 'https://via.placeholder.com/150',
-              cache: 'force-cache' as const
-            }}
-            style={styles.image}
-            resizeMode="cover"
-            onError={() => {
-              // The fallback is handled by the parent View's style
-            }}
-          />
-        </View>
+        {product.imageUrl ? (
+          <View style={[styles.imageContainer, styles.imageFallback]}>
+            <Image
+              source={{ 
+                uri: product.imageUrl,
+                cache: 'force-cache' as const
+              }}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          </View>
+        ) : (
+          <View style={styles.placeholderContainer}>
+            <ProductPlaceholder 
+              category={product.category}
+              location={product.location}
+              size={160}
+            />
+          </View>
+        )}
         
         {/* Add to pantry button */}
         <TouchableOpacity 
@@ -99,7 +107,15 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   imageFallback: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: colors.background,
+  },
+  placeholderContainer: {
+    width: '100%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderRadius: 8,
   },
   addButton: {
     position: 'absolute',

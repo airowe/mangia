@@ -72,22 +72,82 @@ export const fetchPantryItems = async () => {
 };
 
 // Update pantry item quantity
-export const updatePantryItemQuantity = async (itemId: string, quantity: number) => {
-  const response = await fetch(`${apiURL}/pantry/update-quantity`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-    },
-    body: JSON.stringify({ itemId, quantity }),
-  });
+export const updatePantryItemQuantity = async (productId: string, quantity: number) => {
+  try {
+    console.log('Updating quantity via API:', { productId, quantity });
+    
+    const session = await supabase.auth.getSession();
+    const accessToken = session.data.session?.access_token;
+    
+    if (!accessToken) {
+      throw new Error('User not authenticated');
+    }
 
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(json.error || "Failed to update quantity");
+    // Log the full request details
+    const requestUrl = `${apiURL}/pantry/update-quantity`;
+    const requestBody = JSON.stringify({ productId, quantity });
+    const requestHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`
+    };
+    
+    console.log('Making request to:', requestUrl);
+    console.log('Request method: POST');
+    console.log('Request headers:', JSON.stringify(requestHeaders, null, 2));
+    console.log('Request body:', requestBody);
+    
+    // Make the request with POST method
+    const response = await fetch(requestUrl, {
+      method: 'POST',
+      headers: requestHeaders,
+      body: requestBody
+    });
+
+    console.log('API response status:', response.status);
+    
+    if (!response.ok) {
+      let errorMessage = `Failed to update quantity (Status: ${response.status} ${response.statusText})`;
+      console.error('Response headers:');
+      
+      // Log all response headers
+      response.headers.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+      });
+      
+      // Try to get response text
+      try {
+        const responseText = await response.text();
+        console.error('Response text:', responseText);
+        
+        // Try to parse as JSON if possible
+        if (responseText) {
+          try {
+            const errorData = JSON.parse(responseText);
+            console.error('Error response:', errorData);
+            errorMessage = errorData.error || errorData.message || errorMessage;
+          } catch (e) {
+            // If not JSON, use the raw text
+            errorMessage = responseText || errorMessage;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to read response text:', e);
+      }
+      
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    console.log('Successfully updated quantity:', result);
+    return { data: result, error: null };
+    
+  } catch (error) {
+    console.error('Error in updatePantryItemQuantity:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error : new Error('Unknown error updating quantity') 
+    };
   }
-
-  return await response.json();
 };
 
 // Remove item from pantry

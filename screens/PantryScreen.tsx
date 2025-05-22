@@ -6,13 +6,21 @@ import {
   RefreshControl,
   SectionList,
   TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
 import { colors } from "../theme/colors";
 import { Product } from "../models/Product";
 import PantryGroup from "../components/PantryGroup";
 import { fetchPantryItems } from "../lib/pantry";
 import { Screen } from "../components/Screen";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+
+type RootStackParamList = {
+  AddProduct: { category: string };
+  // Add other screens as needed
+};
+
+type PantryScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AddProduct'>;
 
 const CATEGORIES = [
   "Cooking & Baking Ingredients",
@@ -23,7 +31,7 @@ const CATEGORIES = [
   "Soups & Broths",
 ];
 
-export default function PantryScreen({ navigation }: { navigation?: any }) {
+export default function PantryScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -51,6 +59,8 @@ export default function PantryScreen({ navigation }: { navigation?: any }) {
     title: category,
     data: [products.filter((p) => p.category === category)],
   }));
+
+  const navigation = useNavigation<PantryScreenNavigationProp>();
 
   return (
     <Screen noPadding>
@@ -100,6 +110,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    paddingTop: 16,
+    paddingBottom: 16,
   },
   emptyState: {
     flex: 1,
