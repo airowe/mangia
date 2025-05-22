@@ -17,8 +17,8 @@ export const getUserRecipes = async (): Promise<Recipe[]> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
-    const response = await apiClient.get<Recipe[]>('/recipes');
-    return response || [];
+    const response = await apiClient.get<{ data: Recipe[] }>('/recipes');
+    return response?.data || [];
   } catch (error) {
     console.error('Error fetching user recipes:', error);
     return [];
@@ -30,7 +30,7 @@ export const getUserRecipes = async (): Promise<Recipe[]> => {
  */
 export const generateMealPlan = async (filters: Partial<MealPlanFilters>): Promise<MealPlanResponse> => {
   try {
-    const response = await apiClient.post<MealPlanResponse>('/meal-plans/generate', {
+    const response = await apiClient.post<{ data: MealPlanResponse }>('/meal-planner/generate', {
       days: filters.days || 7,
       servings: filters.servings || 4,
       usePantry: filters.usePantry || false,
@@ -42,7 +42,7 @@ export const generateMealPlan = async (filters: Partial<MealPlanFilters>): Promi
       dietaryRestrictions: filters.dietaryRestrictions || []
     });
 
-    return response || { days: [], shoppingList: [] }; // Return the data with fallback
+    return response?.data || { days: [], shoppingList: [] }; // Return the data with fallback
   } catch (error) {
     console.error('Error generating meal plan:', error);
     return { days: [], shoppingList: [] };
@@ -54,7 +54,7 @@ export const generateMealPlan = async (filters: Partial<MealPlanFilters>): Promi
  */
 export const saveMealPlan = async (plan: MealPlanResponse): Promise<void> => {
   try {
-    await apiClient.post('/meal-plans/save', {
+    await apiClient.post('/meal-planner/save', {
       planData: plan
     });
   } catch (error) {
@@ -68,8 +68,8 @@ export const saveMealPlan = async (plan: MealPlanResponse): Promise<void> => {
  */
 export const getSavedMealPlan = async (): Promise<MealPlanResponse | null> => {
   try {
-    const response = await apiClient.get<MealPlanResponse | null>('/meal-plans/current');
-    return response || null;
+    const response = await apiClient.get<{ data: MealPlanResponse | null }>('/meal-planner/current');
+    return response?.data || null;
   } catch (error) {
     console.error('Error fetching saved meal plan:', error);
     return null;
@@ -96,13 +96,15 @@ Respond ONLY in the following JSON format:
 ]`;
 
     const response = await apiClient.post<{
-      choices: Array<{ message: { content: string } }>;
-    }>('/meal-planner/generate', {
+      data: {
+        choices: Array<{ message: { content: string } }>;
+      }
+    }>('/meal-planner/generate-ai', {
       user_id: (await supabase.auth.getUser()).data.user?.id,
       pantryItems,
     });
 
-    const content = response?.choices?.[0]?.message?.content;
+    const content = response?.data?.choices?.[0]?.message?.content;
 
     if (!content) {
       throw new Error('No content in response');

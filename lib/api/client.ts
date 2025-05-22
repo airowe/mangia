@@ -36,7 +36,8 @@ class ApiClient {
     
     // Ensure URLs are properly formed
     this.client.interceptors.request.use(config => {
-      if (config.url && !config.url.startsWith('http')) {
+      // Only modify the URL if it's not an absolute URL and doesn't start with a slash
+      if (config.url && !config.url.startsWith('http') && !config.url.startsWith('/')) {
         config.url = config.url.replace(/^\/+/, '');
       }
       return config;

@@ -59,27 +59,6 @@ const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
     dietaryRestrictions: [],
   });
 
-  // Load initial data
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [recipesData, pantryData] = await Promise.all([
-          getUserRecipes(),
-          fetchPantryItems(),
-        ]);
-        setRecipes(recipesData);
-        setPantryItems(pantryData);
-      } catch (error) {
-        console.error("Error loading data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
-
   // Process recipe to ensure it has all required fields
   const processRecipe = useCallback((recipe: Recipe): Recipe => {
     return {
@@ -97,6 +76,31 @@ const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
       })),
     };
   }, []);
+
+  // Load initial data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [recipesData, pantryData] = await Promise.all([
+          getUserRecipes(),
+          fetchPantryItems(),
+        ]);
+        
+        // Process recipes to ensure they have all required fields
+        const processedRecipes = recipesData.map(recipe => processRecipe(recipe));
+        
+        setRecipes(processedRecipes);
+        setPantryItems(pantryData);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [processRecipe]);
 
   // Generate shopping list from recipes
   const generateShoppingList = useCallback(
@@ -409,3 +413,5 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 });
+
+export default MealPlannerScreen;
