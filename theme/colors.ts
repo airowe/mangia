@@ -3,16 +3,19 @@ export const colors = {
   primary: '#CC5500', // burnt orange
   secondary: '#004E7C', // warm blue
   accent: '#FFB74D',
+  primaryLight: '#FFDDB5',
   
   // UI colors
   background: '#FDF6F0',
   card: '#FFFFFF',
   border: '#DDD',
+  surface: '#FFFFFF',
   
   // Text colors
   text: '#333',
   textSecondary: '#666',
   textTertiary: '#999',
+  muted: '#999',
   
   // Status colors
   error: '#D32F2F',

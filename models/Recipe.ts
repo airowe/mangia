@@ -3,7 +3,7 @@ export interface Recipe {
   user_id: string;
   title: string;
   name?: string; // Alias for title
-  instructions: string;
+  instructions: string[];
   created_at?: string;
   ingredients: RecipeIngredient[];
   main_ingredient: string;
@@ -33,4 +33,5 @@ export interface RecipeIngredient {
   name: string;
   quantity: number;
   unit: string;
+  amount?: number;
 }
