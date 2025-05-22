@@ -40,23 +40,9 @@ const PantryList: React.FC<PantryListProps> = ({
     );
   }, [collections]);
 
-  // If collections is undefined or null, show a loading state
+  // If collections is undefined or null, return null to render nothing
   if (!collections) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.debugText}>Loading products...</Text>
-      </View>
-    );
-  }
-
-  // If there are no products, show an empty state
-  if (!hasProducts) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No products available</Text>
-        <Text style={styles.debugText}>Collections keys: {Object.keys(collections).join(', ')}</Text>
-      </View>
-    );
+    return null;
   }
 
   return (

@@ -4,7 +4,7 @@ import { Screen } from "../components/Screen";
 import PantryList from "../components/PantryList";
 import PantryItem from "../components/PantryItem";
 import { Product, MOCK_PRODUCTS } from "../models/Product";
-import { fetchPantryItems, saveToPantry, updatePantryItemQuantity, fetchAllProducts } from "../lib/pantry";
+import { fetchPantryItems, saveToPantry, updatePantryItemQuantity } from "../lib/pantry";
 import { colors } from "../theme/colors";
 import { FAB } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
@@ -35,24 +35,25 @@ export const HomeScreen = () => {
     loadPantryItems();
   }, []);
 
-  const loadDefaultCollections = async () => {
-    try {
-      const allProducts = await fetchAllProducts();
-      // Group products by category for the default collections
-      const defaultCollections = allProducts.reduce((acc: Record<string, Product[]>, product: Product) => {
-        const category = product.category || 'Other';
-        if (!acc[category]) {
-          acc[category] = [];
-        }
-        acc[category].push(product);
-        return acc;
-      }, {});
-      return defaultCollections;
-    } catch (error) {
-      console.error("Error loading default collections:", error);
-      return {};
-    }
-  };
+  // Commenting out until we have a products endpoint
+  // const loadDefaultCollections = async () => {
+  //   try {
+  //     const allProducts = await fetchAllProducts();
+  //     // Group products by category for the default collections
+  //     const defaultCollections = allProducts.reduce((acc: Record<string, Product[]>, product: Product) => {
+  //       const category = product.category || 'Other';
+  //       if (!acc[category]) {
+  //         acc[category] = [];
+  //       }
+  //       acc[category].push(product);
+  //       return acc;
+  //     }, {});
+  //     return defaultCollections;
+  //   } catch (error) {
+  //     console.error("Error loading default collections:", error);
+  //     return {};
+  //   }
+  // };
 
   const loadPantryItems = useCallback(async () => {
     try {
@@ -60,34 +61,20 @@ export const HomeScreen = () => {
       const items = await fetchPantryItems();
       setPantryItems(items);
       
-      if (items.length > 0) {
-        // Group items by location if user has items
-        const groupedItems = items.reduce((acc: Record<string, Product[]>, item: Product) => {
-          const location = item.location || 'Uncategorized';
-          if (!acc[location]) {
-            acc[location] = [];
-          }
-          acc[location].push(item);
-          return acc;
-        }, {});
-        setCollections(groupedItems);
-      } else {
-        // Load default collections if pantry is empty
-        const defaultCollections = await loadDefaultCollections();
-        setCollections(defaultCollections);
-      }
+      // Group items by location
+      const grouped = items.reduce((acc: Record<string, Product[]>, item) => {
+        const location = item.location || 'Uncategorized';
+        if (!acc[location]) {
+          acc[location] = [];
+        }
+        acc[location].push(item);
+        return acc;
+      }, {});
       
-      setRefreshing(false);
+      setCollections(grouped);
     } catch (error) {
-      console.error("Error loading pantry items:", JSON.stringify(error));
-      // Try to load default collections even if there's an error
-      try {
-        const defaultCollections = await loadDefaultCollections();
-        setCollections(defaultCollections);
-      } catch (e) {
-        console.error("Failed to load default collections:", e);
-        setCollections({});
-      }
+      setCollections({});
+    } finally {
       setRefreshing(false);
     }
   }, []);
@@ -97,20 +84,49 @@ export const HomeScreen = () => {
   }, [loadPantryItems]);
 
   const handleAddToPantry = async (product: Product) => {
-    const { error } = await saveToPantry(product);
-    if (error) {
-      console.error("Error adding to pantry:", error);
+    try {
+      const { data, error } = await saveToPantry(product);
+      if (error) {
+        console.error("Error adding to pantry:", error);
+        return;
+      }
+      
+      if (data) {
+        // Add the new item to the local state
+        setPantryItems(prevItems => [...prevItems, data]);
+        
+        // Update collections with the new item
+        setCollections(prevCollections => {
+          const location = data.location || 'Uncategorized';
+          const updatedCollections = { ...prevCollections };
+          
+          if (!updatedCollections[location]) {
+            updatedCollections[location] = [];
+          }
+          
+          // Check if item already exists in this location
+          const existingItemIndex = updatedCollections[location].findIndex(item => item.id === data.id);
+          
+          if (existingItemIndex >= 0) {
+            // Update existing item
+            updatedCollections[location][existingItemIndex] = data;
+          } else {
+            // Add new item
+            updatedCollections[location] = [...updatedCollections[location], data];
+          }
+          
+          return updatedCollections;
+        });
+      }
+    } catch (error) {
+      console.error("Error in handleAddToPantry:", error);
     }
-    await loadPantryItems();
   };
 
   const handleQuantityChange = async (productId: string, change: number) => {
-    console.log('handleQuantityChange called with:', { productId, change });
-    
     // Find the current product to get its current quantity
     const currentProduct = pantryItems.find(item => item.id === productId);
     if (!currentProduct) {
-      console.error("Product not found in pantry");
       return;
     }
     
@@ -118,30 +134,59 @@ export const HomeScreen = () => {
     const currentQuantity = currentProduct.quantity || 1;
     const newQuantity = Math.max(1, currentQuantity + change);
     
-    console.log('Updating quantity:', { 
-      currentQuantity, 
-      change, 
-      newQuantity,
-      productId,
-      productTitle: currentProduct.title
+    // Optimistically update the UI
+    const updatedProduct = { ...currentProduct, quantity: newQuantity };
+    
+    // Update pantry items state
+    setPantryItems(prevItems => 
+      prevItems.map(item => 
+        item.id === productId ? updatedProduct : item
+      )
+    );
+    
+    // Update collections state
+    setCollections(prevCollections => {
+      const updatedCollections = { ...prevCollections };
+      
+      Object.keys(updatedCollections).forEach(location => {
+        const itemIndex = updatedCollections[location].findIndex(
+          item => item.id === productId
+        );
+        
+        if (itemIndex >= 0) {
+          updatedCollections[location] = updatedCollections[location].map(
+            item => item.id === productId ? updatedProduct : item
+          );
+        }
+      });
+      
+      return updatedCollections;
     });
     
     try {
-      // Update with the new absolute quantity
-      console.log('Calling updatePantryItemQuantity...');
+      // Update the server
       const result = await updatePantryItemQuantity(productId, newQuantity);
-      console.log('updatePantryItemQuantity result:', result);
       
       if (result.error) {
-        console.error('Error from updatePantryItemQuantity:', result.error);
-      } else {
-        console.log('Successfully updated quantity, refreshing pantry items...');
+        // Revert optimistic update on error
+        setPantryItems(prevItems => 
+          prevItems.map(item => 
+            item.id === productId ? currentProduct : item
+          )
+        );
+        
+        // Optionally show an error message to the user
+        console.error('Failed to update quantity:', result.error);
       }
-      
-      // Refresh the pantry items
-      await loadPantryItems();
     } catch (error) {
-      console.error('Error in handleQuantityChange:', error);
+      // Revert optimistic update on error
+      setPantryItems(prevItems => 
+        prevItems.map(item => 
+          item.id === productId ? currentProduct : item
+        )
+      );
+      
+      console.error('Error updating quantity:', error);
     }
   };
 

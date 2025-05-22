@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { apiClient } from "./api";
 
 export type AIRecipe = {
   title: string;
@@ -7,7 +8,8 @@ export type AIRecipe = {
 };
 
 export const generateMealPlan = async (pantryItems: string[]): Promise<AIRecipe[]> => {
-  const prompt = `
+  try {
+    const prompt = `
 Given these pantry ingredients: ${pantryItems.join(', ')}, suggest 3 simple recipes.
 Respond ONLY in the following JSON format:
 
@@ -22,22 +24,27 @@ Respond ONLY in the following JSON format:
 ]
 `;
 
-const response = await fetch('https://grosheries-api.vercel.app/api/generate-meal-plan', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    user_id: (await supabase.auth.getUser()).data.user?.id,
-    pantryItems,
-  }),
-});
+    const response = await apiClient.post<{
+      choices: Array<{ message: { content: string } }>;
+    }>('https://grosheries-api.vercel.app/api/generate-meal-plan', {
+      user_id: (await supabase.auth.getUser()).data.user?.id,
+      pantryItems,
+    });
 
-  const json = await response.json();
-  const content = json.choices?.[0]?.message?.content;
+    const content = response.choices?.[0]?.message?.content;
 
-  try {
-    return JSON.parse(content);
-  } catch (e) {
-    console.error('Failed to parse recipe JSON:', e, content);
-    return [];
+    if (!content) {
+      throw new Error('No content in response');
+    }
+
+    try {
+      return JSON.parse(content);
+    } catch (e) {
+      console.error('Failed to parse recipe JSON:', e, content);
+      return [];
+    }
+  } catch (error) {
+    console.error('Error generating meal plan:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to generate meal plan');
   }
 };

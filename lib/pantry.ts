@@ -1,150 +1,151 @@
-import { Product } from "../models/Product";
-import { getCurrentUser } from "./auth";
-import { supabase } from "./supabase";
+import { Product } from '../models/Product';
+import { apiClient } from './api/client';
+import { supabase } from './supabase';
 
-const apiURL = process.env.EXPO_PUBLIC_API_URL;
-if (!apiURL) {
-  throw new Error("API URL is not defined");
+// Define response types
+interface ApiResponse<T> {
+  data?: T;
+  error?: string;
 }
 
+interface AxiosError extends Error {
+  response?: {
+    status: number;
+    data: any;
+  };
+}
+
+export interface PantryItem {
+  id: string;
+  product_id: string;
+  name: string;
+  barcode: string;
+  image_url?: string;
+  quantity: number;
+  created_at: string;
+  updated_at: string;
+  category?: string;
+  location?: string;
+}
+
+// Map PantryItem to Product
+export const mapToProduct = (item: PantryItem): Product => ({
+  id: item.id,
+  title: item.name,
+  barcode: item.barcode,
+  imageUrl: item.image_url,
+  quantity: item.quantity,
+  category: item.category || 'Uncategorized',
+  location: item.location || 'Pantry',
+  unit: 'pcs', // Default unit, adjust as needed
+});
+
 // Fetch all products (consider pagination if you have many products)
-export const fetchAllProducts = async () => {
-  const response = await fetch(`${apiURL}/products`);
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(json.error || "Failed to fetch products");
-  }
-  return await response.json();
-};
+// export const fetchAllProducts = async (): Promise<Product[]> => {
+//   try {
+//     const response = await apiClient.get<ApiResponse<Product[]>>('/products');
+//     if (response.error) {
+//       throw new Error(response.error);
+//     }
+//     return response.data || [];
+//   } catch (error) {
+//     console.error('Error fetching products:', error);
+//     throw new Error(error instanceof Error ? error.message : 'Failed to fetch products');
+//   }
+// };
 
 // Add a product to the user's pantry
-export const saveToPantry = async (product: Product) => {
-  const session = await supabase.auth.getSession();
-  const accessToken = session.data.session?.access_token;
-  
-  if (!accessToken) {
-    throw new Error("User not authenticated");
-  }
-
-  const response = await fetch(`${apiURL}/pantry/add-item`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${accessToken}`
-    },
-    body: JSON.stringify({
+export const saveToPantry = async (product: Product): Promise<{ data: Product | null; error: Error | null }> => {
+  try {
+    const response = await apiClient.post<ApiResponse<PantryItem>>('/pantry/add-item', {
       product_id: product.id,
       name: product.title,
       barcode: product.barcode,
       image_url: product.imageUrl,
       quantity: product.quantity || 1
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || "Failed to save to pantry");
+    });
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    if (!response.data) {
+      throw new Error('No data returned from server');
+    }
+    
+    const mappedProduct = mapToProduct(response.data);
+    return { data: mappedProduct, error: null };
+  } catch (error) {
+    console.error('Error saving to pantry:', error);
+    const errorMessage = error instanceof Error ? error : new Error('Failed to save to pantry');
+    return { data: null, error: errorMessage };
   }
-
-  return await response.json();
 };
 
 // Fetch user's pantry items
-export const fetchPantryItems = async () => {
-  const session = await supabase.auth.getSession();
-  const accessToken = session.data.session?.access_token;
-  
-  if (!accessToken) {
-    throw new Error("User not authenticated");
-  }
-
-  const response = await fetch(
-    `${apiURL}/pantry/fetch-pantry`,
-    {
-      headers: {
-        "Authorization": `Bearer ${accessToken}`
+export const fetchPantryItems = async (): Promise<Product[]> => {
+  try {
+    const response = await apiClient.get<ApiResponse<PantryItem[]>>('/pantry/fetch-pantry');
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    if (!response.data) {
+      return [];
+    }
+    
+    return response.data.map(mapToProduct);
+  } catch (error) {
+    const axiosError = error as AxiosError;
+    
+    if (axiosError.response?.status === 401) {
+      try {
+        const { data, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !data.session) {
+          throw new Error('Session expired. Please log in again.');
+        }
+        
+        const retryResponse = await apiClient.get<ApiResponse<PantryItem[]>>('/pantry/fetch-pantry');
+        
+        if (retryResponse.error) {
+          throw new Error(retryResponse.error);
+        }
+        
+        return (retryResponse.data || []).map(mapToProduct);
+      } catch (retryError) {
+        throw new Error('Failed to load pantry after session refresh. Please try again.');
       }
     }
-  );
-
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(json.error || "Failed to fetch pantry items");
+    
+    throw new Error(
+      error instanceof Error 
+        ? error.message 
+        : 'Failed to fetch pantry items. Please check your connection and try again.'
+    );
   }
-
-  return await response.json();
 };
 
 // Update pantry item quantity
-export const updatePantryItemQuantity = async (productId: string, quantity: number) => {
+export const updatePantryItemQuantity = async (
+  productId: string, 
+  quantity: number
+): Promise<{ data: Product | null; error: Error | null }> => {
   try {
     console.log('Updating quantity via API:', { productId, quantity });
+    const response = await apiClient.post<ApiResponse<PantryItem>>(
+      '/pantry/update-quantity', 
+      { productId, quantity }
+    );
     
-    const session = await supabase.auth.getSession();
-    const accessToken = session.data.session?.access_token;
-    
-    if (!accessToken) {
-      throw new Error('User not authenticated');
+    if (response.error) {
+      throw new Error(response.error);
     }
-
-    // Log the full request details
-    const requestUrl = `${apiURL}/pantry/update-quantity`;
-    const requestBody = JSON.stringify({ productId, quantity });
-    const requestHeaders = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`
-    };
     
-    console.log('Making request to:', requestUrl);
-    console.log('Request method: POST');
-    console.log('Request headers:', JSON.stringify(requestHeaders, null, 2));
-    console.log('Request body:', requestBody);
-    
-    // Make the request with POST method
-    const response = await fetch(requestUrl, {
-      method: 'POST',
-      headers: requestHeaders,
-      body: requestBody
-    });
-
-    console.log('API response status:', response.status);
-    
-    if (!response.ok) {
-      let errorMessage = `Failed to update quantity (Status: ${response.status} ${response.statusText})`;
-      console.error('Response headers:');
-      
-      // Log all response headers
-      response.headers.forEach((value, key) => {
-        console.log(`${key}: ${value}`);
-      });
-      
-      // Try to get response text
-      try {
-        const responseText = await response.text();
-        console.error('Response text:', responseText);
-        
-        // Try to parse as JSON if possible
-        if (responseText) {
-          try {
-            const errorData = JSON.parse(responseText);
-            console.error('Error response:', errorData);
-            errorMessage = errorData.error || errorData.message || errorMessage;
-          } catch (e) {
-            // If not JSON, use the raw text
-            errorMessage = responseText || errorMessage;
-          }
-        }
-      } catch (e) {
-        console.error('Failed to read response text:', e);
-      }
-      
-      throw new Error(errorMessage);
-    }
-
-    const result = await response.json();
-    console.log('Successfully updated quantity:', result);
-    return { data: result, error: null };
-    
+    const product = response.data ? mapToProduct(response.data) : null;
+    console.log('Successfully updated quantity:', product);
+    return { data: product, error: null };
   } catch (error) {
     console.error('Error in updatePantryItemQuantity:', error);
     return { 
@@ -155,27 +156,20 @@ export const updatePantryItemQuantity = async (productId: string, quantity: numb
 };
 
 // Remove item from pantry
-export const removeFromPantry = async (itemId: string) => {
-  const session = await supabase.auth.getSession();
-  const accessToken = session.data.session?.access_token;
-  
-  if (!accessToken) {
-    throw new Error("User not authenticated");
+export const removeFromPantry = async (itemId: string): Promise<boolean> => {
+  try {
+    const response = await apiClient.delete<ApiResponse<{ success: boolean }>>(
+      '/pantry/remove-item', 
+      { data: { itemId } }
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error removing item from pantry:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to remove item');
   }
-
-  const response = await fetch(`${apiURL}/pantry/remove-item`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${accessToken}`
-    },
-    body: JSON.stringify({ itemId }),
-  });
-
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(json.error || "Failed to remove item");
-  }
-
-  return true;
 };

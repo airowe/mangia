@@ -18,6 +18,7 @@
     "@react-navigation/native-stack": "^7.3.10",
     "@react-navigation/stack": "^7.3.2",
     "@supabase/supabase-js": "v2.49.5-next.1",
+    "axios": "^1.9.0",
     "babel-preset-expo": "^13.1.11",
     "expo": "~53.0.8",
     "expo-build-properties": "~0.14.6",
