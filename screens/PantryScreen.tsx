@@ -65,7 +65,7 @@ export default function PantryScreen() {
   return (
     <Screen noPadding>
       <View style={styles.container}>
-        {products.length === 0 ? (
+        {/* {products.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>Your pantry is empty</Text>
             <Text style={styles.emptySubtext}>Add items to get started</Text>
@@ -100,7 +100,7 @@ export default function PantryScreen() {
             stickySectionHeadersEnabled={false}
             contentContainerStyle={{ paddingBottom: 24 }}
           />
-        )}
+        )} */}
       </View>
     </Screen>
   );

@@ -1,8 +1,8 @@
+import { Alert } from 'react-native';
 import { Product } from '../models/Product';
 import { apiClient } from './api/client';
 import { supabase } from './supabase';
 
-// Define response types
 interface ApiResponse<T> {
   data?: T;
   error?: string;
@@ -18,22 +18,23 @@ interface AxiosError extends Error {
 export interface PantryItem {
   id: string;
   product_id: string;
-  name: string;
-  barcode: string;
-  image_url?: string;
+  title: string;
+  barcode?: string;
+  imageUrl?: string;
   quantity: number;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
   category?: string;
   location?: string;
+  unit?: string;
 }
 
 // Map PantryItem to Product
 export const mapToProduct = (item: PantryItem): Product => ({
   id: item.id,
-  title: item.name,
+  title: item.title,
   barcode: item.barcode,
-  imageUrl: item.image_url,
+  imageUrl: item.imageUrl,
   quantity: item.quantity,
   category: item.category || 'Uncategorized',
   location: item.location || 'Pantry',

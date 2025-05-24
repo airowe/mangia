@@ -14,6 +14,7 @@ export interface BarcodeProduct {
     category: string;
     category_text: string;
     category_text_long: string;
+    image?: string;
     long_desc: string;
     similar?: string;
     language?: string;
