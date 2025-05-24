@@ -328,7 +328,7 @@ export default function BarcodeScannerScreen({
         quantity: 1,
         unit: product.unit || "pcs",
         barcode: product.EAN13 || product.UPCA || "",
-        imageUrl: product.attributes.image,
+        imageUrl: product.image,
         description: product.attributes.long_desc || product.attributes.description,
         ...(product.attributes.asin_com && { asin: product.attributes.asin_com }),
       };
@@ -464,9 +464,9 @@ export default function BarcodeScannerScreen({
               </View>
 
               <View style={styles.imageContainer}>
-                {product.attributes.image ? (
+                {product.image ? (
                   <Image
-                    source={{ uri: product.attributes.image }}
+                    source={{ uri: product.image }}
                     style={styles.productImage}
                     resizeMode="contain"
                   />

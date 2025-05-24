@@ -1,5 +1,6 @@
 import Tesseract from 'tesseract.js';
 import { apiClient } from './api/client';
+import { Alert } from 'react-native';
 
 export const extractTextFromImage = async (uri: string) => {
   const result = await Tesseract.recognize(uri, 'eng');
@@ -14,7 +15,6 @@ export interface BarcodeProduct {
     category: string;
     category_text: string;
     category_text_long: string;
-    image?: string;
     long_desc: string;
     similar?: string;
     language?: string;
@@ -30,7 +30,7 @@ export interface BarcodeProduct {
   locked?: string;
   modified?: string;
   hasImage?: string;
-  image: string;
+  image?: string;
   error?: string;
   unit?: string;
 }
@@ -43,6 +43,8 @@ export interface BarcodeLookupResponse {
 export const lookupBarcode = async (barcode: string): Promise<BarcodeLookupResponse | null> => {
   try {
     const response = await apiClient.get<BarcodeLookupResponse>(`/lookup-barcode?barcode=${barcode}`);
+
+    Alert.alert("Barcode lookup", JSON.stringify(response));
     
     if (response.error || !response.product) {
       console.error('Barcode lookup error:', response.error || 'No product found');
