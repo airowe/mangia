@@ -6,12 +6,17 @@ export interface Product {
   id: string;
   user_id?: string;
   title: string;
-  quantity: number;
+  description?: string;
+  quantity?: number;
   unit: string;
-  location: string;
+  location?: string;
   created_at?: string;
   price?: number;
   imageUrl?: string;
+  asin?: string;
+  brand?: string;
+  EAN13?: string;
+  UPCA?: string;
 }
 
 // Mock data for demonstration

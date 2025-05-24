@@ -1,18 +1,62 @@
 import Tesseract from 'tesseract.js';
+import { apiClient } from './api/client';
 
 export const extractTextFromImage = async (uri: string) => {
   const result = await Tesseract.recognize(uri, 'eng');
   return result.data.text;
 };
 
-export const lookupBarcode = async (barcode: string) => {
-  const response = await fetch(`https://grosheries-api.vercel.app/api/lookup-barcode?barcode=${barcode}`);
-  const data = await response.json();
+export interface BarcodeProduct {
+  attributes: {
+    product: string;
+    description: string;
+    asin_com?: string;
+    category: string;
+    category_text: string;
+    category_text_long: string;
+    long_desc: string;
+    similar?: string;
+    language?: string;
+    language_text?: string;
+    language_text_long?: string;
+  };
+  EAN13: string;
+  UPCA: string;
+  barcode: {
+    EAN13: string;
+    UPCA: string;
+  };
+  locked?: string;
+  modified?: string;
+  hasImage?: string;
+  image: string;
+  error?: string;
+  unit?: string;
+}
 
-  if (!response.ok) {
-    console.error('Error:', data.error);
-    return null;
+export interface BarcodeLookupResponse {
+  product: BarcodeProduct | null;
+  error?: string;
+}
+
+export const lookupBarcode = async (barcode: string): Promise<BarcodeLookupResponse | null> => {
+  try {
+    const response = await apiClient.get<BarcodeLookupResponse>(`/lookup-barcode?barcode=${barcode}`);
+    
+    if (response.error || !response.product) {
+      console.error('Barcode lookup error:', response.error || 'No product found');
+      return { 
+        product: null, 
+        error: response.error || 'No product information available' 
+      };
+    }
+
+    return response;
+  } catch (error) {
+    console.error('Error in barcode lookup:', error);
+    return { 
+      product: null, 
+      error: error instanceof Error ? error.message : 'Failed to lookup barcode' 
+    };
   }
-
-  return data;
 };

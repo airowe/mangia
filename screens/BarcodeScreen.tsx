@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -11,25 +11,31 @@ import {
   SafeAreaView,
   Dimensions,
 } from "react-native";
-import { supabase } from "../lib/supabase";
 import { saveToPantry } from "../lib/pantry";
+import { BarcodeProduct, lookupBarcode } from "../lib/ai";
 import { CameraView, Camera } from "expo-camera";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { STORAGE_CATEGORIES } from "../models/constants";
 import type { Product } from "../models/Product";
 
-interface BarcodeProduct {
-  title: string;
-  brand?: string;
-  barcode: string;
-  image?: string;
-  quantity?: number;
-  unit?: string;
-  category?: string;
-  location?: string;
-  error?: string;
-}
+// Simple debounce function
+const debounce = <F extends (...args: any[]) => any>(
+  func: F,
+  wait: number
+) => {
+  let timeout: NodeJS.Timeout;
+  
+  return function executedFunction(...args: Parameters<F>) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
 
 interface BarcodeScannerScreenProps {
   navigation: any;
@@ -43,78 +49,160 @@ const mapCategoryToStorage = (apiCategory: string): string => {
   const lowerCategory = apiCategory.toLowerCase();
 
   // Map common API categories to our storage categories
-  if (lowerCategory.includes("dairy") || lowerCategory.includes("milk") || lowerCategory.includes("cheese")) {
+  if (
+    lowerCategory.includes("dairy") ||
+    lowerCategory.includes("milk") ||
+    lowerCategory.includes("cheese")
+  ) {
     return "Dairy";
-  } else if (lowerCategory.includes("meat") || lowerCategory.includes("poultry") || lowerCategory.includes("beef") || lowerCategory.includes("chicken")) {
+  } else if (
+    lowerCategory.includes("meat") ||
+    lowerCategory.includes("poultry") ||
+    lowerCategory.includes("beef") ||
+    lowerCategory.includes("chicken")
+  ) {
     return "Meat";
-  } else if (lowerCategory.includes("produce") || lowerCategory.includes("vegetable") || lowerCategory.includes("fruit")) {
+  } else if (
+    lowerCategory.includes("produce") ||
+    lowerCategory.includes("vegetable") ||
+    lowerCategory.includes("fruit")
+  ) {
     return "Produce";
   } else if (lowerCategory.includes("frozen")) {
     return "Frozen";
-  } else if (lowerCategory.includes("beverage") || lowerCategory.includes("drink")) {
+  } else if (
+    lowerCategory.includes("beverage") ||
+    lowerCategory.includes("drink")
+  ) {
     return "Beverages";
   } else if (lowerCategory.includes("snack")) {
     return "Snacks";
-  } else if (lowerCategory.includes("bakery") || lowerCategory.includes("bread")) {
+  } else if (
+    lowerCategory.includes("bakery") ||
+    lowerCategory.includes("bread")
+  ) {
     return "Bakery";
-  } else if (lowerCategory.includes("canned") || lowerCategory.includes("can")) {
+  } else if (
+    lowerCategory.includes("canned") ||
+    lowerCategory.includes("can")
+  ) {
     return "Canned Goods";
-  } else if (lowerCategory.includes("dry") || lowerCategory.includes("pantry")) {
+  } else if (
+    lowerCategory.includes("dry") ||
+    lowerCategory.includes("pantry")
+  ) {
     return "Dry Goods";
   } else if (lowerCategory.includes("baking")) {
     return "Baking";
-  } else if (lowerCategory.includes("spice") || lowerCategory.includes("seasoning")) {
+  } else if (
+    lowerCategory.includes("spice") ||
+    lowerCategory.includes("seasoning")
+  ) {
     return "Spices";
-  } else if (lowerCategory.includes("condiment") || lowerCategory.includes("sauce")) {
+  } else if (
+    lowerCategory.includes("condiment") ||
+    lowerCategory.includes("sauce")
+  ) {
     return "Condiments";
-  } else if (lowerCategory.includes("oil") || lowerCategory.includes("vinegar")) {
+  } else if (
+    lowerCategory.includes("oil") ||
+    lowerCategory.includes("vinegar")
+  ) {
     return "Oils & Vinegars";
-  } else if (lowerCategory.includes("pasta") || lowerCategory.includes("noodle") || lowerCategory.includes("rice")) {
+  } else if (
+    lowerCategory.includes("pasta") ||
+    lowerCategory.includes("noodle") ||
+    lowerCategory.includes("rice")
+  ) {
     return "Grains & Pasta";
-  } else if (lowerCategory.includes("cereal") || lowerCategory.includes("breakfast")) {
+  } else if (
+    lowerCategory.includes("cereal") ||
+    lowerCategory.includes("breakfast")
+  ) {
     return "Breakfast";
-  } else if (lowerCategory.includes("spread") || lowerCategory.includes("nut butter") || lowerCategory.includes("jam")) {
+  } else if (
+    lowerCategory.includes("spread") ||
+    lowerCategory.includes("nut butter") ||
+    lowerCategory.includes("jam")
+  ) {
     return "Spreads";
-  } else if (lowerCategory.includes("soup") || lowerCategory.includes("broth")) {
+  } else if (
+    lowerCategory.includes("soup") ||
+    lowerCategory.includes("broth")
+  ) {
     return "Soups & Broths";
-  } else if (lowerCategory.includes("nut") || lowerCategory.includes("seed") || lowerCategory.includes("trail mix")) {
+  } else if (
+    lowerCategory.includes("nut") ||
+    lowerCategory.includes("seed") ||
+    lowerCategory.includes("trail mix")
+  ) {
     return "Nuts & Seeds";
-  } else if (lowerCategory.includes("dessert") || lowerCategory.includes("candy") || lowerCategory.includes("chocolate")) {
+  } else if (
+    lowerCategory.includes("dessert") ||
+    lowerCategory.includes("candy") ||
+    lowerCategory.includes("chocolate")
+  ) {
     return "Sweets";
-  } else if (lowerCategory.includes("coffee") || lowerCategory.includes("tea") || lowerCategory.includes("cocoa")) {
+  } else if (
+    lowerCategory.includes("coffee") ||
+    lowerCategory.includes("tea") ||
+    lowerCategory.includes("cocoa")
+  ) {
     return "Coffee & Tea";
-  } else if (lowerCategory.includes("alcohol") || lowerCategory.includes("beer") || lowerCategory.includes("wine") || lowerCategory.includes("liquor")) {
+  } else if (
+    lowerCategory.includes("alcohol") ||
+    lowerCategory.includes("beer") ||
+    lowerCategory.includes("wine") ||
+    lowerCategory.includes("liquor")
+  ) {
     return "Alcohol";
-  } else if (lowerCategory.includes("baby") || lowerCategory.includes("infant")) {
+  } else if (
+    lowerCategory.includes("baby") ||
+    lowerCategory.includes("infant")
+  ) {
     return "Baby";
-  } else if (lowerCategory.includes("pet") || lowerCategory.includes("dog") || lowerCategory.includes("cat")) {
+  } else if (
+    lowerCategory.includes("pet") ||
+    lowerCategory.includes("dog") ||
+    lowerCategory.includes("cat")
+  ) {
     return "Pet Supplies";
-  } else if (lowerCategory.includes("health") || lowerCategory.includes("beauty") || lowerCategory.includes("personal care")) {
+  } else if (
+    lowerCategory.includes("health") ||
+    lowerCategory.includes("beauty") ||
+    lowerCategory.includes("personal care")
+  ) {
     return "Health & Beauty";
-  } else if (lowerCategory.includes("household") || lowerCategory.includes("cleaning") || lowerCategory.includes("paper")) {
+  } else if (
+    lowerCategory.includes("household") ||
+    lowerCategory.includes("cleaning") ||
+    lowerCategory.includes("paper")
+  ) {
     return "Household";
   }
   return STORAGE_CATEGORIES[0];
 };
 
-export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScreenProps) {
+export default function BarcodeScannerScreen({
+  navigation,
+}: BarcodeScannerScreenProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [cameraType, setCameraType] = useState<"front" | "back">("back");
   const [flashMode, setFlashMode] = useState<'on' | 'off'>('off');
-  const flashModeForCamera = flashMode === 'on' ? 'torch' : 'off' as const;
+  const [cameraType, setCameraType] = useState<"front" | "back">("back");
   const [product, setProduct] = useState<BarcodeProduct | null>(null);
+  const [saving, setSaving] = useState(false);
   const insets = useSafeAreaInsets();
-  const apiURL = process.env.EXPO_PUBLIC_API_URL;
+  const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const flashModeForCamera = flashMode === "on" ? "torch" : ("off" as const);
 
   const toggleFlash = () => {
     setFlashMode(flashMode === "on" ? "off" : "on");
   };
 
   const toggleCameraType = () => {
-    setCameraType(current => (current === "back" ? "front" : "back"));
+    setCameraType((current) => (current === "back" ? "front" : "back"));
   };
 
   useEffect(() => {
@@ -124,69 +212,71 @@ export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScree
     })();
   }, []);
 
-  const handleBarCodeScanned = async ({ data: barcode }: { data: string }) => {
-    if (!barcode) return;
+  const handleBarcodeLookup = async (barcode: string) => {
+    if (!barcode || loading) return;
 
     setScanned(true);
     setLoading(true);
 
     try {
-      // First try to get product from our database
-      const { data: existingProduct, error: dbError } = await supabase
-        .from("products")
-        .select("*")
-        .eq("barcode", barcode)
-        .single();
+      const response = await lookupBarcode(barcode);
 
-      if (dbError) {
-        console.error("Error fetching product:", dbError);
-      }
-
-      if (existingProduct) {
-        setProduct({
-          title: existingProduct.name,
-          brand: existingProduct.brand,
-          barcode: existingProduct.barcode,
-          image: existingProduct.image_url,
-          category: existingProduct.category,
-          quantity: 1,
-        });
-        setLoading(false);
+      if (!response || !response.product) {
+        const errorProduct: BarcodeProduct = {
+          attributes: {
+            product: "Error",
+            description: "Failed to perform barcode lookup",
+            category: "",
+            category_text: "Error",
+            category_text_long: "Error",
+            long_desc: "Failed to perform barcode lookup"
+          },
+          EAN13: barcode,
+          UPCA: barcode,
+          barcode: {
+            EAN13: `error`,
+            UPCA: `error`
+          },
+          image: "",
+          error: "Failed to perform barcode lookup"
+        };
+        setProduct(errorProduct);
         return;
       }
 
-      // If not in our DB, try the barcode lookup API
-      const response = await fetch(`${apiURL}/barcode/lookup?barcode=${barcode}`);
+
+      const productData = response.product;
+      const categoryGuess = mapCategoryToStorage(productData.attributes?.category || "");
       
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.error) {
-        setProduct({
-          title: "Product not found",
-          barcode,
-          error: data.error,
-        });
-      } else {
-        const categoryGuess = mapCategoryToStorage(data.category || "");
-        
-        setProduct({
-          title: data.name || "Unknown Product",
-          brand: data.brand || "",
-          barcode: data.barcode || barcode,
-          image: data.image_url || "",
-          category: STORAGE_CATEGORIES.includes(categoryGuess as any) ? categoryGuess : "Pantry",
-          quantity: 1,
-        });
-      }
+      setProduct({
+        ...productData,
+        unit: "pcs",
+        attributes: {
+          ...productData.attributes,
+          category: STORAGE_CATEGORIES.includes(categoryGuess as any) 
+            ? categoryGuess 
+            : "Pantry",
+        }
+      });
     } catch (error) {
       console.error("Error looking up product:", error);
+      Alert.alert("Error", error instanceof Error ? error.message : "Unknown error occurred");
       setProduct({
-        title: "Error loading product",
-        barcode,
+        attributes: {
+          product: "Error",
+          description: "Failed to perform barcode lookup",
+          category: "",
+          category_text: "Error",
+          category_text_long: "Error",
+          long_desc: "Failed to perform barcode lookup"
+        },
+        EAN13: barcode,
+        UPCA: barcode,
+        barcode: {
+          EAN13: barcode,
+          UPCA: barcode,
+        },
+        image: "",
         error: error instanceof Error ? error.message : "Unknown error occurred",
       });
     } finally {
@@ -194,8 +284,32 @@ export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScree
     }
   };
 
+  // Create a debounced version of handleBarcodeLookup
+  const debouncedBarcodeLookup = useCallback(
+    debounce((barcode: string) => {
+      handleBarcodeLookup(barcode);
+    }, 500), // 500ms debounce time
+    []
+  );
+
+  const handleBarCodeScanned = useCallback(({ data: barcode }: { data: string }) => {
+    if (!barcode || scanned || loading) return;
+    
+    // Use the debounced function
+    debouncedBarcodeLookup(barcode);
+  }, [scanned, loading, debouncedBarcodeLookup]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (scanTimeoutRef.current) {
+        clearTimeout(scanTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleSaveToPantry = async () => {
-    if (!product || !product.title || !product.barcode) {
+    if (!product || !product.attributes?.product) {
       Alert.alert("Error", "Product information is incomplete");
       return;
     }
@@ -203,24 +317,26 @@ export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScree
     setSaving(true);
 
     try {
-      const categoryGuess = mapCategoryToStorage(product.category || "");
-      
+      const categoryGuess = mapCategoryToStorage(product.attributes.category || "");
+
       const productToSave: Product = {
-        id: product.barcode, // Using barcode as ID since it's required
-        title: product.title,
-        category: STORAGE_CATEGORIES.includes(categoryGuess as any) ? categoryGuess : "Pantry",
-        quantity: product.quantity || 1,
+        id: product.EAN13 || product.UPCA || Date.now().toString(),
+        title: product.attributes.product,
+        category: STORAGE_CATEGORIES.includes(categoryGuess as any)
+          ? categoryGuess
+          : "Pantry",
+        quantity: 1,
         unit: product.unit || "pcs",
-        location: "Pantry",
-        barcode: product.barcode,
+        barcode: product.EAN13 || product.UPCA || "",
         imageUrl: product.image,
-        ...(product.brand && { brand: product.brand }),
+        description: product.attributes.long_desc || product.attributes.description,
+        ...(product.attributes.asin_com && { asin: product.attributes.asin_com }),
       };
 
       // Use the saveToPantry function from the pantry library
       await saveToPantry(productToSave);
 
-      Alert.alert("Success", `${product.title} has been added to your pantry`, [
+      Alert.alert("Success", `${product.attributes.product} has been added to your pantry`, [
         {
           text: "OK",
           onPress: () => navigation.goBack(),
@@ -246,7 +362,9 @@ export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScree
     return (
       <View style={styles.permissionContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.permissionText}>Requesting camera permission...</Text>
+        <Text style={styles.permissionText}>
+          Requesting camera permission...
+        </Text>
       </View>
     );
   }
@@ -291,9 +409,17 @@ export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScree
               </View>
             </View>
 
-            <View style={[styles.bottomOverlay, { paddingBottom: insets.bottom + 20 }]}>
+            <View
+              style={[
+                styles.bottomOverlay,
+                { paddingBottom: insets.bottom + 20 },
+              ]}
+            >
               <View style={styles.buttonRow}>
-                <TouchableOpacity style={styles.iconButton} onPress={toggleFlash}>
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={toggleFlash}
+                >
                   <MaterialIcons
                     name={flashMode === "on" ? "flash-on" : "flash-off"}
                     size={28}
@@ -305,8 +431,15 @@ export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScree
                   <View style={styles.scanLine} />
                 </View>
 
-                <TouchableOpacity style={styles.iconButton} onPress={toggleCameraType}>
-                  <MaterialIcons name="flip-camera-ios" size={28} color="white" />
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={toggleCameraType}
+                >
+                  <MaterialIcons
+                    name="flip-camera-ios"
+                    size={28}
+                    color="white"
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -323,10 +456,10 @@ export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScree
             <View style={styles.productContainer}>
               <View style={styles.productHeader}>
                 <Text style={styles.productTitle} numberOfLines={2}>
-                  {product.title}
+                  {product.attributes.product}
                 </Text>
-                {product.brand && (
-                  <Text style={styles.productBrand}>{product.brand}</Text>
+                {product.attributes.asin_com && (
+                  <Text style={styles.productBrand}>ASIN: {product.attributes.asin_com}</Text>
                 )}
               </View>
 
@@ -339,23 +472,32 @@ export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScree
                   />
                 ) : (
                   <View style={styles.noImage}>
-                    <MaterialIcons name="no-photography" size={48} color="#999" />
+                    <MaterialIcons
+                      name="no-photography"
+                      size={48}
+                      color="#999"
+                    />
                   </View>
                 )}
               </View>
 
               <View style={styles.detailsContainer}>
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Barcode:</Text>
+                  <Text style={styles.detailLabel}>EAN-13:</Text>
                   <Text style={styles.detailValue} numberOfLines={1}>
-                    {product.barcode}
+                    {product.EAN13}
                   </Text>
                 </View>
-
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>UPC-A:</Text>
+                  <Text style={styles.detailValue} numberOfLines={1}>
+                    {product.UPCA}
+                  </Text>
+                </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Category:</Text>
                   <Text style={styles.detailValue}>
-                    {product.category || "Not specified"}
+                    {product.attributes.category_text_long || "Not specified"}
                   </Text>
                 </View>
 
@@ -367,20 +509,20 @@ export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScree
                       onPress={() =>
                         setProduct({
                           ...product,
-                          quantity: Math.max(1, (product.quantity || 1) - 1),
                         })
                       }
                       disabled={saving}
                     >
                       <Text style={styles.quantityButtonText}>-</Text>
                     </TouchableOpacity>
-                    <Text style={styles.quantityText}>{product.quantity || 1}</Text>
+                    <Text style={styles.quantityText}>
+                      {1}
+                    </Text>
                     <TouchableOpacity
                       style={styles.quantityButton}
                       onPress={() =>
                         setProduct({
                           ...product,
-                          quantity: (product.quantity || 1) + 1,
                         })
                       }
                       disabled={saving}
@@ -422,7 +564,11 @@ export default function BarcodeScannerScreen({ navigation }: BarcodeScannerScree
                 {product || "Failed to load product information"}
               </Text>
               <TouchableOpacity
-                style={[styles.button, styles.secondaryButton, { marginTop: 20 }]}
+                style={[
+                  styles.button,
+                  styles.secondaryButton,
+                  { marginTop: 20 },
+                ]}
                 onPress={() => setScanned(false)}
               >
                 <Text style={[styles.buttonText, { color: "#007AFF" }]}>

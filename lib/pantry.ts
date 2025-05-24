@@ -59,7 +59,7 @@ export const saveToPantry = async (product: Product): Promise<{ data: Product | 
   try {
     const response = await apiClient.post<ApiResponse<PantryItem>>('/pantry/add-item', {
       product_id: product.id,
-      name: product.title,
+      title: product.title,
       barcode: product.barcode,
       image_url: product.imageUrl,
       quantity: product.quantity || 1
