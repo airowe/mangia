@@ -15,26 +15,48 @@ export interface RecipeListProps {
   loading?: boolean;
   refreshing?: boolean;
   onRefresh?: () => void;
-  onPressRecipe?: (recipe: Recipe) => void;
-  ListEmptyComponent?: React.ReactElement | null;
-  ListHeaderComponent?: React.ReactElement | null;
-  numColumns?: number;
-  showMealType?: boolean;
+  onPressRecipe: (recipe: Recipe) => void;
   groupByCategory?: boolean;
+  showMealType?: boolean;
+  ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
+  ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
+  numColumns?: number;
+  selectedRecipeIds?: Set<string> | string[];
+  style?: any;
 }
 
 export const RecipeList: React.FC<RecipeListProps> = ({
-  recipes,
+  recipes = [],
   loading = false,
   refreshing = false,
   onRefresh,
   onPressRecipe = () => {},
-  ListEmptyComponent = null,
-  ListHeaderComponent = null,
-  numColumns = 1,
-  showMealType = false,
   groupByCategory = false,
+  showMealType = false,
+  ListHeaderComponent = null,
+  ListEmptyComponent = null,
+  numColumns = 1,
+  selectedRecipeIds = new Set<string>(),
+  style,
 }) => {
+  // All hooks must be called unconditionally at the top level
+  const isSelected = useCallback((recipeId: string): boolean => {
+    if (!selectedRecipeIds) return false;
+    if (Array.isArray(selectedRecipeIds)) {
+      return selectedRecipeIds.includes(recipeId);
+    }
+    return selectedRecipeIds.has(recipeId);
+  }, [selectedRecipeIds]);
+
+  const renderRecipeItem = useCallback(({ item }: { item: Recipe }) => (
+    <RecipeItem 
+      recipe={item} 
+      onPress={onPressRecipe} 
+      showMealType={showMealType}
+      isSelected={item.id ? isSelected(item.id) : false}
+    />
+  ), [onPressRecipe, showMealType, isSelected]);
+
   // Group recipes by category if needed
   const groupedRecipes = useMemo(() => {
     if (!groupByCategory) return null;
@@ -71,11 +93,7 @@ export const RecipeList: React.FC<RecipeListProps> = ({
             <Text style={styles.categoryHeader}>{category}</Text>
             {items.map((recipe) => (
               <View key={recipe.id} style={styles.recipeCardContainer}>
-                <RecipeItem 
-                  recipe={recipe} 
-                  onPress={onPressRecipe} 
-                  showMealType={showMealType} 
-                />
+                {renderRecipeItem({ item: recipe })}
               </View>
             ))}
           </View>
@@ -102,18 +120,16 @@ export const RecipeList: React.FC<RecipeListProps> = ({
     );
   }
 
+  // Generate a key based on numColumns to force re-render when columns change
+  const listKey = `recipe-list-${numColumns}`;
+  
   // Render flat list for non-grouped view
   return (
     <FlatList
+      key={listKey}
       data={recipes}
       keyExtractor={(item) => item.id || `recipe-${item.title}`}
-      renderItem={({ item }) => (
-        <RecipeItem 
-          recipe={item} 
-          onPress={onPressRecipe} 
-          showMealType={showMealType} 
-        />
-      )}
+      renderItem={renderRecipeItem}
       numColumns={numColumns}
       contentContainerStyle={styles.listContent}
       refreshControl={

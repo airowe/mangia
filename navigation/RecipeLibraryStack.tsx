@@ -5,6 +5,7 @@ import RecipeCatalogScreen from "../screens/RecipeCatalogScreen";
 import RecipeDetailScreen from "../screens/RecipeDetailScreen";
 import { AllRecipesScreen } from "../screens/AllRecipesScreen";
 import RecipeCreateScreen from "../screens/RecipeCreateScreen";
+import { SearchResultsScreen } from "../screens/SearchResultsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -14,6 +15,7 @@ export type RecipeLibraryStackParamList = {
   RecipeDetail: { id: string };
   AllRecipes: undefined;
   RecipeCreate: undefined;
+  SearchResults: { searchQuery: string };
 };
 
 export default function RecipeLibraryStack() {
@@ -30,6 +32,11 @@ export default function RecipeLibraryStack() {
         name="RecipeCreate" 
         component={RecipeCreateScreen} 
         options={{ title: 'Add Recipe' }}
+      />
+      <Stack.Screen 
+        name="SearchResults" 
+        component={SearchResultsScreen}
+        options={{ title: 'Search Results' }}
       />
     </Stack.Navigator>
   );

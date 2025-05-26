@@ -7,15 +7,25 @@ interface RecipeItemProps {
   recipe: Recipe;
   onPress: (recipe: Recipe) => void;
   showMealType?: boolean;
+  isSelected?: boolean;
 }
 
-export const RecipeItem = ({ recipe, onPress, showMealType = false }: RecipeItemProps) => {
+export const RecipeItem: React.FC<RecipeItemProps> = ({ 
+  recipe, 
+  onPress, 
+  showMealType = true, 
+  isSelected = false 
+}) => {
   const imageUrl = recipe.image_url;
   
   return (
-    <TouchableOpacity
-      style={styles.recipeCard}
+    <TouchableOpacity 
+      style={[
+        styles.container, 
+        isSelected && styles.selectedContainer
+      ]} 
       onPress={() => onPress(recipe)}
+      activeOpacity={0.7}
     >
       {imageUrl ? (
         <Image
@@ -51,15 +61,21 @@ export const RecipeItem = ({ recipe, onPress, showMealType = false }: RecipeItem
 };
 
 const styles = StyleSheet.create({
-  recipeCard: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
+  container: {
+    flex: 1,
+    margin: 8,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
     overflow: 'hidden',
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+  },
+  selectedContainer: {
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   recipeImage: {
     width: '100%',
