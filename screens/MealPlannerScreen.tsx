@@ -10,11 +10,18 @@ import {
   SafeAreaView,
   TextInput,
   Switch,
+  FlatList,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Product } from "../models/Product";
 import { Recipe } from "../models/Recipe";
-import { MealType, Meal, MealPlanDay, MealPlanFilters, MealPlanResponse } from "../models/Meal";
+import {
+  MealType,
+  Meal,
+  MealPlanDay,
+  MealPlanFilters,
+  MealPlanResponse,
+} from "../models/Meal";
 import { ShoppingListItem } from "../models/ShoppingList";
 import { theme } from "../theme/theme";
 
@@ -27,15 +34,26 @@ interface NavigationProps {
 }
 
 // ===== API Imports =====
-import { 
-  getUserRecipes, 
-  generateMealPlan, 
-  saveMealPlan, 
-  getSavedMealPlan 
+import {
+  getUserRecipes,
+  generateMealPlan,
+  saveMealPlan,
+  getSavedMealPlan,
 } from "../lib/mealPlanner";
 import { fetchPantryItems } from "../lib/pantry";
 
 // ===== Main Component =====
+
+const DAYS_OF_WEEK = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner"];
 
 const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
   // State management
@@ -44,7 +62,12 @@ const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [pantryItems, setPantryItems] = useState<Product[]>([]);
-  const [selectedDay, setSelectedDay] = useState<string>("");
+  const [selectedDays, setSelectedDays] = useState<Set<string>>(
+    new Set(DAYS_OF_WEEK)
+  );
+  const [selectedMeals, setSelectedMeals] = useState<Set<string>>(
+    new Set(MEAL_TYPES)
+  );
 
   // Filter state
   const [filters, setFilters] = useState<MealPlanFilters>({
@@ -86,10 +109,12 @@ const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
           getUserRecipes(),
           fetchPantryItems(),
         ]);
-        
+
         // Process recipes to ensure they have all required fields
-        const processedRecipes = recipesData.map(recipe => processRecipe(recipe));
-        
+        const processedRecipes = recipesData.map((recipe) =>
+          processRecipe(recipe)
+        );
+
         setRecipes(processedRecipes);
         setPantryItems(pantryData);
       } catch (error) {
@@ -138,27 +163,75 @@ const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
     []
   );
 
-  // Handle meal plan generation
+  const toggleDaySelection = (day: string) => {
+    const newSelectedDays = new Set(selectedDays);
+    if (newSelectedDays.has(day)) {
+      newSelectedDays.delete(day);
+    } else {
+      newSelectedDays.add(day);
+    }
+    setSelectedDays(newSelectedDays);
+  };
+
+  const toggleMealSelection = (meal: string) => {
+    const newSelectedMeals = new Set(selectedMeals);
+    if (newSelectedMeals.has(meal)) {
+      newSelectedMeals.delete(meal);
+    } else {
+      newSelectedMeals.add(meal);
+    }
+    setSelectedMeals(newSelectedMeals);
+  };
+
   const handleGenerateMealPlan = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await generateMealPlan(filters);
+      const updatedFilters = {
+        ...filters,
+        includeBreakfast: selectedMeals.has("Breakfast"),
+        includeLunch: selectedMeals.has("Lunch"),
+        includeDinner: selectedMeals.has("Dinner"),
+        days: selectedDays.size,
+      };
+
+      const response = await generateMealPlan(updatedFilters);
       setMealPlan(response.days);
       setShoppingList(response.shoppingList);
-      
-      // Save the generated meal plan
       await saveMealPlan(response);
-      
-      // Set the first day as selected
-      if (response.days.length > 0) {
-        setSelectedDay(response.days[0].date);
-      }
     } catch (error) {
       console.error("Error generating meal plan:", error);
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, selectedDays, selectedMeals]);
+
+  const renderMealCell = (day: string, mealType: string) => {
+    const dayPlan = mealPlan.find((plan) => plan.date === day);
+    const meal = dayPlan?.meals[mealType.toLowerCase() as MealType];
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.mealCell,
+          !selectedDays.has(day) && styles.disabledCell,
+          !selectedMeals.has(mealType) && styles.disabledCell,
+        ]}
+        onPress={() => {
+          if (meal) {
+            navigation.navigate("RecipeDetails", { recipe: meal });
+          }
+        }}
+      >
+        {meal ? (
+          <Text style={styles.mealTitle} numberOfLines={2}>
+            {meal.title}
+          </Text>
+        ) : (
+          <Text style={styles.emptyMealText}>No meal planned</Text>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   // Render loading state
   if (loading) {
@@ -188,18 +261,99 @@ const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
   // Render the main content
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={styles.header}>
-          <Text style={styles.title}>Meal Plan</Text>
-          <TouchableOpacity
-            style={styles.generateButton}
-            onPress={handleGenerateMealPlan}
-          >
-            <Text style={styles.buttonText}>Regenerate</Text>
-          </TouchableOpacity>
+      <View style={styles.header}>
+        <Text style={styles.title}>Meal Plan</Text>
+        <TouchableOpacity
+          style={styles.generateButton}
+          onPress={handleGenerateMealPlan}
+        >
+          <Text style={styles.buttonText}>Generate Plan</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.selectionContainer}>
+        <Text style={styles.sectionTitle}>Select Days</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {DAYS_OF_WEEK.map((day) => (
+            <TouchableOpacity
+              key={day}
+              style={[
+                styles.dayButton,
+                selectedDays.has(day) && styles.selectedButton,
+              ]}
+              onPress={() => toggleDaySelection(day)}
+            >
+              <Text
+                style={[
+                  styles.dayButtonText,
+                  selectedDays.has(day) && styles.selectedButtonText,
+                ]}
+              >
+                {day}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <Text style={styles.sectionTitle}>Select Meals</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {MEAL_TYPES.map((meal) => (
+            <TouchableOpacity
+              key={meal}
+              style={[
+                styles.mealButton,
+                selectedMeals.has(meal) && styles.selectedButton,
+              ]}
+              onPress={() => toggleMealSelection(meal)}
+            >
+              <Text
+                style={[
+                  styles.mealButtonText,
+                  selectedMeals.has(meal) && styles.selectedButtonText,
+                ]}
+              >
+                {meal}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      <ScrollView style={styles.gridContainer}>
+        <View style={styles.gridHeader}>
+          <View style={styles.headerCell} />
+          {DAYS_OF_WEEK.map((day) => (
+            <TouchableOpacity
+              key={day}
+              style={[
+                styles.headerCell,
+                !selectedDays.has(day) && styles.disabledCell,
+              ]}
+              onPress={() => toggleDaySelection(day)}
+            >
+              <Text style={styles.headerText}>{day}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        {/* Add day selector and meal plan rendering here */}
+        {MEAL_TYPES.map((mealType) => (
+          <View key={mealType} style={styles.gridRow}>
+            <TouchableOpacity
+              style={[
+                styles.mealTypeCell,
+                !selectedMeals.has(mealType) && styles.disabledCell,
+              ]}
+              onPress={() => toggleMealSelection(mealType)}
+            >
+              <Text style={styles.mealTypeText}>{mealType}</Text>
+            </TouchableOpacity>
+            {DAYS_OF_WEEK.map((day) => (
+              <View key={`${day}-${mealType}`} style={styles.mealCellContainer}>
+                {renderMealCell(day, mealType)}
+              </View>
+            ))}
+          </View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -222,21 +376,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.lightGray,
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold' as const,
+    fontWeight: "bold" as const,
     color: colors.text,
   },
 
   // Loading State
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     backgroundColor: colors.background,
   },
   loadingText: {
@@ -248,8 +402,8 @@ const styles = StyleSheet.create({
   // Empty State
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     padding: 20,
     backgroundColor: colors.background,
   },
@@ -257,7 +411,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.mediumGray,
     marginBottom: 20,
-    textAlign: 'center' as const,
+    textAlign: "center" as const,
   },
 
   // Buttons
@@ -266,11 +420,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
-    alignSelf: 'center' as const,
+    alignSelf: "center" as const,
   },
   buttonText: {
     color: colors.white,
-    fontWeight: '600' as const,
+    fontWeight: "600" as const,
     fontSize: 16,
   },
   buttonDisabled: {
@@ -308,7 +462,7 @@ const styles = StyleSheet.create({
   },
   dayTitle: {
     fontSize: 20,
-    fontWeight: 'bold' as const,
+    fontWeight: "bold" as const,
     marginBottom: 16,
     color: colors.darkGray,
   },
@@ -319,7 +473,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
@@ -327,13 +481,13 @@ const styles = StyleSheet.create({
   },
   mealType: {
     fontSize: 16,
-    fontWeight: '600' as const,
+    fontWeight: "600" as const,
     color: colors.primary,
     marginBottom: 8,
   },
   mealTitle: {
     fontSize: 18,
-    fontWeight: 'bold' as const,
+    fontWeight: "bold" as const,
     marginBottom: 8,
     color: colors.darkGray,
   },
@@ -343,7 +497,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   mealImage: {
-    width: '100%',
+    width: "100%",
     height: 150,
     borderRadius: 8,
     marginVertical: 8,
@@ -352,7 +506,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
     padding: 8,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
   },
   viewRecipeText: {
@@ -411,6 +565,86 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: colors.text,
     lineHeight: 22,
+  },
+  selectionContainer: {
+    padding: 16,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+  },
+  mealButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  selectedButton: {
+    backgroundColor: colors.primary,
+  },
+  mealButtonText: {
+    color: colors.primary,
+  },
+  selectedButtonText: {
+    color: colors.white,
+  },
+  gridContainer: {
+    flex: 1,
+  },
+  gridHeader: {
+    flexDirection: "row",
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+  },
+  headerCell: {
+    flex: 1,
+    padding: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 100,
+  },
+  headerText: {
+    fontWeight: "600",
+    color: colors.text,
+  },
+  gridRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+  },
+  mealTypeCell: {
+    width: 100,
+    padding: 8,
+    backgroundColor: colors.white,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRightWidth: 1,
+    borderRightColor: colors.lightGray,
+  },
+  mealTypeText: {
+    fontWeight: "600",
+    color: colors.text,
+  },
+  mealCellContainer: {
+    flex: 1,
+    minWidth: 100,
+  },
+  mealCell: {
+    padding: 8,
+    height: 120,
+    backgroundColor: colors.white,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyMealText: {
+    fontSize: 12,
+    color: colors.mediumGray,
+    textAlign: "center",
+  },
+  disabledCell: {
+    opacity: 0.5,
   },
 });
 

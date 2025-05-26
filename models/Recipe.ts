@@ -8,11 +8,11 @@ export interface RecipeIngredient {
 }
 
 export interface Recipe {
-  id?: string;
+  id: string;
   user_id?: string;
   title: string;
   description?: string;
-  instructions: string;
+  instructions: string[];
   ingredients: RecipeIngredient[];
   prep_time?: number;
   cook_time?: number;

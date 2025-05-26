@@ -2,17 +2,12 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
-  TextInput, 
-  FlatList, 
-  TouchableOpacity, 
-  Image, 
   StyleSheet, 
   ActivityIndicator, 
-  RefreshControl, 
-  Alert 
+  Alert,
+  Keyboard 
 } from 'react-native';
-import DropDownPicker from 'react-native-dropdown-picker';
-import { fetchRecipes, fetchRecipeById, searchRecipes, addRecipe } from '../lib/recipes';
+import { fetchRecipes, searchRecipes, addRecipe } from '../lib/recipes';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RecipeLibraryStackParamList } from '../navigation/RecipeLibraryStack';
@@ -66,6 +61,8 @@ export default function RecipeCatalogScreen() {
 
   const handleSearch = useCallback(() => {
     const trimmedQuery = searchQuery.trim();
+    Keyboard.dismiss(); // Dismiss the keyboard
+    
     if (trimmedQuery) {
       setSearch(trimmedQuery);
       setIsSearching(true);

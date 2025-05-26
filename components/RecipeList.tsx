@@ -87,12 +87,17 @@ export const RecipeList: React.FC<RecipeListProps> = ({
     return (
       <FlatList
         data={Object.entries(groupedRecipes)}
-        keyExtractor={([category]) => category}
+        keyExtractor={([category, items]) =>
+          `${category}-${items.map((item) => item.id).join("-")}`
+        }
         renderItem={({ item: [category, items] }) => (
           <View style={styles.categoryContainer}>
             <Text style={styles.categoryHeader}>{category}</Text>
             {items.map((recipe) => (
-              <View key={recipe.id} style={styles.recipeCardContainer}>
+              <View
+                key={`${category}-${recipe.id}`}
+                style={styles.recipeCardContainer}
+              >
                 {renderRecipeItem({ item: recipe })}
               </View>
             ))}
@@ -112,7 +117,9 @@ export const RecipeList: React.FC<RecipeListProps> = ({
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No recipes found</Text>
-            <Text style={styles.emptySubtext}>Try adjusting your search or filters</Text>
+            <Text style={styles.emptySubtext}>
+              Try adjusting your search or filters
+            </Text>
           </View>
         }
         ListHeaderComponent={ListHeaderComponent}
