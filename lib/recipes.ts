@@ -45,9 +45,6 @@ export interface MealPlanResponse {
   };
 }
 
-
-const API_BASE_URL = '/recipes';
-
 export const recipeApi = {
   // Get user's saved recipes
   async getUserRecipes(): Promise<Recipe[]> {
@@ -110,7 +107,7 @@ export const recipeApi = {
       if (params.user_id) queryParams.append('user_id', params.user_id);
       
       const queryString = queryParams.toString();
-      const url = queryString ? `${API_BASE_URL}/fetch-recipes?${queryString}` : API_BASE_URL;
+      const url = `/recipes/fetch-recipes${queryString ? `?${queryString}` : ''}`;
       
       const response = await apiClient.get<{ data: Recipe[] }>(url);
       return response.data || [];
@@ -123,7 +120,7 @@ export const recipeApi = {
   // Fetch a single recipe by ID
   async fetchRecipeById(id: string): Promise<Recipe> {
     try {
-      const response = await apiClient.get<{ data: Recipe }>(`${API_BASE_URL}/${id}`);
+      const response = await apiClient.get<{ data: Recipe }>(`/recipes/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching recipe ${id}:`, error);
@@ -134,6 +131,30 @@ export const recipeApi = {
   // Fetch all recipes (alias for fetchRecipes for backward compatibility)
   async fetchAllRecipes(): Promise<Recipe[]> {
     return this.fetchRecipes();
+  },
+
+  // Search recipes with optional filters
+  async searchRecipes(params: { 
+    query?: string; 
+    meal_type?: string;
+    user_id?: string;
+  } = {}): Promise<Recipe[]> {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      if (params.query) queryParams.append('query', params.query);
+      if (params.meal_type) queryParams.append('meal_type', params.meal_type);
+      if (params.user_id) queryParams.append('user_id', params.user_id);
+      
+      const queryString = queryParams.toString();
+      const url = `/recipes/search${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await apiClient.get<{ data: Recipe[] }>(url);
+      return response.data || [];
+    } catch (error) {
+      console.error('Error searching recipes:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to search recipes');
+    }
   }
 };
 
@@ -148,5 +169,6 @@ export const addRecipe = recipeApi.addRecipe.bind(recipeApi);
 export const fetchRecipes = recipeApi.fetchRecipes.bind(recipeApi);
 export const fetchRecipeById = recipeApi.fetchRecipeById.bind(recipeApi);
 export const fetchAllRecipes = recipeApi.fetchAllRecipes.bind(recipeApi);
+export const searchRecipes = recipeApi.searchRecipes.bind(recipeApi);
 
 export default recipeApi;

@@ -1,37 +1,70 @@
-export interface Recipe {
-  id: string;
-  user_id: string;
-  title: string;
-  name?: string; // Alias for title
-  instructions: string[];
-  created_at?: string;
-  ingredients: RecipeIngredient[];
-  main_ingredient: string;
-  meal_type: string;
-  description: string;
-  image_url: string;
-  image?: string; // Alias for image_url
-  cook_time?: number; // In minutes
-  cookTime?: number; // Alias for cook_time
-  servings?: number;
-  prep_time?: number; // In minutes
-  prepTime?: number; // Alias for prep_time
-  difficulty?: 'easy' | 'medium' | 'hard';
-  cuisine?: string;
-  tags?: string[];
-  is_favorite?: boolean;
-  is_public?: boolean;
-  source?: string;
-  notes?: string;
-  rating?: number; // 1-5
-  last_made?: string; // ISO date string
-}
-
 export interface RecipeIngredient {
-  id: string;
-  recipe_id: string;
+  id?: string;
+  recipe_id?: string;
   name: string;
   quantity: number;
   unit: string;
-  amount?: number;
+  inPantry?: boolean;
+}
+
+export interface Recipe {
+  id?: string;
+  user_id?: string;
+  title: string;
+  description?: string;
+  instructions: string;
+  ingredients: RecipeIngredient[];
+  prep_time?: number;
+  cook_time?: number;
+  servings?: number;
+  image_url?: string;
+  created_at?: string;
+  updated_at?: string;
+  is_ai_generated?: boolean;
+  source?: string;
+  meal_type?: string;
+  dietary_restrictions?: string[];
+}
+
+export interface MealPlanFilters {
+  days: number;
+  servings?: number;
+  dietaryRestrictions?: string[];
+  maxCookingTime?: number;
+  includeBreakfast?: boolean;
+  includeLunch?: boolean;
+  includeDinner?: boolean;
+  includeSnacks?: boolean;
+  usePantryItems?: boolean;
+  quickMealsOnly?: boolean;
+}
+
+export interface MealPlanDay {
+  date: string;
+  meals: {
+    breakfast?: Recipe | null;
+    lunch?: Recipe | null;
+    dinner?: Recipe | null;
+    snacks?: Recipe[];
+  };
+  shoppingList?: {
+    ingredients: {
+      name: string;
+      amount: string;
+      unit: string;
+      inPantry: boolean;
+    }[];
+  };
+}
+
+export interface MealPlanResponse {
+  days: MealPlanDay[];
+  shoppingList: {
+    ingredients: {
+      name: string;
+      amount: string;
+      unit: string;
+      inPantry: boolean;
+    }[];
+  };
 }

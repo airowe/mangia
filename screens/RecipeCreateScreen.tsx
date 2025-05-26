@@ -3,11 +3,9 @@ import {
   View, 
   Text, 
   TextInput, 
-  FlatList, 
   StyleSheet, 
   TouchableOpacity, 
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
@@ -46,16 +44,14 @@ export default function RecipeCreateScreen({ navigation }: any) {
     try {
       await addRecipe({
         title,
-        instructions: [instructions], // Wrap in array to match string[] type
+        instructions: instructions, // Now a single string
         ingredients,
-        main_ingredient: '',
-        meal_type: '',
         description: '',
         image_url: ''
       });
       navigation.goBack();
     } catch (e) {
-      console.error(e);
+      console.error('Failed to save recipe:', e);
     }
   };
 

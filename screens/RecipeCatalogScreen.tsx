@@ -11,14 +11,15 @@ import {
   RefreshControl,
 } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { fetchRecipes, fetchRecipeById } from '../lib/recipes';
+import { fetchRecipes, fetchRecipeById, searchRecipes } from '../lib/recipes';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RecipeLibraryStackParamList } from '../navigation/RecipeLibraryStack';
 import { Recipe } from '../models/Recipe';
 import { Screen } from '../components/Screen';
 import { colors } from '../theme/colors';
-import { Ionicons } from '@expo/vector-icons';
+import { TextInput as PaperTextInput } from 'react-native-paper';
+
 
 export default function RecipeCatalogScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -26,13 +27,28 @@ export default function RecipeCatalogScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RecipeLibraryStackParamList, 'RecipeCatalog'>>();
   const [mealFilter, setMealFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
 
   const loadRecipes = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
-      const data = await fetchRecipes({ search, meal_type: mealFilter });
+      let data: Recipe[] = [];
+      
+      if (search.trim()) {
+        // Only search if there's a search query
+        data = await searchRecipes({ 
+          query: search,
+          meal_type: mealFilter 
+        });
+      } else {
+        // Otherwise, fetch all recipes (optionally filtered by meal type)
+        data = await fetchRecipes({ 
+          meal_type: mealFilter 
+        });
+      }
+      
       setRecipes(data);
     } catch (error) {
       console.error('Failed to load recipes:', error);
@@ -42,6 +58,14 @@ export default function RecipeCatalogScreen() {
     }
   }, [search, mealFilter]);
 
+  const handleSearch = useCallback(() => {
+    if (searchQuery.trim() !== '' || search !== searchQuery) {
+      setSearch(searchQuery);
+      setRefreshing(true);
+      loadRecipes();
+    }
+  }, [searchQuery, search, loadRecipes]);
+
   const handleRefresh = () => {
     setRefreshing(true);
     loadRecipes(false);
@@ -50,10 +74,18 @@ export default function RecipeCatalogScreen() {
   useEffect(() => {
     loadRecipes();
   }, [loadRecipes]);
+  
+  // Reset search when component mounts
+  useEffect(() => {
+    setSearch('');
+    setSearchQuery('');
+  }, []);
 
   const grouped = React.useMemo(() => {
     return recipes.reduce<Record<string, Recipe[]>>((acc, recipe) => {
-      const category = recipe.meal_type?.charAt(0).toUpperCase() + recipe.meal_type?.slice(1) || 'Other';
+      const category = (recipe.meal_type && recipe.meal_type.length > 0) 
+        ? recipe.meal_type.charAt(0).toUpperCase() + recipe.meal_type.slice(1) 
+        : 'Other';
       if (!acc[category]) {
         acc[category] = [];
       }
@@ -66,14 +98,35 @@ export default function RecipeCatalogScreen() {
     <Screen>
       <View style={styles.container}>
         <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Search recipes..."
-            placeholderTextColor={colors.textSecondary}
-            value={search}
-            onChangeText={setSearch}
-          />
-          <DropDownPicker
+          <View style={styles.searchInputContainer}>
+            <PaperTextInput
+              mode="outlined"
+              placeholder="Search recipes..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmitEditing={handleSearch}
+              returnKeyType="search"
+              style={styles.input}
+              right={
+                <PaperTextInput.Icon 
+                  icon="magnify" 
+                  onPress={handleSearch}
+                />
+              }
+              outlineColor={colors.border}
+              activeOutlineColor={colors.primary}
+              theme={{
+                colors: {
+                  primary: colors.primary,
+                  placeholder: colors.textSecondary,
+                  text: colors.text,
+                  background: colors.background,
+                },
+                roundness: 8,
+              }}
+            />
+          </View>
+          {/* <DropDownPicker
             items={[
               { label: 'All Meals', value: '' },
               { label: 'Breakfast', value: 'breakfast' },
@@ -95,7 +148,7 @@ export default function RecipeCatalogScreen() {
             listMode="SCROLLVIEW"
             zIndex={1000}
             zIndexInverse={1000}
-          />
+          /> */}
         </View>
 
         {loading ? (
@@ -110,12 +163,16 @@ export default function RecipeCatalogScreen() {
               <View style={styles.categoryContainer}>
                 <Text style={styles.categoryHeader}>{category}</Text>
                 {items.map((recipe) => {
-                  const imageUrl = recipe.image_url || recipe.image;
+                  const imageUrl = recipe.image_url;
                   return (
                     <TouchableOpacity
                       key={recipe.id}
                       style={styles.recipeCard}
-                      onPress={() => navigation.navigate('RecipeDetail', { id: recipe.id })}
+                      onPress={() => {
+                        if (recipe.id) {
+                          navigation.navigate('RecipeDetail', { id: recipe.id });
+                        }
+                      }}
                     >
                       {imageUrl ? (
                         <Image
@@ -130,7 +187,7 @@ export default function RecipeCatalogScreen() {
                       )}
                       <View style={styles.recipeInfo}>
                         <Text style={styles.recipeTitle} numberOfLines={1}>
-                          {recipe.title || recipe.name}
+                          {recipe.title}
                         </Text>
                         {recipe.description && (
                           <Text style={styles.recipeDescription} numberOfLines={2}>
@@ -166,12 +223,7 @@ export default function RecipeCatalogScreen() {
           />
         )}
       </View>
-      <TouchableOpacity 
-        style={styles.fab}
-        onPress={() => navigation.navigate('RecipeCreate')}
-      >
-        <Ionicons name="add" size={24} color="white" />
-      </TouchableOpacity>
+
     </Screen>
   );
 }
@@ -198,35 +250,44 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   searchContainer: {
+    flexDirection: 'row',
     padding: 16,
-    paddingBottom: 8,
+    gap: 10,
     backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    flexWrap: 'wrap',
+  },
+  searchInputContainer: {
+    width: '100%',
   },
   input: {
-    padding: 12,
-    marginBottom: 12,
     backgroundColor: colors.card,
-    borderRadius: 8,
+    fontSize: 16,
     borderWidth: 1,
     borderColor: colors.border,
+    borderRadius: 8,
+    padding: 8,
     color: colors.text,
-    fontSize: 16,
+    minWidth: 160,
   },
   dropdown: {
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 8,
+    padding: 8,
+    color: colors.text,
+    minWidth: 160,
     backgroundColor: colors.card,
-    minHeight: 48,
   },
   dropdownContainer: {
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 8,
-    marginTop: 4,
-    backgroundColor: colors.card,
+    padding: 12,
+    color: colors.text,
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   dropdownText: {
     color: colors.text,
