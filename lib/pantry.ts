@@ -62,7 +62,7 @@ export const saveToPantry = async (product: Product): Promise<{ data: Product | 
       product_id: product.id,
       title: product.title,
       barcode: product.barcode,
-      image_url: product.imageUrl,
+      image_url: product.image,
       quantity: product.quantity || 1
     });
     

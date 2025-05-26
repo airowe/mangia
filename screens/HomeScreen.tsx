@@ -12,7 +12,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 
 type RootStackParamList = {
   BarcodeScreen: undefined;
-  // Add other screens as needed
+  ManualEntryScreen: undefined;
 };
 
 type HomeScreenNavigationProp = StackNavigationProp<
@@ -26,6 +26,11 @@ export const HomeScreen = () => {
   const handleBarcodeScan = () => {
     navigation.navigate("BarcodeScreen");
   };
+
+  const handleManualEntry = () => {
+    navigation.navigate("ManualEntryScreen");
+  };
+  
   const [refreshing, setRefreshing] = useState(false);
   const [pantryItems, setPantryItems] = useState<Product[]>([]);
   const [collections, setCollections] = useState<Record<string, Product[]>>({});
@@ -238,12 +243,20 @@ export const HomeScreen = () => {
           </View>
         </ScrollView>
         
-        <FAB
-          style={styles.fab}
-          icon="barcode-scan"
-          onPress={handleBarcodeScan}
-          color="white"
-        />
+        <View style={styles.fabContainer}>
+          <FAB
+            style={[styles.fab, styles.fabLeft]}
+            icon="barcode-scan"
+            onPress={handleBarcodeScan}
+            color="white"
+          />
+          <FAB
+            style={[styles.fab, styles.fabRight]}
+            icon="plus"
+            onPress={handleManualEntry}
+            color="white"
+          />
+        </View>
       </View>
     </Screen>
   );
@@ -279,12 +292,23 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 16, // Add bottom padding to prevent content from being hidden by FAB
   },
-  fab: {
+  fabContainer: {
     position: "absolute",
-    margin: 16,
-    right: 0,
     bottom: 0,
-    backgroundColor: colors.primary,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 16,
     zIndex: 1,
+  },
+  fab: {
+    backgroundColor: colors.primary,
+  },
+  fabLeft: {
+    alignSelf: 'flex-start',
+  },
+  fabRight: {
+    alignSelf: 'flex-end',
   },
 });

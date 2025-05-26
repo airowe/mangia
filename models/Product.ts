@@ -1,5 +1,3 @@
-// import { StorageCategory } from './constants';
-
 export interface Product {
   barcode?: string;
   category: string;
@@ -12,6 +10,7 @@ export interface Product {
   location?: string;
   created_at?: string;
   price?: number;
+  image?: string;
   imageUrl?: string;
   asin?: string;
   brand?: string;
