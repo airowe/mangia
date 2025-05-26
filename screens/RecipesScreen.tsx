@@ -9,12 +9,11 @@ import {
   ActivityIndicator,
   RefreshControl 
 } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { fetchRecipes } from '../lib/recipes';
 import { Recipe } from '../models/Recipe';
 import { Screen } from '../components/Screen';
 import { colors } from '../theme/colors';
-
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/120x80.png?text=No+Image';
 
 export const RecipesScreen = ({ navigation }: { navigation: any }) => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -47,7 +46,8 @@ export const RecipesScreen = ({ navigation }: { navigation: any }) => {
   }, []);
 
   const renderRecipeItem = ({ item }: { item: Recipe }) => {
-    const imageUrl = item.image_url || item.image || PLACEHOLDER_IMAGE;
+    
+    const imageUrl = item.image_url || item.image;
     const title = item.title || item.name || 'Untitled Recipe';
     const description = item.description || 'No description available';
     const cookTime = item.cook_time || item.cookTime || 0;
@@ -62,11 +62,17 @@ export const RecipesScreen = ({ navigation }: { navigation: any }) => {
         }}
       >
         <View style={styles.cardContent}>
-          <Image 
-            source={{ uri: imageUrl }} 
-            style={styles.recipeImage} 
-            resizeMode="cover"
-          />
+          {imageUrl ? (
+            <Image 
+              source={{ uri: imageUrl }} 
+              style={styles.recipeImage} 
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.placeholderContainer}>
+              <Ionicons name="restaurant" size={48} color={colors.primary} />
+            </View>
+          )}
           <View style={styles.recipeInfo}>
             <Text style={styles.recipeName} numberOfLines={1}>
               {title}
@@ -135,6 +141,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+  },
+  placeholderContainer: {
+    width: '100%',
+    height: 150,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
   },
   heading: {
     fontSize: 28,

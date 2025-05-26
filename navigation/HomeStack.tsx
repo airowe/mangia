@@ -1,12 +1,21 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { HomeScreen } from "../screens/HomeScreen";
-import PantryScreen from "../screens/PantryScreen";
 import BarcodeScreen from "../screens/BarcodeScreen";
 import { CustomHeader } from "../components/CustomHeader";
 import { ManualEntryScreen } from "../screens/ManualEntryScreen";
+import ProductDetailScreen from "../screens/ProductDetailScreen";
+import { Product } from "../models/Product";
 
-const Stack = createNativeStackNavigator();
+// Define the param list for the root stack
+export type RootStackParamList = {
+  HomeScreen: undefined;
+  BarcodeScreen: undefined;
+  ManualEntryScreen: undefined;
+  ProductDetail: { product: Product };
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 import { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 
@@ -36,11 +45,6 @@ export default function HomeStack() {
         options={{ title: "" }}
       />
       <Stack.Screen
-        name="Pantry"
-        component={PantryScreen}
-        options={{ title: "Pantry" }}
-      />
-      <Stack.Screen
         name="BarcodeScreen"
         component={BarcodeScreen}
         options={{ title: "Scan Barcode" }}
@@ -49,6 +53,11 @@ export default function HomeStack() {
         name="ManualEntryScreen"
         component={ManualEntryScreen}
         options={{ title: "Add Product" }}
+      />
+      <Stack.Screen
+        name="ProductDetail"
+        component={ProductDetailScreen}
+        options={{ title: "Product Details" }}
       />
     </Stack.Navigator>
   );

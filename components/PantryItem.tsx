@@ -1,6 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/HomeStack';
 import { Product } from '../models/Product';
 import { colors } from '../theme/colors';
 import { ProductPlaceholder } from './ProductPlaceholder';
@@ -18,8 +21,17 @@ const PantryItem: React.FC<PantryItemProps> = ({
   onAddToPantry,
   onQuantityChange,
 }) => {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  
+  const handlePress = () => {
+    navigation.navigate('ProductDetail', { product });
+  };
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container}
+      onPress={handlePress}
+      activeOpacity={0.8}
+    >
       <View style={styles.imageContainer}>
         {product.imageUrl ? (
           <View style={[styles.imageContainer, styles.imageFallback]}>
@@ -80,7 +92,7 @@ const PantryItem: React.FC<PantryItemProps> = ({
           ${product.price.toFixed(2)}
         </Text>
       )}
-    </View>
+    </TouchableOpacity>
   );
 };
 

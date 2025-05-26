@@ -14,16 +14,17 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import { fetchRecipes, fetchRecipeById } from '../lib/recipes';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/RootNavigator';
+import { RecipeLibraryStackParamList } from '../navigation/RecipeLibraryStack';
 import { Recipe } from '../models/Recipe';
 import { Screen } from '../components/Screen';
 import { colors } from '../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RecipeCatalogScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'RecipeCatalog'>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RecipeLibraryStackParamList, 'RecipeCatalog'>>();
   const [mealFilter, setMealFilter] = useState('');
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
@@ -165,6 +166,12 @@ export default function RecipeCatalogScreen() {
           />
         )}
       </View>
+      <TouchableOpacity 
+        style={styles.fab}
+        onPress={() => navigation.navigate('RecipeCreate')}
+      >
+        <Ionicons name="add" size={24} color="white" />
+      </TouchableOpacity>
     </Screen>
   );
 }
@@ -172,6 +179,23 @@ export default function RecipeCatalogScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position: 'relative',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    backgroundColor: colors.primary,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   searchContainer: {
     padding: 16,

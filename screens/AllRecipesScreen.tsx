@@ -4,8 +4,6 @@ import { fetchAllRecipes } from '../lib/recipes';
 import { Screen } from '../components/Screen';
 import { colors } from '../theme/colors';
 
-// const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/120x80.png?text=No+Image';
-
 export const AllRecipesScreen = () => {
   const [recipes, setRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,5 +1,5 @@
 import { apiClient } from './api/client';
-import { Recipe, RecipeIngredient } from '../models/Recipe';
+import { Recipe } from '../models/Recipe';
 
 export interface MealPlanFilters {
   days: number;
@@ -45,6 +45,9 @@ export interface MealPlanResponse {
   };
 }
 
+
+const API_BASE_URL = '/recipes';
+
 export const recipeApi = {
   // Get user's saved recipes
   async getUserRecipes(): Promise<Recipe[]> {
@@ -56,6 +59,11 @@ export const recipeApi = {
   async saveRecipe(recipe: Omit<Recipe, 'id' | 'user_id' | 'created_at'>): Promise<Recipe> {
     const response = await apiClient.post<{ data: Recipe }>('/recipes/add', recipe);
     return response.data;
+  },
+
+  // Add a recipe (alias for saveRecipe for backward compatibility)
+  async addRecipe(recipe: Omit<Recipe, 'id' | 'user_id'>): Promise<Recipe> {
+    return this.saveRecipe(recipe);
   },
 
   // Generate a meal plan
@@ -91,67 +99,54 @@ export const recipeApi = {
   async removeUserRecipe(recipeId: string): Promise<void> {
     await apiClient.delete(`/recipes/${recipeId}/save`);
   },
+
+  // Fetch recipes with optional filters
+  async fetchRecipes(params: { search?: string; user_id?: string; meal_type?: string } = {}): Promise<Recipe[]> {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      if (params.search) queryParams.append('search', params.search);
+      if (params.meal_type) queryParams.append('meal_type', params.meal_type);
+      if (params.user_id) queryParams.append('user_id', params.user_id);
+      
+      const queryString = queryParams.toString();
+      const url = queryString ? `${API_BASE_URL}/fetch-recipes?${queryString}` : API_BASE_URL;
+      
+      const response = await apiClient.get<{ data: Recipe[] }>(url);
+      return response.data || [];
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch recipes');
+    }
+  },
+
+  // Fetch a single recipe by ID
+  async fetchRecipeById(id: string): Promise<Recipe> {
+    try {
+      const response = await apiClient.get<{ data: Recipe }>(`${API_BASE_URL}/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching recipe ${id}:`, error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch recipe');
+    }
+  },
+
+  // Fetch all recipes (alias for fetchRecipes for backward compatibility)
+  async fetchAllRecipes(): Promise<Recipe[]> {
+    return this.fetchRecipes();
+  }
 };
 
-// Export the previous functions for backward compatibility
-const API_BASE_URL = '/recipes';
-
+// Export types for backward compatibility
 export interface AddRecipeResponse extends Recipe {
   id: string;
   user_id: string;
 }
 
-export const addRecipe = async (recipe: Omit<Recipe, "id" | "user_id">): Promise<AddRecipeResponse> => {
-  try {
-    return await apiClient.post<AddRecipeResponse>(`${API_BASE_URL}`, recipe);
-  } catch (error) {
-    console.error('Error adding recipe:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to add recipe');
-  }
-};
+// Export individual functions for backward compatibility
+export const addRecipe = recipeApi.addRecipe.bind(recipeApi);
+export const fetchRecipes = recipeApi.fetchRecipes.bind(recipeApi);
+export const fetchRecipeById = recipeApi.fetchRecipeById.bind(recipeApi);
+export const fetchAllRecipes = recipeApi.fetchAllRecipes.bind(recipeApi);
 
-interface FetchRecipesParams {
-  search?: string;
-  user_id?: string;
-  meal_type?: string;
-}
-
-export const fetchRecipes = async (
-  params: FetchRecipesParams = {}
-): Promise<Recipe[]> => {
-  try {
-    const queryParams = new URLSearchParams();
-    
-    if (params.search) queryParams.append('search', params.search);
-    if (params.meal_type) queryParams.append('meal_type', params.meal_type);
-    
-    const queryString = queryParams.toString();
-    const url = queryString ? `${API_BASE_URL}?${queryString}` : API_BASE_URL;
-    
-    const response = await apiClient.get<{ data: Recipe[] }>(url);
-    return response.data || [];
-  } catch (error) {
-    console.error('Error fetching recipes:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch recipes');
-  }
-};
-
-export const fetchRecipeById = async (id: string): Promise<Recipe> => {
-  try {
-    const response = await apiClient.get<{ data: Recipe }>(`${API_BASE_URL}/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching recipe ${id}:`, error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch recipe');
-  }
-};
-
-export const fetchAllRecipes = async (): Promise<Recipe[]> => {
-  try {
-    const response = await apiClient.get<{ data: Recipe[] }>(API_BASE_URL);
-    return response.data || [];
-  } catch (error) {
-    console.error('Error fetching all recipes:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch all recipes');
-  }
-};
+export default recipeApi;

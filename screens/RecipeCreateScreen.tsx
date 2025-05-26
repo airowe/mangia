@@ -46,7 +46,7 @@ export default function RecipeCreateScreen({ navigation }: any) {
     try {
       await addRecipe({
         title,
-        instructions,
+        instructions: [instructions], // Wrap in array to match string[] type
         ingredients,
         main_ingredient: '',
         meal_type: '',

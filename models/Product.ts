@@ -16,6 +16,7 @@ export interface Product {
   brand?: string;
   EAN13?: string;
   UPCA?: string;
+  expiryDate?: string;
 }
 
 // Mock data for demonstration
