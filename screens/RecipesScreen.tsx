@@ -7,7 +7,7 @@ import { fetchRecipes } from "../lib/recipes";
 import { Recipe } from "../models/Recipe";
 import { Screen } from "../components/Screen";
 import { colors } from "../theme/colors";
-import RecipeList from "../components/RecipeList";
+import { RecipeList } from "../components/RecipeList";
 import { RecipeLibraryStackParamList } from "../navigation/RecipeLibraryStack";
 
 export const RecipesScreen = () => {

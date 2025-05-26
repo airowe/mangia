@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RecipeLibraryStackParamList } from '../navigation/RecipeLibraryStack';
 import { Recipe } from '../models/Recipe';
 import { Screen } from '../components/Screen';
+import { RecipeList } from '../components/RecipeList';
 import { colors } from '../theme/colors';
 import { TextInput as PaperTextInput } from 'react-native-paper';
 
@@ -156,64 +157,18 @@ export default function RecipeCatalogScreen() {
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
         ) : (
-          <FlatList
-            data={Object.entries(grouped)}
-            keyExtractor={([category]) => category}
-            renderItem={({ item: [category, items] }) => (
-              <View style={styles.categoryContainer}>
-                <Text style={styles.categoryHeader}>{category}</Text>
-                {items.map((recipe) => {
-                  const imageUrl = recipe.image_url;
-                  return (
-                    <TouchableOpacity
-                      key={recipe.id}
-                      style={styles.recipeCard}
-                      onPress={() => {
-                        if (recipe.id) {
-                          navigation.navigate('RecipeDetail', { id: recipe.id });
-                        }
-                      }}
-                    >
-                      {imageUrl ? (
-                        <Image
-                          source={{ uri: imageUrl }}
-                          style={styles.recipeImage}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <View style={styles.placeholderImage}>
-                          <Text style={styles.placeholderText}>No Image</Text>
-                        </View>
-                      )}
-                      <View style={styles.recipeInfo}>
-                        <Text style={styles.recipeTitle} numberOfLines={1}>
-                          {recipe.title}
-                        </Text>
-                        {recipe.description && (
-                          <Text style={styles.recipeDescription} numberOfLines={2}>
-                            {recipe.description}
-                          </Text>
-                        )}
-                        {recipe.cook_time && (
-                          <Text style={styles.recipeMeta}>
-                            {recipe.cook_time} min • {recipe.servings || 2} servings
-                          </Text>
-                        )}
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                colors={[colors.primary]}
-                tintColor={colors.primary}
-              />
-            }
-            contentContainerStyle={styles.listContent}
+          <RecipeList
+            recipes={recipes}
+            loading={loading}
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            onPressRecipe={(recipe: Recipe) => {
+              if (recipe.id) {
+                navigation.navigate('RecipeDetail', { id: recipe.id });
+              }
+            }}
+            groupByCategory={!searchQuery}
+            showMealType={false}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>No recipes found</Text>

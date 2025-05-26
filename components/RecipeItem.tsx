@@ -10,35 +10,39 @@ interface RecipeItemProps {
 }
 
 export const RecipeItem = ({ recipe, onPress, showMealType = false }: RecipeItemProps) => {
-  const imageUrl = recipe.image_url || recipe.image;
+  const imageUrl = recipe.image_url;
   
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.recipeCard}
       onPress={() => onPress(recipe)}
     >
-      <View style={styles.recipeImageContainer}>
-        {imageUrl ? (
-          <Image 
-            source={{ uri: imageUrl }} 
-            style={styles.recipeImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[styles.recipeImage, styles.recipeImagePlaceholder]}>
-            <Text style={styles.recipeImagePlaceholderText}>
-              {(recipe.name ?? recipe.title).charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )}
-      </View>
+      {imageUrl ? (
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.recipeImage}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={styles.placeholderImage}>
+          <Text style={styles.placeholderText}>No Image</Text>
+        </View>
+      )}
       <View style={styles.recipeInfo}>
-        <Text style={styles.recipeName} numberOfLines={1}>
-          {recipe.name ?? recipe.title}
+        <Text style={styles.recipeTitle} numberOfLines={1}>
+          {recipe.title}
         </Text>
-        {showMealType && recipe.meal_type && (
-          <Text style={styles.mealType}>
-            {recipe.meal_type.charAt(0).toUpperCase() + recipe.meal_type.slice(1)}
+        {recipe.description && (
+          <Text style={styles.recipeDescription} numberOfLines={2}>
+            {recipe.description}
+          </Text>
+        )}
+        {(recipe.cook_time || recipe.servings) && (
+          <Text style={styles.recipeMeta}>
+            {recipe.cook_time && `${recipe.cook_time} min`}
+            {recipe.cook_time && recipe.servings && ' • '}
+            {recipe.servings && `${recipe.servings} servings`}
+            {showMealType && recipe.meal_type && ` • ${recipe.meal_type}`}
           </Text>
         )}
       </View>
@@ -57,36 +61,37 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  recipeImageContainer: {
-    aspectRatio: 1,
-    backgroundColor: colors.background,
-  },
   recipeImage: {
     width: '100%',
-    height: '100%',
+    height: 160,
   },
-  recipeImagePlaceholder: {
-    backgroundColor: colors.border,
+  placeholderImage: {
+    width: '100%',
+    height: 160,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  recipeImagePlaceholderText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: colors.textSecondary,
+  placeholderText: {
+    color: colors.textTertiary,
+    fontSize: 14,
   },
   recipeInfo: {
     padding: 12,
   },
-  recipeName: {
+  recipeTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
     marginBottom: 4,
   },
-  mealType: {
-    fontSize: 12,
+  recipeDescription: {
+    fontSize: 14,
     color: colors.textSecondary,
-    textTransform: 'capitalize',
+    marginBottom: 8,
+  },
+  recipeMeta: {
+    fontSize: 12,
+    color: colors.textTertiary,
   },
 });

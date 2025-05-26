@@ -1,5 +1,11 @@
-import React, { useCallback, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, ListRenderItem, RefreshControl, FlatListProps } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  FlatList, 
+  RefreshControl
+} from 'react-native';
 import { Recipe } from '../models/Recipe';
 import { RecipeItem } from './RecipeItem';
 import { colors } from '../theme/colors';
@@ -14,9 +20,10 @@ export interface RecipeListProps {
   ListHeaderComponent?: React.ReactElement | null;
   numColumns?: number;
   showMealType?: boolean;
+  groupByCategory?: boolean;
 }
 
-const RecipeList: React.FC<RecipeListProps> = ({
+export const RecipeList: React.FC<RecipeListProps> = ({
   recipes,
   loading = false,
   refreshing = false,
@@ -26,39 +33,24 @@ const RecipeList: React.FC<RecipeListProps> = ({
   ListHeaderComponent = null,
   numColumns = 1,
   showMealType = false,
+  groupByCategory = false,
 }) => {
-  const renderRecipeItem: ListRenderItem<Recipe> = useCallback(({ item }) => (
-    <RecipeItem 
-      recipe={item} 
-      onPress={onPressRecipe} 
-      showMealType={showMealType} 
-    />
-  ), [onPressRecipe, showMealType]);
+  // Group recipes by category if needed
+  const groupedRecipes = useMemo(() => {
+    if (!groupByCategory) return null;
+    
+    return recipes.reduce<Record<string, Recipe[]>>((acc, recipe) => {
+      const category = (recipe.meal_type && recipe.meal_type.length > 0)
+        ? recipe.meal_type.charAt(0).toUpperCase() + recipe.meal_type.slice(1)
+        : 'Other';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(recipe);
+      return acc;
+    }, {});
+  }, [recipes, groupByCategory]);
 
-  // Calculate item dimensions for getItemLayout
-  const ITEM_HEIGHT = 150; // Adjust based on your item height
-  const ITEM_MARGIN = 8; // Adjust based on your styles
-  
-  // Create a ref for the FlatList
-  const flatListRef = useRef<FlatList<Recipe>>(null);
-
-  // Calculate item layout for better performance
-  const getItemLayout = useCallback<NonNullable<FlatListProps<Recipe>['getItemLayout']>>((data, index) => {
-    return {
-      length: ITEM_HEIGHT + ITEM_MARGIN * 2,
-      offset: (ITEM_HEIGHT + ITEM_MARGIN * 2) * Math.floor(index / (numColumns || 1)),
-      index,
-    };
-  }, [numColumns]);
-
-  // Key extractor for the list items
-  const keyExtractor = useCallback((item: Recipe, index: number): string => {
-    return item.id || `recipe-${index}`;
-  }, []);
-  
-  // Use the existing renderRecipeItem directly
-  const renderItem = useCallback(renderRecipeItem, [renderRecipeItem]);
-  
   // Show loading state if needed
   if (loading && recipes.length === 0) {
     return (
@@ -68,33 +60,79 @@ const RecipeList: React.FC<RecipeListProps> = ({
     );
   }
 
+  // Render grouped recipes if enabled
+  if (groupByCategory && groupedRecipes) {
+    return (
+      <FlatList
+        data={Object.entries(groupedRecipes)}
+        keyExtractor={([category]) => category}
+        renderItem={({ item: [category, items] }) => (
+          <View style={styles.categoryContainer}>
+            <Text style={styles.categoryHeader}>{category}</Text>
+            {items.map((recipe) => (
+              <View key={recipe.id} style={styles.recipeCardContainer}>
+                <RecipeItem 
+                  recipe={recipe} 
+                  onPress={onPressRecipe} 
+                  showMealType={showMealType} 
+                />
+              </View>
+            ))}
+          </View>
+        )}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={!!refreshing}
+              onRefresh={onRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          ) : undefined
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No recipes found</Text>
+            <Text style={styles.emptySubtext}>Try adjusting your search or filters</Text>
+          </View>
+        }
+        ListHeaderComponent={ListHeaderComponent}
+      />
+    );
+  }
+
+  // Render flat list for non-grouped view
   return (
-    <FlatList<Recipe>
-      ref={flatListRef}
+    <FlatList
       data={recipes}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      getItemLayout={getItemLayout}
+      keyExtractor={(item) => item.id || `recipe-${item.title}`}
+      renderItem={({ item }) => (
+        <RecipeItem 
+          recipe={item} 
+          onPress={onPressRecipe} 
+          showMealType={showMealType} 
+        />
+      )}
       numColumns={numColumns}
-      key={`recipe-list-${numColumns}`}
       contentContainerStyle={styles.listContent}
-      ListEmptyComponent={ListEmptyComponent}
-      ListHeaderComponent={ListHeaderComponent}
       refreshControl={
         onRefresh ? (
-          <RefreshControl 
-            refreshing={!!refreshing} 
-            onRefresh={onRefresh} 
+          <RefreshControl
+            refreshing={!!refreshing}
+            onRefresh={onRefresh}
             colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         ) : undefined
       }
-      removeClippedSubviews={true}
-      maxToRenderPerBatch={10}
-      updateCellsBatchingPeriod={50}
-      initialNumToRender={4}
-      windowSize={5}
-      showsVerticalScrollIndicator={false}
+      ListEmptyComponent={
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No recipes found</Text>
+          <Text style={styles.emptySubtext}>Try adding a new recipe</Text>
+        </View>
+      }
+      ListHeaderComponent={ListHeaderComponent}
     />
   );
 };
@@ -109,20 +147,79 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  recipeRow: {
-    flexDirection: 'row',
+  categoryContainer: {
+    marginBottom: 24,
+  },
+  categoryHeader: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 12,
+    color: colors.text,
+  },
+  recipeCardContainer: {
     marginBottom: 16,
   },
-  recipeCell: {
+  recipeCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  recipeImage: {
+    width: '100%',
+    height: 160,
+  },
+  placeholderImage: {
+    width: '100%',
+    height: 160,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: colors.textTertiary,
+    fontSize: 14,
+  },
+  recipeInfo: {
+    padding: 12,
+  },
+  recipeTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  recipeDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  recipeMeta: {
+    fontSize: 12,
+    color: colors.textTertiary,
+  },
+  emptyContainer: {
     flex: 1,
-    marginHorizontal: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
   },
-  emptyCell: {
-    backgroundColor: 'transparent',
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  loadingText: {
-    marginTop: 8,
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textTertiary,
+    textAlign: 'center',
   },
 });
 
-export default RecipeList;
+
