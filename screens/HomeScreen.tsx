@@ -1,12 +1,25 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { View, StyleSheet, Text, RefreshControl, ScrollView, Alert } from "react-native";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  RefreshControl,
+  ScrollView,
+  Alert,
+  Animated,
+  Platform,
+} from "react-native";
 import { Screen } from "../components/Screen";
 import PantryList from "../components/PantryList";
 import PantryItem from "../components/PantryItem";
 import { Product, MOCK_PRODUCTS } from "../models/Product";
-import { fetchPantryItems, saveToPantry, updatePantryItemQuantity } from "../lib/pantry";
+import {
+  fetchPantryItems,
+  saveToPantry,
+  updatePantryItemQuantity,
+} from "../lib/pantry";
 import { colors } from "../theme/colors";
-import { FAB } from "react-native-paper";
+import { Button } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 
@@ -30,10 +43,11 @@ export const HomeScreen = () => {
   const handleManualEntry = () => {
     navigation.navigate("ManualEntryScreen");
   };
-  
+
   const [refreshing, setRefreshing] = useState(false);
   const [pantryItems, setPantryItems] = useState<Product[]>([]);
   const [collections, setCollections] = useState<Record<string, Product[]>>({});
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Initial load
@@ -65,17 +79,17 @@ export const HomeScreen = () => {
       setRefreshing(true);
       const items = await fetchPantryItems();
       setPantryItems(items);
-      
+
       // Group items by location
       const grouped = items.reduce((acc: Record<string, Product[]>, item) => {
-        const location = item.location || 'Uncategorized';
+        const location = item.location || "Uncategorized";
         if (!acc[location]) {
           acc[location] = [];
         }
         acc[location].push(item);
         return acc;
       }, {});
-      
+
       setCollections(grouped);
     } catch (error) {
       setCollections({});
@@ -95,31 +109,36 @@ export const HomeScreen = () => {
         console.error("Error adding to pantry:", error);
         return;
       }
-      
+
       if (data) {
         // Add the new item to the local state
-        setPantryItems(prevItems => [...prevItems, data]);
-        
+        setPantryItems((prevItems) => [...prevItems, data]);
+
         // Update collections with the new item
-        setCollections(prevCollections => {
-          const location = data.location || 'Uncategorized';
+        setCollections((prevCollections) => {
+          const location = data.location || "Uncategorized";
           const updatedCollections = { ...prevCollections };
-          
+
           if (!updatedCollections[location]) {
             updatedCollections[location] = [];
           }
-          
+
           // Check if item already exists in this location
-          const existingItemIndex = updatedCollections[location].findIndex(item => item.id === data.id);
-          
+          const existingItemIndex = updatedCollections[location].findIndex(
+            (item) => item.id === data.id
+          );
+
           if (existingItemIndex >= 0) {
             // Update existing item
             updatedCollections[location][existingItemIndex] = data;
           } else {
             // Add new item
-            updatedCollections[location] = [...updatedCollections[location], data];
+            updatedCollections[location] = [
+              ...updatedCollections[location],
+              data,
+            ];
           }
-          
+
           return updatedCollections;
         });
       }
@@ -130,68 +149,64 @@ export const HomeScreen = () => {
 
   const handleQuantityChange = async (productId: string, change: number) => {
     // Find the current product to get its current quantity
-    const currentProduct = pantryItems.find(item => item.id === productId);
+    const currentProduct = pantryItems.find((item) => item.id === productId);
     if (!currentProduct) {
       return;
     }
-    
+
     // Calculate the new quantity (ensure it doesn't go below 1)
     const currentQuantity = currentProduct.quantity || 1;
     const newQuantity = Math.max(1, currentQuantity + change);
-    
+
     // Optimistically update the UI
     const updatedProduct = { ...currentProduct, quantity: newQuantity };
-    
+
     // Update pantry items state
-    setPantryItems(prevItems => 
-      prevItems.map(item => 
-        item.id === productId ? updatedProduct : item
-      )
+    setPantryItems((prevItems) =>
+      prevItems.map((item) => (item.id === productId ? updatedProduct : item))
     );
-    
+
     // Update collections state
-    setCollections(prevCollections => {
+    setCollections((prevCollections) => {
       const updatedCollections = { ...prevCollections };
-      
-      Object.keys(updatedCollections).forEach(location => {
+
+      Object.keys(updatedCollections).forEach((location) => {
         const itemIndex = updatedCollections[location].findIndex(
-          item => item.id === productId
+          (item) => item.id === productId
         );
-        
+
         if (itemIndex >= 0) {
           updatedCollections[location] = updatedCollections[location].map(
-            item => item.id === productId ? updatedProduct : item
+            (item) => (item.id === productId ? updatedProduct : item)
           );
         }
       });
-      
+
       return updatedCollections;
     });
-    
+
     try {
       // Update the server
       const result = await updatePantryItemQuantity(productId, newQuantity);
-      
+
       if (result.error) {
         // Revert optimistic update on error
-        setPantryItems(prevItems => 
-          prevItems.map(item => 
+        setPantryItems((prevItems) =>
+          prevItems.map((item) =>
             item.id === productId ? currentProduct : item
           )
         );
-        
+
         // Optionally show an error message to the user
-        console.error('Failed to update quantity:', result.error);
+        console.error("Failed to update quantity:", result.error);
       }
     } catch (error) {
       // Revert optimistic update on error
-      setPantryItems(prevItems => 
-        prevItems.map(item => 
-          item.id === productId ? currentProduct : item
-        )
+      setPantryItems((prevItems) =>
+        prevItems.map((item) => (item.id === productId ? currentProduct : item))
       );
-      
-      console.error('Error updating quantity:', error);
+
+      console.error("Error updating quantity:", error);
     }
   };
 
@@ -199,10 +214,16 @@ export const HomeScreen = () => {
     loadPantryItems();
   }, [loadPantryItems]);
 
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [0, -100],
+    extrapolate: "clamp",
+  });
+
   return (
     <Screen noPadding>
       <View style={styles.container}>
-        <ScrollView 
+        <Animated.ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContent}
           refreshControl={
@@ -212,6 +233,11 @@ export const HomeScreen = () => {
               colors={[colors.primary]}
             />
           }
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+          )}
+          scrollEventThrottle={16}
         >
           {/* Existing Collections */}
           <PantryList
@@ -221,41 +247,53 @@ export const HomeScreen = () => {
             pantryItems={pantryItems}
             contentContainerStyle={styles.listContent}
           />
-          
+
           {/* Add Items Section */}
           <View style={styles.addItemsSection}>
             <Text style={styles.sectionTitle}>Add Items</Text>
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.addItemsContainer}
             >
-              {MOCK_PRODUCTS['Pantry']?.map((product) => (
+              {MOCK_PRODUCTS["Pantry"]?.map((product) => (
                 <PantryItem
                   key={product.id}
                   product={product}
-                  isInPantry={pantryItems.some(item => item.id === product.id)}
+                  isInPantry={pantryItems.some(
+                    (item) => item.id === product.id
+                  )}
                   onAddToPantry={handleAddToPantry}
                   onQuantityChange={handleQuantityChange}
                 />
               ))}
             </ScrollView>
           </View>
-        </ScrollView>
-        
-        <View style={styles.fabContainer}>
-          <FAB
-            style={[styles.fab, styles.fabLeft]}
+        </Animated.ScrollView>
+
+        <View style={styles.buttonContainer}>
+          <Button
+            mode="contained"
             icon="barcode-scan"
             onPress={handleBarcodeScan}
-            color="white"
-          />
-          <FAB
-            style={[styles.fab, styles.fabRight]}
+            style={styles.button}
+            compact
+            buttonColor={colors.primary}
+            textColor={colors.white}
+          >
+            Scan
+          </Button>
+          <Button
+            mode="contained"
             icon="plus"
             onPress={handleManualEntry}
-            color="white"
-          />
+            style={styles.button}
+            compact
+            buttonColor={colors.primary}
+            textColor={colors.white}
+          >
+            Add
+          </Button>
         </View>
       </View>
     </Screen>
@@ -266,13 +304,39 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    position: "relative",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 12,
+    gap: 12,
+    backgroundColor: colors.background,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  button: {
+    minWidth: 100,
   },
   scrollView: {
     flex: 1,
   },
   scrollViewContent: {
-    paddingBottom: 80, // Extra space at the bottom for FAB
+    paddingBottom: 80, // Space for the button container
   },
   addItemsSection: {
     marginTop: 16,
@@ -280,7 +344,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 12,
     color: colors.text,
   },
@@ -290,25 +354,5 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     paddingTop: 8,
-    paddingBottom: 16, // Add bottom padding to prevent content from being hidden by FAB
-  },
-  fabContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 16,
-    zIndex: 1,
-  },
-  fab: {
-    backgroundColor: colors.primary,
-  },
-  fabLeft: {
-    alignSelf: 'flex-start',
-  },
-  fabRight: {
-    alignSelf: 'flex-end',
   },
 });

@@ -1,5 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useUser } from "../hooks/useUser";
@@ -18,14 +24,23 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 interface CustomHeaderProps {
   showBackButton?: boolean;
   title?: string;
+  scrollY?: Animated.Value;
 }
 
 export const CustomHeader: React.FC<CustomHeaderProps> = ({
   showBackButton = false,
   title,
+  scrollY,
 }) => {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useUser();
+
+  const headerTranslateY =
+    scrollY?.interpolate({
+      inputRange: [0, 100],
+      outputRange: [0, -100],
+      extrapolate: "clamp",
+    }) || new Animated.Value(0);
 
   // Get user initials (first letter of first name + first letter of last name, or 'G.G.' if not available)
   const getUserInitials = () => {
@@ -40,7 +55,12 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View
+      style={[
+        styles.container,
+        { transform: [{ translateY: headerTranslateY }] },
+      ]}
+    >
       <View style={styles.leftContainer}>
         {showBackButton ? (
           <TouchableOpacity
@@ -65,7 +85,7 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
         </View>
         <Ionicons name="person-circle" size={28} color="#000" />
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
@@ -76,8 +96,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#eaeaea",
+    borderBottomColor: colors.secondary,
     backgroundColor: colors.background,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
   },
   leftContainer: {
     flexDirection: "row",
