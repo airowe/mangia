@@ -9,16 +9,12 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import TabNavigator from "./navigation/TabNavigator";
 import {
   ActivityIndicator,
-  StatusBar,
   StyleSheet,
   View,
   Text,
   Button,
-  Alert,
 } from "react-native";
 import { colors } from "./theme/colors";
-import { Screen } from "./components/Screen";
-import { getSession } from "./lib/auth";
 
 const Stack = createNativeStackNavigator();
 
@@ -164,8 +160,6 @@ function AppContent() {
 
   // Show auth screen if no session, otherwise show main app
   return (
-    <Screen noPadding style={styles.container}>
-      <StatusBar barStyle="dark-content" />
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {!session ? (
@@ -186,7 +180,6 @@ function AppContent() {
           )}
         </Stack.Navigator>
       </NavigationContainer>
-    </Screen>
   );
 }
 

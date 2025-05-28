@@ -73,18 +73,23 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
   const headerContent = (
     <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
       <View style={styles.headerTop}>
-        {showBackButton ? (
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.logoContainer}>
-            <Text style={styles.logo}>Grosheries</Text>
-          </View>
-        )}
+        <View style={styles.leftContainer}>
+          {showBackButton ? (
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('HomeScreen' as never)}
+              style={styles.basketButton}
+            >
+              <Ionicons name="basket" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          )}
+        </View>
 
         <View style={styles.rightContainer}>
           <TouchableOpacity
@@ -108,39 +113,41 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
 
   if (!scrollY) {
     return (
-      <View
-        style={[
-          styles.staticHeader,
-          { paddingTop: Platform.OS === "ios" ? 40 : 10 },
-        ]}
-      >
-        {headerContent}
+      <View style={styles.staticHeader}>
+        <View style={[
+          styles.headerContainer,
+          { paddingTop: Platform.OS === "ios" ? 40 : 10 }
+        ]}>
+          {headerContent}
+        </View>
       </View>
     );
   }
 
   return (
-    <AnimatedHeader
-      scrollY={scrollY}
-      headerMaxHeight={60}
-      headerMinHeight={44}
-      style={{
-        borderBottomWidth: 0,
-        ...Platform.select({
-          android: {
-            elevation: 4,
-          },
-          ios: {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-          },
-        }),
-      }}
-    >
-      {headerContent}
-    </AnimatedHeader>
+    <View style={styles.staticHeader}>
+      <AnimatedHeader
+        scrollY={scrollY}
+        headerMaxHeight={60}
+        headerMinHeight={44}
+        style={{
+          backgroundColor: 'transparent',
+          ...Platform.select({
+            android: {
+              elevation: 4,
+            },
+            ios: {
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+            },
+          }),
+        }}
+      >
+        {headerContent}
+      </AnimatedHeader>
+    </View>
   );
 };
 
@@ -149,9 +156,19 @@ const styles = StyleSheet.create({
   staticHeader: {
     width: "100%",
     backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.primary,
+  },
+  
+  // Inner header container
+  headerContainer: {
+    width: '100%',
     paddingHorizontal: 16,
+    paddingBottom: 8,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
   },
 
   // Header content styles
@@ -161,18 +178,19 @@ const styles = StyleSheet.create({
 
   // Avatar styles
   avatarContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 16,
   },
 
   avatarText: {
     color: colors.background,
-    fontWeight: "600",
-    fontSize: 14,
+    fontWeight: '600',
+    fontSize: 12,
   },
 
   // Title styles
@@ -192,6 +210,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  
+  leftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 
   // Logo styles
@@ -216,6 +240,10 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 5,
     marginRight: 10,
+  },
+  
+  basketButton: {
+    padding: 5,
   },
 
   // User account button
