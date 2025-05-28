@@ -2,18 +2,17 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   StyleSheet,
-  Text,
   RefreshControl,
-  ScrollView,
   Alert,
   Animated,
+  StatusBar,
   Platform,
 } from "react-native";
 import { Screen } from "../components/Screen";
 import PantryList from "../components/PantryList";
-import PantryItem from "../components/PantryItem";
-import { Product, MOCK_PRODUCTS } from "../models/Product";
+import { Product } from "../models/Product";
 import {
+  fetchAllProducts,
   fetchPantryItems,
   saveToPantry,
   updatePantryItemQuantity,
@@ -33,186 +32,156 @@ type HomeScreenNavigationProp = StackNavigationProp<
   "BarcodeScreen"
 >;
 
-export const HomeScreen = () => {
+interface PaginationState {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-
-  const handleBarcodeScan = () => {
-    navigation.navigate("BarcodeScreen");
-  };
-
-  const handleManualEntry = () => {
-    navigation.navigate("ManualEntryScreen");
-  };
-
-  const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [pantryItems, setPantryItems] = useState<Product[]>([]);
-  const [collections, setCollections] = useState<Record<string, Product[]>>({});
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 1,
+  });
+
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    // Initial load
-    loadPantryItems();
-  }, []);
+  const handleBarcodeScan = useCallback(() => {
+    navigation.navigate("BarcodeScreen");
+  }, [navigation]);
 
-  // Commenting out until we have a products endpoint
-  // const loadDefaultCollections = async () => {
-  //   try {
-  //     const allProducts = await fetchAllProducts();
-  //     // Group products by category for the default collections
-  //     const defaultCollections = allProducts.reduce((acc: Record<string, Product[]>, product: Product) => {
-  //       const category = product.category || 'Other';
-  //       if (!acc[category]) {
-  //         acc[category] = [];
-  //       }
-  //       acc[category].push(product);
-  //       return acc;
-  //     }, {});
-  //     return defaultCollections;
-  //   } catch (error) {
-  //     console.error("Error loading default collections:", error);
-  //     return {};
-  //   }
-  // };
+  const handleManualEntry = useCallback(() => {
+    navigation.navigate("ManualEntryScreen");
+  }, [navigation]);
+
+  const loadProducts = useCallback(
+    async (pageNum: number = 1) => {
+      const isFirstPage = pageNum === 1;
+      if (!isFirstPage) {
+        setLoadingMore(true);
+      }
+
+      try {
+        const response = await fetchAllProducts({
+          page: pageNum,
+          limit: pagination.limit,
+        });
+
+        // Ensure we have valid data
+        const products = Array.isArray(response.data) ? response.data : [];
+
+        // Update products list based on pagination
+        setAllProducts((prev) =>
+          pageNum === 1 ? products : [...prev, ...products]
+        );
+
+        // Update pagination state
+        setPagination((prev) => ({
+          ...prev,
+          page: response.page || pageNum,
+          total: response.total || 0,
+          totalPages: response.totalPages || 1,
+          limit: response.limit || prev.limit,
+        }));
+      } catch (error) {
+        console.error("Error loading products:", error);
+        Alert.alert("Error", "Failed to load products");
+      } finally {
+        setLoadingMore(false);
+        if (isInitialLoad) {
+          setIsInitialLoad(false);
+        }
+      }
+    },
+    [pagination.limit]
+  );
 
   const loadPantryItems = useCallback(async () => {
     try {
-      setRefreshing(true);
       const items = await fetchPantryItems();
       setPantryItems(items);
-
-      // Group items by location
-      const grouped = items.reduce((acc: Record<string, Product[]>, item) => {
-        const location = item.location || "Uncategorized";
-        if (!acc[location]) {
-          acc[location] = [];
-        }
-        acc[location].push(item);
-        return acc;
-      }, {});
-
-      setCollections(grouped);
     } catch (error) {
-      setCollections({});
-    } finally {
-      setRefreshing(false);
+      console.error("Error loading pantry items:", error);
+      Alert.alert("Error", "Failed to load pantry items");
     }
   }, []);
 
-  const onRefresh = useCallback(() => {
-    loadPantryItems();
-  }, [loadPantryItems]);
-
-  const handleAddToPantry = async (product: Product) => {
+  const handleAddToPantry = useCallback(async (product: Product) => {
     try {
+      // Optimistically update the UI
+      setAllProducts((prev) => prev.filter((p) => p.id !== product.id));
+
       const { data, error } = await saveToPantry(product);
       if (error) {
         console.error("Error adding to pantry:", error);
+        // Revert optimistic update on error
+        setAllProducts((prev) => [...prev, product]);
         return;
       }
 
       if (data) {
-        // Add the new item to the local state
-        setPantryItems((prevItems) => [...prevItems, data]);
-
-        // Update collections with the new item
-        setCollections((prevCollections) => {
-          const location = data.location || "Uncategorized";
-          const updatedCollections = { ...prevCollections };
-
-          if (!updatedCollections[location]) {
-            updatedCollections[location] = [];
-          }
-
-          // Check if item already exists in this location
-          const existingItemIndex = updatedCollections[location].findIndex(
-            (item) => item.id === data.id
-          );
-
-          if (existingItemIndex >= 0) {
-            // Update existing item
-            updatedCollections[location][existingItemIndex] = data;
-          } else {
-            // Add new item
-            updatedCollections[location] = [
-              ...updatedCollections[location],
-              data,
-            ];
-          }
-
-          return updatedCollections;
-        });
+        // Add the new item to the pantry items
+        setPantryItems((prev) => [...prev, data]);
       }
     } catch (error) {
       console.error("Error in handleAddToPantry:", error);
-    }
-  };
-
-  const handleQuantityChange = async (productId: string, change: number) => {
-    // Find the current product to get its current quantity
-    const currentProduct = pantryItems.find((item) => item.id === productId);
-    if (!currentProduct) {
-      return;
-    }
-
-    // Calculate the new quantity (ensure it doesn't go below 1)
-    const currentQuantity = currentProduct.quantity || 1;
-    const newQuantity = Math.max(1, currentQuantity + change);
-
-    // Optimistically update the UI
-    const updatedProduct = { ...currentProduct, quantity: newQuantity };
-
-    // Update pantry items state
-    setPantryItems((prevItems) =>
-      prevItems.map((item) => (item.id === productId ? updatedProduct : item))
-    );
-
-    // Update collections state
-    setCollections((prevCollections) => {
-      const updatedCollections = { ...prevCollections };
-
-      Object.keys(updatedCollections).forEach((location) => {
-        const itemIndex = updatedCollections[location].findIndex(
-          (item) => item.id === productId
-        );
-
-        if (itemIndex >= 0) {
-          updatedCollections[location] = updatedCollections[location].map(
-            (item) => (item.id === productId ? updatedProduct : item)
-          );
-        }
-      });
-
-      return updatedCollections;
-    });
-
-    try {
-      // Update the server
-      const result = await updatePantryItemQuantity(productId, newQuantity);
-
-      if (result.error) {
-        // Revert optimistic update on error
-        setPantryItems((prevItems) =>
-          prevItems.map((item) =>
-            item.id === productId ? currentProduct : item
-          )
-        );
-
-        // Optionally show an error message to the user
-        console.error("Failed to update quantity:", result.error);
-      }
-    } catch (error) {
       // Revert optimistic update on error
-      setPantryItems((prevItems) =>
-        prevItems.map((item) => (item.id === productId ? currentProduct : item))
+      setAllProducts((prev) => [...prev, product]);
+    }
+  }, []);
+
+  const handleQuantityChange = useCallback(
+    async (productId: string, change: number) => {
+      // Find the current product to get its current quantity
+      const currentProduct = pantryItems.find((item) => item.id === productId);
+      if (!currentProduct) return;
+
+      // Calculate the new quantity (ensure it doesn't go below 1)
+      const currentQuantity = currentProduct.quantity || 1;
+      const newQuantity = Math.max(1, currentQuantity + change);
+
+      // Optimistically update the UI
+      const updatedProduct = { ...currentProduct, quantity: newQuantity };
+      setPantryItems((prev) =>
+        prev.map((item) => (item.id === productId ? updatedProduct : item))
       );
 
-      console.error("Error updating quantity:", error);
+      try {
+        // Update the server
+        const result = await updatePantryItemQuantity(productId, newQuantity);
+        if (result.error) throw result.error;
+      } catch (error) {
+        // Revert optimistic update on error
+        console.error("Error updating quantity:", error);
+        setPantryItems((prev) =>
+          prev.map((item) => (item.id === productId ? currentProduct : item))
+        );
+        Alert.alert("Error", "Failed to update item quantity");
+      }
+    },
+    [pantryItems]
+  );
+
+  const handleLoadMore = useCallback(() => {
+    if (pagination.page < pagination.totalPages) {
+      loadProducts(pagination.page + 1);
     }
-  };
+  }, [pagination.page, pagination.totalPages, loadProducts]);
 
   useEffect(() => {
+    loadProducts(1);
     loadPantryItems();
-  }, [loadPantryItems]);
+  }, [loadProducts, loadPantryItems]);
+
+  const headerHeight = 60;
 
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, 100],
@@ -221,80 +190,79 @@ export const HomeScreen = () => {
   });
 
   return (
-    <Screen noPadding>
-      <View style={styles.container}>
-        <Animated.ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollViewContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={[colors.primary]}
-            />
+    <Screen style={styles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent
+      />
+      <Animated.ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollViewContent,
+          { paddingTop: headerHeight },
+        ]}
+        // Removed refresh control
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          {
+            useNativeDriver: true,
+            listener: (event: any) => {
+              // Optional: Add any additional scroll handling here
+            },
           }
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
-          )}
-          scrollEventThrottle={16}
-        >
-          {/* Existing Collections */}
+        )}
+        scrollEventThrottle={16}
+        contentInsetAdjustmentBehavior="automatic"
+      >
+        <View style={styles.listContainer}>
+          {/* Pantry Items */}
           <PantryList
-            collections={collections}
+            title="My Pantry"
+            products={pantryItems}
             onAddToPantry={handleAddToPantry}
             onQuantityChange={handleQuantityChange}
             pantryItems={pantryItems}
-            contentContainerStyle={styles.listContent}
+            onEndReached={handleLoadMore}
+            isInitialLoad={isInitialLoad}
+            loadingMore={loadingMore}
+            hasMore={pagination.page < pagination.totalPages}
           />
 
-          {/* Add Items Section */}
-          <View style={styles.addItemsSection}>
-            <Text style={styles.sectionTitle}>Add Items</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.addItemsContainer}
-            >
-              {MOCK_PRODUCTS["Pantry"]?.map((product) => (
-                <PantryItem
-                  key={product.id}
-                  product={product}
-                  isInPantry={pantryItems.some(
-                    (item) => item.id === product.id
-                  )}
-                  onAddToPantry={handleAddToPantry}
-                  onQuantityChange={handleQuantityChange}
-                />
-              ))}
-            </ScrollView>
-          </View>
-        </Animated.ScrollView>
-
-        <View style={styles.buttonContainer}>
-          <Button
-            mode="contained"
-            icon="barcode-scan"
-            onPress={handleBarcodeScan}
-            style={styles.button}
-            compact
-            buttonColor={colors.primary}
-            textColor={colors.white}
-          >
-            Scan
-          </Button>
-          <Button
-            mode="contained"
-            icon="plus"
-            onPress={handleManualEntry}
-            style={styles.button}
-            compact
-            buttonColor={colors.primary}
-            textColor={colors.white}
-          >
-            Add
-          </Button>
+          {/* All Products */}
+          <PantryList
+            title="All Products"
+            products={allProducts}
+            onAddToPantry={handleAddToPantry}
+            onQuantityChange={handleQuantityChange}
+            pantryItems={pantryItems}
+            onEndReached={handleLoadMore}
+            loadingMore={loadingMore}
+            hasMore={pagination.page < pagination.totalPages}
+            isInitialLoad={isInitialLoad}
+          />
         </View>
+      </Animated.ScrollView>
+
+      <View style={styles.buttonContainer}>
+        <Button
+          mode="contained"
+          onPress={handleBarcodeScan}
+          style={[styles.button, styles.containedButton]}
+          labelStyle={[styles.buttonLabel, { color: "white" }]}
+          theme={{ colors: { primary: colors.primary } }}
+        >
+          Scan Barcode
+        </Button>
+        <Button
+          mode="outlined"
+          onPress={handleManualEntry}
+          style={[styles.button, styles.outlinedButton]}
+          labelStyle={[styles.buttonLabel, { color: colors.primary }]}
+          theme={{ colors: { primary: colors.primary } }}
+        >
+          Add Manually
+        </Button>
       </View>
     </Screen>
   );
@@ -305,54 +273,61 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  scrollView: {
+    flex: 1,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
+  },
+  scrollViewContent: {
+    paddingBottom: 80,
+    paddingTop: 0, // We'll control the top padding dynamically
+  },
+  listContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
   buttonContainer: {
     flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 12,
-    gap: 12,
-    backgroundColor: colors.background,
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(253, 246, 240, 0.85)",
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    zIndex: 1000,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    overflow: "hidden",
   },
   button: {
-    minWidth: 100,
-  },
-  scrollView: {
     flex: 1,
+    marginHorizontal: 6,
+    height: 38,
+    justifyContent: "center",
+    borderRadius: 8,
   },
-  scrollViewContent: {
-    paddingBottom: 80, // Space for the button container
-  },
-  addItemsSection: {
-    marginTop: 16,
-    paddingHorizontal: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
+  buttonLabel: {
+    fontSize: 14,
     fontWeight: "600",
-    marginBottom: 12,
-    color: colors.text,
+    marginVertical: 0,
+    paddingVertical: 0,
+    height: 20,
+    lineHeight: 20,
   },
-  addItemsContainer: {
-    paddingBottom: 16,
+  containedButton: {
+    backgroundColor: colors.primary,
+    elevation: 0,
   },
-  listContent: {
-    padding: 16,
-    paddingTop: 8,
+  outlinedButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
 });
+
+export default HomeScreen;

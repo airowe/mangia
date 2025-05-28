@@ -17,7 +17,7 @@ export const getUserRecipes = async (): Promise<Recipe[]> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
-    const response = await apiClient.get<{ data: Recipe[] }>('/recipes');
+    const response = await apiClient.get<{ data: Recipe[] }>('/recipes/fetch-recipes');
     return response?.data || [];
   } catch (error) {
     console.error('Error fetching user recipes:', error);

@@ -1,21 +1,26 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Animated,
+  Platform,
+  StyleProp,
+  ViewStyle,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useUser } from "../hooks/useUser";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "../theme/colors";
+import { AnimatedHeader } from "./AnimatedHeader";
 
 type RootStackParamList = {
   HomeScreen: undefined;
   Pantry: undefined;
   BarcodeScreen: undefined;
+  Account: undefined;
   [key: string]: undefined;
 };
 
@@ -35,12 +40,23 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
   const navigation = useNavigation<NavigationProp>();
   const { user } = useUser();
 
-  const headerTranslateY =
+  // Header animation values
+  const headerHeight =
     scrollY?.interpolate({
-      inputRange: [0, 100],
-      outputRange: [0, -100],
+      inputRange: [0, 60],
+      outputRange: [120, 60],
       extrapolate: "clamp",
-    }) || new Animated.Value(0);
+    }) || new Animated.Value(120);
+
+  const headerTranslateY = scrollY || new Animated.Value(0);
+
+  // Opacity for the title and other elements
+  const headerOpacity =
+    scrollY?.interpolate({
+      inputRange: [0, 30, 60],
+      outputRange: [1, 0.5, 0],
+      extrapolate: "clamp",
+    }) || new Animated.Value(1);
 
   // Get user initials (first letter of first name + first letter of last name, or 'G.G.' if not available)
   const getUserInitials = () => {
@@ -54,87 +70,173 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
     );
   };
 
-  return (
-    <Animated.View
-      style={[
-        styles.container,
-        { transform: [{ translateY: headerTranslateY }] },
-      ]}
-    >
-      <View style={styles.leftContainer}>
+  const headerContent = (
+    <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
+      <View style={styles.headerTop}>
         {showBackButton ? (
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <Ionicons name="arrow-back" size={24} color="#000" />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity
-            onPress={() => navigation.navigate("HomeScreen")}
-            style={styles.homeButton}
-          >
-            <Ionicons name="basket-outline" size={24} color="#000" />
-          </TouchableOpacity>
+          <View style={styles.logoContainer}>
+            <Text style={styles.logo}>Grosheries</Text>
+          </View>
         )}
-        {title && <Text style={styles.title}>{title}</Text>}
-      </View>
-      <View style={styles.rightContainer}>
-        <View style={styles.userInitialsContainer}>
-          <Text style={styles.userInitials}>{getUserInitials()}</Text>
+
+        <View style={styles.rightContainer}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Account" as never)}
+            style={styles.avatarContainer}
+          >
+            <Text style={styles.avatarText}>{getUserInitials()}</Text>
+          </TouchableOpacity>
         </View>
-        <Ionicons name="person-circle" size={28} color="#000" />
       </View>
+
+      {title && (
+        <View style={styles.titleContainer}>
+          <Text style={styles.title} numberOfLines={1}>
+            {title}
+          </Text>
+        </View>
+      )}
     </Animated.View>
+  );
+
+  if (!scrollY) {
+    return (
+      <View
+        style={[
+          styles.staticHeader,
+          { paddingTop: Platform.OS === "ios" ? 40 : 10 },
+        ]}
+      >
+        {headerContent}
+      </View>
+    );
+  }
+
+  return (
+    <AnimatedHeader
+      scrollY={scrollY}
+      headerMaxHeight={60}
+      headerMinHeight={44}
+      style={{
+        borderBottomWidth: 0,
+        ...Platform.select({
+          android: {
+            elevation: 4,
+          },
+          ios: {
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+          },
+        }),
+      }}
+    >
+      {headerContent}
+    </AnimatedHeader>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  // Header container styles
+  staticHeader: {
+    width: "100%",
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingHorizontal: 16,
+  },
+
+  // Header content styles
+  headerContent: {
+    width: "100%",
+  },
+
+  // Avatar styles
+  avatarContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  avatarText: {
+    color: colors.background,
+    fontWeight: "600",
+    fontSize: 14,
+  },
+
+  // Title styles
+  titleContainer: {
+    paddingHorizontal: 16,
+  },
+
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.text,
+  },
+
+  // Header layout
+  headerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.secondary,
-    backgroundColor: colors.background,
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
+    paddingHorizontal: 16,
   },
-  leftContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+
+  // Logo styles
+  logoContainer: {
+    width: 100,
+    height: 30,
   },
+
+  logo: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: colors.text,
+  },
+
+  // Navigation elements
   rightContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
   },
+
   backButton: {
     padding: 5,
     marginRight: 10,
   },
-  homeButton: {
-    padding: 5,
-    marginRight: 10,
+
+  // User account button
+  accountButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
+
   userInitialsContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#f0f0f0",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primaryLight,
     justifyContent: "center",
     alignItems: "center",
   },
+
   userInitials: {
-    fontSize: 14,
+    color: colors.background,
     fontWeight: "600",
+    fontSize: 14,
   },
 });

@@ -35,7 +35,11 @@ export const RecipeItem: React.FC<RecipeItemProps> = ({
         />
       ) : (
         <View style={styles.placeholderImage}>
-          <Text style={styles.placeholderText}>No Image</Text>
+          <Image
+            source={{ uri: "https://loremflickr.com/320/240" }}
+            style={styles.recipeImage}
+            resizeMode="cover"
+          />
         </View>
       )}
       <View style={styles.recipeInfo}>

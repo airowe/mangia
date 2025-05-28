@@ -196,17 +196,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 160,
   },
-  placeholderImage: {
-    width: '100%',
-    height: 160,
-    backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    color: colors.textTertiary,
-    fontSize: 14,
-  },
   recipeInfo: {
     padding: 12,
   },

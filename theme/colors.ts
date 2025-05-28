@@ -1,7 +1,7 @@
 export const colors = {
   // Brand colors
   primary: '#CC5500', // burnt orange
-  secondary: '#004E7C', // warm blue
+  secondary: '#5D9EC7', // even lighter warm blue
   accent: '#FFB74D',
   primaryLight: '#FFDDB5',
   

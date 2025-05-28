@@ -1,15 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
+import { View, StyleSheet, ViewStyle, Image } from 'react-native';
 
-type ProductPlaceholderProps = {
-  category?: string;
-  location?: string;
-  size?: number;
-  style?: ViewStyle;
-};
-
+// Keep these for future use
 const getIconForCategory = (category: string = '') => {
   const lowerCategory = category.toLowerCase();
   
@@ -52,27 +44,31 @@ const getIconForLocation = (location: string = '') => {
   return 'shopping';
 };
 
+type ProductPlaceholderProps = {
+  category?: string;
+  location?: string;
+  size?: number;
+  style?: ViewStyle;
+  imageUrl?: string | null;
+};
+
 export const ProductPlaceholder: React.FC<ProductPlaceholderProps> = ({
   category,
   location,
-  size = 40,
+  size = 100,
   style,
+  imageUrl,
 }) => {
-  const iconName = category 
-    ? getIconForCategory(category)
-    : location
-    ? getIconForLocation(location)
-    : 'shopping';
+  // Use the provided image URL or fallback to loremflickr
+  const imageSource = imageUrl || 'https://loremflickr.com/320/240/food';
 
   return (
     <View style={[styles.container, { width: size, height: size }, style]}>
-      <View style={styles.iconContainer}>
-        <MaterialCommunityIcons 
-          name={iconName as any} 
-          size={size * 0.4} 
-          color="rgba(0, 0, 0, 0.4)" 
-        />
-      </View>
+      <Image 
+        source={{ uri: imageSource }}
+        style={styles.image}
+        resizeMode="cover"
+      />
     </View>
   );
 };
@@ -81,14 +77,11 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.1)',
   },
-  iconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  image: {
     width: '100%',
     height: '100%',
   },

@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { supabase } from "./lib/supabase";
 import { AuthScreen } from "./screens/AuthScreen";
+import { AccountScreen } from "./screens/AccountScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import TabNavigator from "./navigation/TabNavigator";
@@ -166,13 +167,24 @@ function AppContent() {
     <Screen noPadding style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <NavigationContainer>
-        {session ? (
-          <TabNavigator />
-        ) : (
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {!session ? (
             <Stack.Screen name="Auth" component={AuthScreen} />
-          </Stack.Navigator>
-        )}
+          ) : (
+            <>
+              <Stack.Screen name="MainTabs" component={TabNavigator} />
+              <Stack.Screen 
+                name="Account" 
+                component={AccountScreen} 
+                options={{ 
+                  headerShown: true, 
+                  title: 'Account',
+                  headerBackTitle: 'Back'
+                }} 
+              />
+            </>
+          )}
+        </Stack.Navigator>
       </NavigationContainer>
     </Screen>
   );

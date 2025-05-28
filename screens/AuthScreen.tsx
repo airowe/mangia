@@ -30,7 +30,7 @@ export const AuthScreen = ({ navigation }: any) => {
       setError('');
       const { data, error: signInError } = await signIn(email, password);
       if (signInError) throw signInError;
-      navigation.replace('HomeStack');
+      // navigation.replace('HomeStack');
     } catch (error) {
       let errorMessage = error instanceof Error ? error.message : 'Failed to sign in';
       errorMessage = errorMessage + process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;

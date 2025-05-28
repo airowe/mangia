@@ -30,7 +30,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'box',
       location: 'Pantry',
       price: 1.99,
-      imageUrl: 'https://images.unsplash.com/photo-1551183053-bf91a1d81111?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
     {
@@ -41,7 +41,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'bag',
       location: 'Pantry',
       price: 3.49,
-      imageUrl: 'https://images.unsplash.com/photo-1512058564366-18510bf2d0f3?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
     {
@@ -52,7 +52,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'can',
       location: 'Pantry',
       price: 0.99,
-      imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
     {
@@ -63,7 +63,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'bottle',
       location: 'Pantry',
       price: 8.99,
-      imageUrl: 'https://images.unsplash.com/photo-1601521722609-54a580a51310?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
   ],
@@ -76,7 +76,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'gallon',
       location: 'Refrigerator',
       price: 3.29,
-      imageUrl: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
     {
@@ -87,7 +87,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'count',
       location: 'Refrigerator',
       price: 2.99,
-      imageUrl: 'https://images.unsplash.com/photo-1587486913049-53fc88980dfa?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
     {
@@ -98,7 +98,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'block',
       location: 'Refrigerator',
       price: 4.99,
-      imageUrl: 'https://images.unsplash.com/photo-1603569283847-aa295f0d016a?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
   ],
@@ -111,7 +111,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'jar',
       location: 'Spice Drawer',
       price: 3.99,
-      imageUrl: 'https://images.unsplash.com/photo-1600851606868-dc7ecfb01d9c?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
     {
@@ -122,7 +122,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'jar',
       location: 'Spice Drawer',
       price: 2.99,
-      imageUrl: 'https://images.unsplash.com/photo-1580010436149-4c5f2f82068f?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
     {
@@ -133,7 +133,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'jar',
       location: 'Spice Drawer',
       price: 2.49,
-      imageUrl: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
   ],
@@ -146,7 +146,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'bag',
       location: 'Freezer',
       price: 2.99,
-      imageUrl: 'https://images.unsplash.com/photo-1518843875459-f73868223802?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
     {
@@ -157,7 +157,7 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       unit: 'pint',
       location: 'Freezer',
       price: 4.99,
-      imageUrl: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=500&auto=format&fit=crop&q=60',
+      imageUrl: 'https://loremflickr.com/320/240',
       barcode: undefined
     },
   ],

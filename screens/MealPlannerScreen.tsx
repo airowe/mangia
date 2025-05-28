@@ -6,21 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
   SafeAreaView,
-  TextInput,
-  Switch,
-  FlatList,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { Product } from "../models/Product";
 import { Recipe } from "../models/Recipe";
 import {
   MealType,
-  Meal,
   MealPlanDay,
   MealPlanFilters,
-  MealPlanResponse,
 } from "../models/Meal";
 import { ShoppingListItem } from "../models/ShoppingList";
 import { theme } from "../theme/theme";
@@ -38,7 +31,6 @@ import {
   getUserRecipes,
   generateMealPlan,
   saveMealPlan,
-  getSavedMealPlan,
 } from "../lib/mealPlanner";
 import { fetchPantryItems } from "../lib/pantry";
 

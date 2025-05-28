@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,15 +10,19 @@ import {
   Share,
   Platform,
   Linking,
-} from 'react-native';
-import { useRoute, type RouteProp } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { fetchRecipeById } from '../lib/recipes';
-import { Recipe } from '../models/Recipe';
-import { Screen } from '../components/Screen';
-import { colors } from '../theme/colors';
+  Alert,
+} from "react-native";
+import { useRoute, type RouteProp } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import { fetchRecipeById } from "../lib/recipes";
+import { Recipe } from "../models/Recipe";
+import { Screen } from "../components/Screen";
+import { colors } from "../theme/colors";
 
-type RecipeDetailScreenRouteProp = RouteProp<{ params: { id: string } }, 'params'>;
+type RecipeDetailScreenRouteProp = RouteProp<
+  { params: { id: string } },
+  "params"
+>;
 
 export default function RecipeDetailScreen() {
   const route = useRoute<RecipeDetailScreenRouteProp>();
@@ -30,11 +34,12 @@ export default function RecipeDetailScreen() {
   const loadRecipe = useCallback(async () => {
     try {
       setLoading(true);
+      Alert.alert("Loading recipe...", id);
       const data = await fetchRecipeById(id);
       setRecipe(data);
     } catch (err) {
-      console.error('Failed to load recipe:', err);
-      setError('Failed to load recipe. Please try again.');
+      console.error("Failed to load recipe:", err);
+      setError("Failed to load recipe. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -51,7 +56,7 @@ export default function RecipeDetailScreen() {
         title: recipe?.title,
       });
     } catch (error) {
-      console.error('Error sharing recipe:', error);
+      console.error("Error sharing recipe:", error);
     }
   };
 
@@ -75,7 +80,7 @@ export default function RecipeDetailScreen() {
     return (
       <Screen>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error || 'Recipe not found'}</Text>
+          <Text style={styles.errorText}>{error || "Recipe not found"}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadRecipe}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
@@ -87,53 +92,62 @@ export default function RecipeDetailScreen() {
   return (
     <Screen noPadding>
       <ScrollView style={styles.container}>
-        <Image 
-          source={{ uri: recipe.image_url || recipe.image }} 
-          style={styles.image} 
+        <Image
+          source={{ uri: recipe.image_url }}
+          style={styles.image}
           resizeMode="cover"
         />
-        
+
         <View style={styles.header}>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>{recipe.title || recipe.name}</Text>
+            <Text style={styles.title}>{recipe.title}</Text>
             <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
-              <Ionicons name="share-social-outline" size={24} color={colors.primary} />
+              <Ionicons
+                name="share-social-outline"
+                size={24}
+                color={colors.primary}
+              />
             </TouchableOpacity>
           </View>
-          
+
           {recipe.description && (
             <Text style={styles.description}>{recipe.description}</Text>
           )}
-          
+
           <View style={styles.metaContainer}>
             {(recipe.cook_time || 0) > 0 && (
               <View style={styles.metaItem}>
-                <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+                <Ionicons
+                  name="time-outline"
+                  size={16}
+                  color={colors.textSecondary}
+                />
                 <Text style={styles.metaText}>{recipe.cook_time} min</Text>
               </View>
             )}
             {(recipe.servings || 0) > 0 && (
               <View style={styles.metaItem}>
-                <Ionicons name="people-outline" size={16} color={colors.textSecondary} />
+                <Ionicons
+                  name="people-outline"
+                  size={16}
+                  color={colors.textSecondary}
+                />
                 <Text style={styles.metaText}>{recipe.servings} servings</Text>
               </View>
             )}
-            {recipe.cuisine && (
-              <View style={styles.metaItem}>
-                <Ionicons name="restaurant-outline" size={16} color={colors.textSecondary} />
-                <Text style={styles.metaText}>{recipe.cuisine}</Text>
-              </View>
-            )}
           </View>
-          
+
           {recipe.source && (
-            <TouchableOpacity onPress={openSourceLink} style={styles.sourceButton}>
+            <TouchableOpacity
+              onPress={openSourceLink}
+              style={styles.sourceButton}
+            >
               <Text style={styles.sourceText}>View Original Recipe</Text>
               <Ionicons name="open-outline" size={16} color={colors.primary} />
             </TouchableOpacity>
           )}
         </View>
-        
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ingredients</Text>
           <View style={styles.ingredientsList}>
@@ -141,37 +155,32 @@ export default function RecipeDetailScreen() {
               <View key={idx} style={styles.ingredientItem}>
                 <View style={styles.bulletPoint} />
                 <Text style={styles.ingredientText}>
-                  {ing.quantity ? `${ing.quantity} ${ing.unit || ''} ` : ''}
+                  {ing.quantity ? `${ing.quantity} ${ing.unit || ""} ` : ""}
                   {ing.name}
                 </Text>
               </View>
             ))}
           </View>
         </View>
-        
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Instructions</Text>
           <View style={styles.instructionsContainer}>
             {recipe.instructions ? (
               <Text style={styles.instructionsText}>{recipe.instructions}</Text>
             ) : (
-              <Text style={styles.noInstructions}>No instructions provided.</Text>
+              <Text style={styles.noInstructions}>
+                No instructions provided.
+              </Text>
             )}
           </View>
         </View>
-        
-        {recipe.notes && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Notes</Text>
-            <Text style={styles.notesText}>{recipe.notes}</Text>
-          </View>
-        )}
-        
+
         <View style={styles.footer} />
       </ScrollView>
     </Screen>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -180,21 +189,21 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   errorText: {
     fontSize: 16,
     color: colors.error,
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   retryButton: {
     backgroundColor: colors.primary,
@@ -203,11 +212,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
   image: {
-    width: '100%',
+    width: "100%",
     height: 250,
   },
   header: {
@@ -217,14 +226,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   title: {
     flex: 1,
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text,
     marginBottom: 8,
   },
@@ -239,13 +248,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   metaContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginBottom: 16,
   },
   metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: 20,
     marginBottom: 8,
   },
@@ -255,9 +264,9 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   sourceButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
     marginTop: 8,
   },
   sourceText: {
@@ -274,7 +283,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
     marginBottom: 12,
   },
@@ -282,8 +291,8 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   ingredientItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     marginBottom: 8,
   },
   bulletPoint: {
@@ -310,14 +319,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   noInstructions: {
-    fontStyle: 'italic',
+    fontStyle: "italic",
     color: colors.textSecondary,
-  },
-  notesText: {
-    fontSize: 16,
-    color: colors.text,
-    lineHeight: 24,
-    fontStyle: 'italic',
   },
   footer: {
     height: 40,

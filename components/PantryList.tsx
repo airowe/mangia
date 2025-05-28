@@ -1,114 +1,122 @@
-import React, { useMemo, useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet, Text, ScrollView, RefreshControl } from 'react-native';
 import { Product } from '../models/Product';
 import PantryItem from './PantryItem';
 import { colors } from '../theme/colors';
 
 interface PantryListProps {
-  products?: Product[];
-  collections: Record<string, Product[]>;
+  products: Product[];
   onAddToPantry: (product: Product) => void;
   onQuantityChange: (productId: string, change: number) => void;
   pantryItems: Product[];
   onRefresh?: () => void;
   refreshing?: boolean;
   contentContainerStyle?: object;
+  onEndReached?: () => void;
+  loadingMore?: boolean;
+  hasMore?: boolean;
+  title?: string;
+  isInitialLoad?: boolean;
 }
 
 const PantryList: React.FC<PantryListProps> = ({
-  collections,
+  products,
   onAddToPantry,
   onQuantityChange,
   pantryItems,
   onRefresh,
   refreshing = false,
   contentContainerStyle,
+  onEndReached,
+  loadingMore = false,
+  hasMore = false,
+  title,
+  isInitialLoad = false
 }) => {
   // Check if a product is in the pantry
   const isInPantry = (productId: string) => {
     return pantryItems.some(item => item.id === productId);
   };
 
-  // Check if there are any products in any collection
-  const hasProducts = useMemo(() => {
-    if (!collections) {
-      return false;
-    }
-    
-    return Object.values(collections).some(collection => 
-      Array.isArray(collection) && collection.length > 0
-    );
-  }, [collections]);
-
-  // If collections is undefined or null, return null to render nothing
-  if (!collections) {
+  // Return null or an empty view during initial load
+  if (isInitialLoad) {
     return null;
   }
 
+  // If there are no products, show a message
+  if (!products || products.length === 0) {
+    return (
+      <View style={[styles.emptyContainer, contentContainerStyle]}>
+        <Text style={styles.emptyText}>No products found</Text>
+      </View>
+    );
+  }
+
   return (
-    <ScrollView 
-      style={styles.container}
-      contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
-      refreshControl={
-        onRefresh ? (
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[colors.primary]}
-          />
-        ) : undefined
-      }
-    >
-      {Object.entries(collections).map(([title, products]) => {
-        if (!products || products.length === 0) return null;
-        
-        return (
-          <View key={title} style={styles.collectionContainer}>
-            <Text style={styles.collectionTitle}>{title}</Text>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.productsContainer}
-            >
-              {products.map((product) => (
-                <PantryItem
-                  key={product.id}
-                  product={product}
-                  isInPantry={isInPantry(product.id)}
-                  onAddToPantry={onAddToPantry}
-                  onQuantityChange={onQuantityChange}
-                />
-              ))}
-            </ScrollView>
+    <View style={[styles.container, contentContainerStyle]}>
+      {title && <Text style={styles.sectionTitle}>{title}</Text>}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={[styles.horizontalContainer, contentContainerStyle]}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} />
+          ) : undefined
+        }
+        onScrollEndDrag={({ nativeEvent }) => {
+          if (onEndReached && !loadingMore) {
+            const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+            const isCloseToEnd = layoutMeasurement.width + contentOffset.x >= contentSize.width - 50;
+            if (isCloseToEnd) {
+              onEndReached();
+            }
+          }
+        }}
+        scrollEventThrottle={400}
+      >
+        {products.map((product) => (
+          <View key={product.id} style={styles.itemWrapper}>
+            <PantryItem
+              product={product}
+              onAddToPantry={onAddToPantry}
+              onQuantityChange={onQuantityChange}
+              isInPantry={isInPantry(product.id)}
+            />
           </View>
-        );
-      })}
-    </ScrollView>
+        ))}
+
+      </ScrollView>
+      {onEndReached && !loadingMore && hasMore && (
+        <View style={styles.loadMorePlaceholder} />
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: colors.background,
+    paddingVertical: 4,
   },
-  contentContainer: {
-    paddingBottom: 24,
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginLeft: 16,
+    marginBottom: 4,
   },
-  scrollContent: {
-    paddingBottom: 24,
+  horizontalContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    paddingBottom: 12, // Extra padding for scroll indicator
+    alignItems: 'flex-start',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f0f0f0',
-  },
-  debugText: {
-    color: 'red',
-    fontSize: 12,
-    marginTop: 5,
+  itemWrapper: {
+    marginRight: 16,
+    marginBottom: 8, // Add bottom margin for better spacing
+    width: 150, // Fixed width for each item
   },
   emptyContainer: {
     flex: 1,
@@ -117,22 +125,28 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyText: {
+    color: colors.textSecondary,
     fontSize: 16,
-    color: colors.secondary,
-    textAlign: 'center',
   },
-  collectionContainer: {
-    marginBottom: 24,
+  loadingMore: {
+    width: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadMorePlaceholder: {
+    width: 20,
+    height: 20,
+  },
+  debugText: {
+    color: 'red',
+    fontSize: 14,
   },
   collectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
     marginHorizontal: 16,
     color: colors.text,
-  },
-  productsContainer: {
-    paddingHorizontal: 8,
   },
 });
 

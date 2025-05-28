@@ -1,9 +1,9 @@
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
-import HomeStack from './HomeStack';
-import MealPlanningStack from './MealPlanningStack';
-import RecipeLibraryStack from './RecipeLibraryStack';
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
+import HomeStack from "./HomeStack";
+import MealPlanningStack from "./MealPlanningStack";
+import RecipeLibraryStack from "./RecipeLibraryStack";
 import { colors } from "../theme/colors";
 
 const Tab = createBottomTabNavigator();

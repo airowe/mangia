@@ -17,7 +17,7 @@ import { colors } from '../theme/colors';
 
 export default function RecipeCreateScreen({ navigation }: any) {
   const [title, setTitle] = useState('');
-  const [instructions, setInstructions] = useState('');
+  const [instructions, setInstructions] = useState<string[]>([]);
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
   const [currentName, setCurrentName] = useState('');
   const [currentQuantity, setCurrentQuantity] = useState('');
@@ -44,7 +44,7 @@ export default function RecipeCreateScreen({ navigation }: any) {
     try {
       await addRecipe({
         title,
-        instructions: instructions, // Now a single string
+        instructions,
         ingredients,
         description: '',
         image_url: ''
@@ -79,8 +79,8 @@ export default function RecipeCreateScreen({ navigation }: any) {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Instructions</Text>
             <TextInput
-              value={instructions}
-              onChangeText={setInstructions}
+              value={instructions.join('\n')}
+              onChangeText={(text) => setInstructions(text.split('\n'))}
               style={[styles.input, styles.textArea]}
               multiline
               numberOfLines={4}
