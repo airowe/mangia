@@ -6,6 +6,7 @@ import { supabase } from "./supabase";
 interface ApiResponse<T> {
   data?: T;
   error?: string;
+  message?: string;
 }
 
 interface AxiosError extends Error {
@@ -14,32 +15,6 @@ interface AxiosError extends Error {
     data: any;
   };
 }
-
-export interface PantryItem {
-  id: string;
-  product_id: string;
-  title: string;
-  barcode?: string;
-  imageUrl?: string;
-  quantity: number;
-  created_at?: string;
-  updated_at?: string;
-  category?: string;
-  location?: string;
-  unit?: string;
-}
-
-// Map PantryItem to Product
-export const mapToProduct = (item: PantryItem): Product => ({
-  id: item.id,
-  title: item.title,
-  barcode: item.barcode,
-  imageUrl: item.imageUrl,
-  quantity: item.quantity,
-  category: item.category || "Uncategorized",
-  location: item.location || "Pantry",
-  unit: "pcs",
-});
 
 export interface PaginationParams {
   page?: number;
@@ -141,13 +116,10 @@ export const addToPantry = async (
   product: Product
 ): Promise<{ data: Product | null; error: Error | null }> => {
   try {
-    const response = await apiClient.post<ApiResponse<PantryItem>>(
+    const response = await apiClient.post<ApiResponse<Product>>(
       "/pantry/add-item",
       {
-        product_id: product.id,
-        title: product.title,
-        barcode: product.barcode,
-        image_url: product.image,
+        ...product,
         quantity: product.quantity || 1,
       }
     );
@@ -160,8 +132,7 @@ export const addToPantry = async (
       throw new Error("No data returned from server");
     }
 
-    const mappedProduct = mapToProduct(response.data);
-    return { data: mappedProduct, error: null };
+    return { data: response.data, error: null };
   } catch (error) {
     console.error("Error saving to pantry:", error);
     const errorMessage =
@@ -173,7 +144,7 @@ export const addToPantry = async (
 // Fetch user's pantry items
 export const fetchPantryItems = async (): Promise<Product[]> => {
   try {
-    const response = await apiClient.get<ApiResponse<PantryItem[]>>(
+    const response = await apiClient.get<ApiResponse<Product[]>>(
       "/pantry/fetch-pantry"
     );
 
@@ -185,7 +156,7 @@ export const fetchPantryItems = async (): Promise<Product[]> => {
       return [];
     }
 
-    return response.data.map(mapToProduct);
+    return response.data;
   } catch (error) {
     const axiosError = error as AxiosError;
 
@@ -198,7 +169,7 @@ export const fetchPantryItems = async (): Promise<Product[]> => {
           throw new Error("Session expired. Please log in again.");
         }
 
-        const retryResponse = await apiClient.get<ApiResponse<PantryItem[]>>(
+        const retryResponse = await apiClient.get<ApiResponse<Product[]>>(
           "/pantry/fetch-pantry"
         );
 
@@ -206,7 +177,7 @@ export const fetchPantryItems = async (): Promise<Product[]> => {
           throw new Error(retryResponse.error);
         }
 
-        return (retryResponse.data || []).map(mapToProduct);
+        return retryResponse.data || [];
       } catch (retryError) {
         throw new Error(
           "Failed to load pantry after session refresh. Please try again."
@@ -229,7 +200,7 @@ export const updatePantryItemQuantity = async (
 ): Promise<{ data: Product | null; error: Error | null }> => {
   try {
     console.log("Updating quantity via API:", { productId, quantity });
-    const response = await apiClient.post<ApiResponse<PantryItem>>(
+    const response = await apiClient.post<ApiResponse<Product>>(
       "/pantry/update-quantity",
       { productId, quantity }
     );
@@ -238,9 +209,8 @@ export const updatePantryItemQuantity = async (
       throw new Error(response.error);
     }
 
-    const product = response.data ? mapToProduct(response.data) : null;
-    console.log("Successfully updated quantity:", product);
-    return { data: product, error: null };
+    console.log("Successfully updated quantity:", response.data);
+    return { data: response.data || null, error: null };
   } catch (error) {
     console.error("Error in updatePantryItemQuantity:", error);
     return {

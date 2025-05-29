@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -16,7 +16,6 @@ export interface RecipeListProps {
   refreshing?: boolean;
   onRefresh?: () => void;
   onPressRecipe: (recipe: Recipe) => void;
-  groupByCategory?: boolean;
   showMealType?: boolean;
   ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
   ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
@@ -31,7 +30,6 @@ export const RecipeList: React.FC<RecipeListProps> = ({
   refreshing = false,
   onRefresh,
   onPressRecipe = () => {},
-  groupByCategory = false,
   showMealType = false,
   ListHeaderComponent = null,
   ListEmptyComponent = null,
@@ -57,73 +55,12 @@ export const RecipeList: React.FC<RecipeListProps> = ({
     />
   ), [onPressRecipe, showMealType, isSelected]);
 
-  // Group recipes by category if needed
-  const groupedRecipes = useMemo(() => {
-    if (!groupByCategory) return null;
-    
-    return recipes.reduce<Record<string, Recipe[]>>((acc, recipe) => {
-      const category = (recipe.meal_type && recipe.meal_type.length > 0)
-        ? recipe.meal_type.charAt(0).toUpperCase() + recipe.meal_type.slice(1)
-        : 'Other';
-      if (!acc[category]) {
-        acc[category] = [];
-      }
-      acc[category].push(recipe);
-      return acc;
-    }, {});
-  }, [recipes, groupByCategory]);
-
   // Show loading state if needed
   if (loading && recipes.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         <Text>Loading recipes...</Text>
       </View>
-    );
-  }
-
-  // Render grouped recipes if enabled
-  if (groupByCategory && groupedRecipes) {
-    return (
-      <FlatList
-        data={Object.entries(groupedRecipes)}
-        keyExtractor={([category, items]) =>
-          `${category}-${items.map((item) => item.id).join("-")}`
-        }
-        renderItem={({ item: [category, items] }) => (
-          <View style={styles.categoryContainer}>
-            <Text style={styles.categoryHeader}>{category}</Text>
-            {items.map((recipe) => (
-              <View
-                key={`${category}-${recipe.id}`}
-                style={styles.recipeCardContainer}
-              >
-                {renderRecipeItem({ item: recipe })}
-              </View>
-            ))}
-          </View>
-        )}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          onRefresh ? (
-            <RefreshControl
-              refreshing={!!refreshing}
-              onRefresh={onRefresh}
-              colors={[colors.primary]}
-              tintColor={colors.primary}
-            />
-          ) : undefined
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No recipes found</Text>
-            <Text style={styles.emptySubtext}>
-              Try adjusting your search or filters
-            </Text>
-          </View>
-        }
-        ListHeaderComponent={ListHeaderComponent}
-      />
     );
   }
 
@@ -170,18 +107,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  categoryContainer: {
-    marginBottom: 24,
-  },
-  categoryHeader: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 12,
-    color: colors.text,
-  },
-  recipeCardContainer: {
-    marginBottom: 16,
-  },
+
+
   recipeCard: {
     backgroundColor: colors.card,
     borderRadius: 12,
