@@ -1,36 +1,77 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { TextInput, Button, Text, useTheme, Portal, Modal, IconButton } from 'react-native-paper';
-import { Product } from '../models/Product';
-import { saveToPantry } from '../lib/pantry';
+import React, { useState } from "react";
+import { View, StyleSheet, ScrollView, Alert } from "react-native";
+import {
+  TextInput,
+  Button,
+  Text,
+  useTheme,
+  Portal,
+  Modal,
+  IconButton,
+} from "react-native-paper";
+import { Product } from "../models/Product";
+import { addToPantry } from "../lib/pantry";
 
 interface ManualEntryScreenProps {
   navigation: any;
   route: any;
 }
 
-export const ManualEntryScreen = ({ navigation, route }: ManualEntryScreenProps) => {
+export const ManualEntryScreen = ({
+  navigation,
+  route,
+}: ManualEntryScreenProps) => {
   const { colors } = useTheme();
   const [product, setProduct] = useState<Partial<Product>>({
-    title: '',
-    category: 'Other',
+    title: "",
+    category: "Other",
     quantity: 1,
-    unit: 'unit',
-    location: 'Pantry',
-    description: '',
+    unit: "unit",
+    location: "Pantry",
+    description: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showUnitModal, setShowUnitModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
 
-  const categories = ['Fruits', 'Vegetables', 'Dairy', 'Meat', 'Bakery', 'Beverages', 'Snacks', 'Canned Goods', 'Frozen', 'Other'];
-  const units = ['unit', 'g', 'kg', 'ml', 'L', 'oz', 'lb', 'box', 'pack', 'bottle', 'can', 'bag'];
-  const locations = ['Pantry', 'Refrigerator', 'Freezer', 'Spice Rack', 'Other'];
+  const categories = [
+    "Fruits",
+    "Vegetables",
+    "Dairy",
+    "Meat",
+    "Bakery",
+    "Beverages",
+    "Snacks",
+    "Canned Goods",
+    "Frozen",
+    "Other",
+  ];
+  const units = [
+    "unit",
+    "g",
+    "kg",
+    "ml",
+    "L",
+    "oz",
+    "lb",
+    "box",
+    "pack",
+    "bottle",
+    "can",
+    "bag",
+  ];
+  const locations = [
+    "Pantry",
+    "Refrigerator",
+    "Freezer",
+    "Spice Rack",
+    "Other",
+  ];
 
   const handleSave = async () => {
     if (!product.title) {
-      Alert.alert('Error', 'Please enter a product name');
+      Alert.alert("Error", "Please enter a product name");
       return;
     }
 
@@ -38,26 +79,26 @@ export const ManualEntryScreen = ({ navigation, route }: ManualEntryScreenProps)
     try {
       const newProduct: Product = {
         id: Date.now().toString(),
-        title: product.title || '',
-        category: product.category || 'Other',
+        title: product.title || "",
+        category: product.category || "Other",
         quantity: product.quantity || 1,
-        unit: product.unit || 'unit',
-        location: product.location || 'Pantry',
-        description: product.description || '',
+        unit: product.unit || "unit",
+        location: product.location || "Pantry",
+        description: product.description || "",
         image: product.image,
         created_at: new Date().toISOString(),
       };
 
-      const { data, error } = await saveToPantry(newProduct);
-      
+      const { data, error } = await addToPantry(newProduct);
+
       if (error) {
         throw error;
       }
 
       navigation.goBack();
     } catch (error) {
-      console.error('Error saving product:', error);
-      Alert.alert('Error', 'Failed to save product. Please try again.');
+      console.error("Error saving product:", error);
+      Alert.alert("Error", "Failed to save product. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -90,27 +131,31 @@ export const ManualEntryScreen = ({ navigation, route }: ManualEntryScreenProps)
               <IconButton
                 icon="minus"
                 size={20}
-                onPress={() => setProduct(prev => ({ 
-                  ...prev, 
-                  quantity: Math.max(1, (prev.quantity || 1) - 1) 
-                }))}
+                onPress={() =>
+                  setProduct((prev) => ({
+                    ...prev,
+                    quantity: Math.max(1, (prev.quantity || 1) - 1),
+                  }))
+                }
               />
               <Text style={styles.quantityText}>{product.quantity}</Text>
               <IconButton
                 icon="plus"
                 size={20}
-                onPress={() => setProduct(prev => ({ 
-                  ...prev, 
-                  quantity: (prev.quantity || 1) + 1 
-                }))}
+                onPress={() =>
+                  setProduct((prev) => ({
+                    ...prev,
+                    quantity: (prev.quantity || 1) + 1,
+                  }))
+                }
               />
             </View>
           </View>
 
           <View style={[styles.input, { flex: 1 }]}>
             <Text style={styles.label}>Unit</Text>
-            <Button 
-              mode="outlined" 
+            <Button
+              mode="outlined"
               onPress={() => setShowUnitModal(true)}
               style={styles.unitButton}
             >
@@ -121,11 +166,11 @@ export const ManualEntryScreen = ({ navigation, route }: ManualEntryScreenProps)
 
         <View style={[styles.input, { marginBottom: 16 }]}>
           <Text style={styles.label}>Location</Text>
-          <Button 
-            mode="outlined" 
+          <Button
+            mode="outlined"
             onPress={() => setShowLocationModal(true)}
             style={styles.locationButton}
-            contentStyle={{ justifyContent: 'space-between' }}
+            contentStyle={{ justifyContent: "space-between" }}
             icon="map-marker"
           >
             {product.location}
@@ -158,9 +203,14 @@ export const ManualEntryScreen = ({ navigation, route }: ManualEntryScreenProps)
         <Modal
           visible={showCategoryModal}
           onDismiss={() => setShowCategoryModal(false)}
-          contentContainerStyle={[styles.modalContainer, { backgroundColor: colors.surface }]}
+          contentContainerStyle={[
+            styles.modalContainer,
+            { backgroundColor: colors.surface },
+          ]}
         >
-          <Text style={[styles.modalTitle, { color: colors.onSurface }]}>Select Category</Text>
+          <Text style={[styles.modalTitle, { color: colors.onSurface }]}>
+            Select Category
+          </Text>
           {categories.map((category) => (
             <Button
               key={category}
@@ -179,9 +229,14 @@ export const ManualEntryScreen = ({ navigation, route }: ManualEntryScreenProps)
         <Modal
           visible={showUnitModal}
           onDismiss={() => setShowUnitModal(false)}
-          contentContainerStyle={[styles.modalContainer, { backgroundColor: colors.surface }]}
+          contentContainerStyle={[
+            styles.modalContainer,
+            { backgroundColor: colors.surface },
+          ]}
         >
-          <Text style={[styles.modalTitle, { color: colors.onSurface }]}>Select Unit</Text>
+          <Text style={[styles.modalTitle, { color: colors.onSurface }]}>
+            Select Unit
+          </Text>
           {units.map((unit) => (
             <Button
               key={unit}
@@ -200,9 +255,14 @@ export const ManualEntryScreen = ({ navigation, route }: ManualEntryScreenProps)
         <Modal
           visible={showLocationModal}
           onDismiss={() => setShowLocationModal(false)}
-          contentContainerStyle={[styles.modalContainer, { backgroundColor: colors.surface }]}
+          contentContainerStyle={[
+            styles.modalContainer,
+            { backgroundColor: colors.surface },
+          ]}
         >
-          <Text style={[styles.modalTitle, { color: colors.onSurface }]}>Select Location</Text>
+          <Text style={[styles.modalTitle, { color: colors.onSurface }]}>
+            Select Location
+          </Text>
           {locations.map((location) => (
             <Button
               key={location}
@@ -211,9 +271,15 @@ export const ManualEntryScreen = ({ navigation, route }: ManualEntryScreenProps)
                 setShowLocationModal(false);
               }}
               style={styles.modalItem}
-              icon={location === 'Refrigerator' ? 'fridge' : 
-                    location === 'Freezer' ? 'snowflake' : 
-                    location === 'Spice Rack' ? 'bottle-tonic' : 'shopping'}
+              icon={
+                location === "Refrigerator"
+                  ? "fridge"
+                  : location === "Freezer"
+                  ? "snowflake"
+                  : location === "Spice Rack"
+                  ? "bottle-tonic"
+                  : "shopping"
+              }
             >
               {location}
             </Button>
@@ -236,31 +302,31 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 4,
     paddingHorizontal: 8,
     marginTop: 8,
   },
   quantityText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   unitButton: {
     marginTop: 8,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
   },
   locationButton: {
     marginTop: 8,
-    borderColor: '#ccc',
-    justifyContent: 'space-between',
+    borderColor: "#ccc",
+    justifyContent: "space-between",
   },
   saveButton: {
     marginTop: 16,
@@ -269,19 +335,19 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     marginBottom: 4,
-    color: 'rgba(0, 0, 0, 0.54)',
+    color: "rgba(0, 0, 0, 0.54)",
   },
   modalContainer: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     padding: 20,
     margin: 20,
     borderRadius: 8,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   modalItem: {
     marginVertical: 4,

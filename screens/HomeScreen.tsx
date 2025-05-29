@@ -7,6 +7,7 @@ import {
   Animated,
   StatusBar,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Screen } from "../components/Screen";
 import PantryList from "../components/PantryList";
@@ -14,7 +15,7 @@ import { Product } from "../models/Product";
 import {
   fetchAllProducts,
   fetchPantryItems,
-  saveToPantry,
+  addToPantry,
   updatePantryItemQuantity,
 } from "../lib/pantry";
 import { colors } from "../theme/colors";
@@ -45,6 +46,8 @@ export const HomeScreen: React.FC = () => {
   const [pantryItems, setPantryItems] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     limit: 20,
@@ -106,11 +109,14 @@ export const HomeScreen: React.FC = () => {
 
   const loadPantryItems = useCallback(async () => {
     try {
+      setIsLoading(true);
       const items = await fetchPantryItems();
       setPantryItems(items);
     } catch (error) {
       console.error("Error loading pantry items:", error);
       Alert.alert("Error", "Failed to load pantry items");
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -119,7 +125,7 @@ export const HomeScreen: React.FC = () => {
       // Optimistically update the UI
       setAllProducts((prev) => prev.filter((p) => p.id !== product.id));
 
-      const { data, error } = await saveToPantry(product);
+      const { data, error } = await addToPantry(product);
       if (error) {
         console.error("Error adding to pantry:", error);
         // Revert optimistic update on error
@@ -189,15 +195,31 @@ export const HomeScreen: React.FC = () => {
     extrapolate: "clamp",
   });
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <Screen style={styles.container}>
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent
+        backgroundColor={colors.background}
+        translucent={false}
       />
       <Animated.ScrollView
         style={styles.scrollView}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={loadPantryItems}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
         contentContainerStyle={[
           styles.scrollViewContent,
           { paddingTop: headerHeight },
@@ -271,6 +293,12 @@ export const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: colors.background,
   },
   scrollView: {

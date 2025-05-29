@@ -8,13 +8,15 @@ import {
   Platform,
   StyleProp,
   ViewStyle,
+  StatusBar,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { useUser } from "../hooks/useUser";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "../theme/colors";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AnimatedHeader } from "./AnimatedHeader";
+import { useUser } from "../hooks/useUser";
 
 type RootStackParamList = {
   HomeScreen: undefined;
@@ -30,15 +32,22 @@ interface CustomHeaderProps {
   showBackButton?: boolean;
   title?: string;
   scrollY?: Animated.Value;
+  headerStyle?: StyleProp<ViewStyle>;
+  showStatic?: boolean;
+  showLogo?: boolean;
 }
 
-export const CustomHeader: React.FC<CustomHeaderProps> = ({
-  showBackButton = false,
+export function CustomHeader({
   title,
+  showBackButton = false,
   scrollY,
-}) => {
-  const navigation = useNavigation<NavigationProp>();
+  headerStyle,
+  showStatic = false,
+  showLogo = true,
+}: CustomHeaderProps) {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user } = useUser();
+  const insets = useSafeAreaInsets();
 
   // Header animation values
   const headerHeight =
@@ -125,23 +134,18 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
   }
 
   return (
-    <View style={styles.staticHeader}>
+    <View style={[styles.staticHeader, headerStyle, { paddingTop: insets.top }]}>
       <AnimatedHeader
         scrollY={scrollY}
-        headerMaxHeight={60}
-        headerMinHeight={44}
         style={{
-          backgroundColor: 'transparent',
-          ...Platform.select({
-            android: {
-              elevation: 4,
-            },
-            ios: {
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-            },
+          ...styles.headerContainer,
+          ...(headerStyle as object),
+          transform: [{ translateY: headerTranslateY }],
+          ...(Platform.OS === 'ios' && {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
           }),
         }}
       >
@@ -156,19 +160,24 @@ const styles = StyleSheet.create({
   staticHeader: {
     width: "100%",
     backgroundColor: colors.background,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.primary,
+    paddingTop: 0,
   },
   
   // Inner header container
   headerContainer: {
     width: '100%',
+    backgroundColor: colors.background,
+    paddingTop: Platform.OS === 'ios' ? 44 : StatusBar.currentHeight,
     paddingHorizontal: 16,
-    paddingBottom: 8,
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 1000,
   },
 
   // Header content styles

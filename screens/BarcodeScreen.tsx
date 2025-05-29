@@ -11,7 +11,7 @@ import {
   SafeAreaView,
   Dimensions,
 } from "react-native";
-import { saveToPantry } from "../lib/pantry";
+import { addToPantry } from "../lib/pantry";
 import { BarcodeProduct, lookupBarcode } from "../lib/ai";
 import { CameraView, Camera } from "expo-camera";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -20,18 +20,15 @@ import { STORAGE_CATEGORIES } from "../models/constants";
 import type { Product } from "../models/Product";
 
 // Simple debounce function
-const debounce = <F extends (...args: any[]) => any>(
-  func: F,
-  wait: number
-) => {
+const debounce = <F extends (...args: any[]) => any>(func: F, wait: number) => {
   let timeout: NodeJS.Timeout;
-  
+
   return function executedFunction(...args: Parameters<F>) {
     const later = () => {
       clearTimeout(timeout);
       func(...args);
     };
-    
+
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
@@ -189,7 +186,7 @@ export default function BarcodeScannerScreen({
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [flashMode, setFlashMode] = useState<'on' | 'off'>('off');
+  const [flashMode, setFlashMode] = useState<"on" | "off">("off");
   const [cameraType, setCameraType] = useState<"front" | "back">("back");
   const [product, setProduct] = useState<BarcodeProduct | null>(null);
   const [saving, setSaving] = useState(false);
@@ -229,38 +226,42 @@ export default function BarcodeScannerScreen({
             category: "",
             category_text: "Error",
             category_text_long: "Error",
-            long_desc: "Failed to perform barcode lookup"
+            long_desc: "Failed to perform barcode lookup",
           },
           EAN13: barcode,
           UPCA: barcode,
           barcode: {
             EAN13: `error`,
-            UPCA: `error`
+            UPCA: `error`,
           },
           image: "",
-          error: "Failed to perform barcode lookup"
+          error: "Failed to perform barcode lookup",
         };
         setProduct(errorProduct);
         return;
       }
 
-
       const productData = response.product;
-      const categoryGuess = mapCategoryToStorage(productData.attributes?.category || "");
-      
+      const categoryGuess = mapCategoryToStorage(
+        productData.attributes?.category || ""
+      );
+
       setProduct({
         ...productData,
         unit: "pcs",
         attributes: {
           ...productData.attributes,
-          category: STORAGE_CATEGORIES.includes(categoryGuess as any) 
-            ? categoryGuess 
+          category: STORAGE_CATEGORIES.includes(categoryGuess as any)
+            ? categoryGuess
             : "Pantry",
-        }
+        },
       });
     } catch (error) {
       console.error("Error looking up product:", error);
-      Alert.alert("Error", error instanceof Error ? error.message : "Unknown error occurred");
+      Alert.alert(
+        "Error",
+        error instanceof Error ? error.message : "Unknown error occurred"
+      );
       setProduct({
         attributes: {
           product: "Error",
@@ -268,7 +269,7 @@ export default function BarcodeScannerScreen({
           category: "",
           category_text: "Error",
           category_text_long: "Error",
-          long_desc: "Failed to perform barcode lookup"
+          long_desc: "Failed to perform barcode lookup",
         },
         EAN13: barcode,
         UPCA: barcode,
@@ -277,7 +278,8 @@ export default function BarcodeScannerScreen({
           UPCA: barcode,
         },
         image: "",
-        error: error instanceof Error ? error.message : "Unknown error occurred",
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       });
     } finally {
       setLoading(false);
@@ -292,12 +294,15 @@ export default function BarcodeScannerScreen({
     []
   );
 
-  const handleBarCodeScanned = useCallback(({ data: barcode }: { data: string }) => {
-    if (!barcode || scanned || loading) return;
-    
-    // Use the debounced function
-    debouncedBarcodeLookup(barcode);
-  }, [scanned, loading, debouncedBarcodeLookup]);
+  const handleBarCodeScanned = useCallback(
+    ({ data: barcode }: { data: string }) => {
+      if (!barcode || scanned || loading) return;
+
+      // Use the debounced function
+      debouncedBarcodeLookup(barcode);
+    },
+    [scanned, loading, debouncedBarcodeLookup]
+  );
 
   // Clean up on unmount
   useEffect(() => {
@@ -317,7 +322,9 @@ export default function BarcodeScannerScreen({
     setSaving(true);
 
     try {
-      const categoryGuess = mapCategoryToStorage(product.attributes.category || "");
+      const categoryGuess = mapCategoryToStorage(
+        product.attributes.category || ""
+      );
 
       const productToSave: Product = {
         id: product.EAN13 || product.UPCA || Date.now().toString(),
@@ -329,19 +336,26 @@ export default function BarcodeScannerScreen({
         unit: product.unit || "pcs",
         barcode: product.EAN13 || product.UPCA || "",
         imageUrl: product.image,
-        description: product.attributes.long_desc || product.attributes.description,
-        ...(product.attributes.asin_com && { asin: product.attributes.asin_com }),
+        description:
+          product.attributes.long_desc || product.attributes.description,
+        ...(product.attributes.asin_com && {
+          asin: product.attributes.asin_com,
+        }),
       };
 
       // Use the saveToPantry function from the pantry library
-      await saveToPantry(productToSave);
+      await addToPantry(productToSave);
 
-      Alert.alert("Success", `${product.attributes.product} has been added to your pantry`, [
-        {
-          text: "OK",
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      Alert.alert(
+        "Success",
+        `${product.attributes.product} has been added to your pantry`,
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
     } catch (error) {
       console.error("Error saving product:", error);
       Alert.alert(
@@ -459,7 +473,9 @@ export default function BarcodeScannerScreen({
                   {product.attributes.product}
                 </Text>
                 {product.attributes.asin_com && (
-                  <Text style={styles.productBrand}>ASIN: {product.attributes.asin_com}</Text>
+                  <Text style={styles.productBrand}>
+                    ASIN: {product.attributes.asin_com}
+                  </Text>
                 )}
               </View>
 
@@ -515,9 +531,7 @@ export default function BarcodeScannerScreen({
                     >
                       <Text style={styles.quantityButtonText}>-</Text>
                     </TouchableOpacity>
-                    <Text style={styles.quantityText}>
-                      {1}
-                    </Text>
+                    <Text style={styles.quantityText}>{1}</Text>
                     <TouchableOpacity
                       style={styles.quantityButton}
                       onPress={() =>
