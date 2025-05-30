@@ -5,6 +5,10 @@ import RecipeCatalogScreen from "../screens/RecipeCatalogScreen";
 import RecipeDetailScreen from "../screens/RecipeDetailScreen";
 import RecipeCreateScreen from "../screens/RecipeCreateScreen";
 import { SearchResultsScreen } from "../screens/SearchResultsScreen";
+import { Animated } from "react-native";
+import { NativeStackNavigationOptions } from "@react-navigation/native-stack";
+import { CustomHeader } from "../components/CustomHeader";
+import { useRef, useMemo } from "react";
 
 const Stack = createNativeStackNavigator();
 
@@ -17,23 +21,40 @@ export type RecipeLibraryStackParamList = {
 };
 
 export default function RecipeLibraryStack() {
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const screenOptions: NativeStackNavigationOptions = useMemo(() => ({
+    header: ({ route, options }) => {
+      const showBackButton = route.name !== "RecipesScreen";
+      return (
+        <CustomHeader
+          showBackButton={showBackButton}
+          title={options.title as string}
+          scrollY={route.name === "RecipesScreen" ? scrollY : undefined}
+        />
+      );
+    },
+    headerShown: true,
+    contentStyle: { backgroundColor: "red" },
+  }), [scrollY]);
+
   return (
     <Stack.Navigator
       initialRouteName="RecipesScreen"
-      screenOptions={{ headerShown: false }}
+      screenOptions={screenOptions}
     >
       <Stack.Screen name="RecipesScreen" component={RecipesScreen} />
       <Stack.Screen name="RecipeCatalog" component={RecipeCatalogScreen} />
       <Stack.Screen name="RecipeDetail" component={RecipeDetailScreen} />
-      <Stack.Screen 
-        name="RecipeCreate" 
-        component={RecipeCreateScreen} 
-        options={{ title: 'Add Recipe' }}
+      <Stack.Screen
+        name="RecipeCreate"
+        component={RecipeCreateScreen}
+        options={{ title: "Add Recipe" }}
       />
-      <Stack.Screen 
-        name="SearchResults" 
+      <Stack.Screen
+        name="SearchResults"
         component={SearchResultsScreen}
-        options={{ title: 'Search Results' }}
+        options={{ title: "Search Results" }}
       />
     </Stack.Navigator>
   );

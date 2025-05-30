@@ -6,14 +6,15 @@ import { colors } from '../theme/colors';
 
 interface PantryListProps {
   products: Product[];
-  onAddToPantry: (product: Product) => void;
+  onAddToPantry?: (product: Product) => void;
+  onRemoveFromPantry?: (product: Product) => void;
   onQuantityChange: (productId: string, change: number) => void;
   pantryItems: Product[];
   onRefresh?: () => void;
   refreshing?: boolean;
   contentContainerStyle?: object;
   onEndReached?: () => void;
-  loadingMore?: boolean;
+  loadingMore?: boolean;  
   hasMore?: boolean;
   title?: string;
   isInitialLoad?: boolean;
@@ -22,6 +23,7 @@ interface PantryListProps {
 const PantryList: React.FC<PantryListProps> = ({
   products,
   onAddToPantry,
+  onRemoveFromPantry,
   onQuantityChange,
   pantryItems,
   onRefresh,
@@ -80,6 +82,7 @@ const PantryList: React.FC<PantryListProps> = ({
             <PantryItem
               product={product}
               onAddToPantry={onAddToPantry}
+              onRemoveFromPantry={onRemoveFromPantry}
               onQuantityChange={onQuantityChange}
               isInPantry={isInPantry(product.id)}
             />

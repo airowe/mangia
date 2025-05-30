@@ -1,5 +1,5 @@
 import React from 'react';
-import { Animated, View, StyleSheet, Platform, ViewStyle } from 'react-native';
+import { Animated, StyleSheet, Platform, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 
@@ -66,8 +66,7 @@ export const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
 
 const styles = StyleSheet.create({
   header: {
-    position: 'absolute',
-    top: 0,
+    position: 'relative',
     left: 0,
     right: 0,
     backgroundColor: colors.background,
@@ -89,7 +88,10 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flex: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
+    minHeight: 44,
   },
 });

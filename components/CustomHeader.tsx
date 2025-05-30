@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   Platform,
   StyleProp,
   ViewStyle,
-  StatusBar,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,15 +25,11 @@ type RootStackParamList = {
   [key: string]: undefined;
 };
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
 interface CustomHeaderProps {
   showBackButton?: boolean;
   title?: string;
   scrollY?: Animated.Value;
   headerStyle?: StyleProp<ViewStyle>;
-  showStatic?: boolean;
-  showLogo?: boolean;
 }
 
 export function CustomHeader({
@@ -42,20 +37,11 @@ export function CustomHeader({
   showBackButton = false,
   scrollY,
   headerStyle,
-  showStatic = false,
-  showLogo = true,
 }: CustomHeaderProps) {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user } = useUser();
   const insets = useSafeAreaInsets();
-
-  // Header animation values
-  const headerHeight =
-    scrollY?.interpolate({
-      inputRange: [0, 60],
-      outputRange: [120, 60],
-      extrapolate: "clamp",
-    }) || new Animated.Value(120);
 
   const headerTranslateY = scrollY || new Animated.Value(0);
 
@@ -92,7 +78,7 @@ export function CustomHeader({
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              onPress={() => navigation.navigate('HomeScreen' as never)}
+              onPress={() => navigation.navigate("HomeScreen" as never)}
               style={styles.basketButton}
             >
               <Ionicons name="basket" size={24} color={colors.primary} />
@@ -123,10 +109,7 @@ export function CustomHeader({
   if (!scrollY) {
     return (
       <View style={styles.staticHeader}>
-        <View style={[
-          styles.headerContainer,
-          { paddingTop: Platform.OS === "ios" ? 40 : 10 }
-        ]}>
+        <View style={[styles.headerContainer, { paddingTop: insets.top }]}>
           {headerContent}
         </View>
       </View>
@@ -134,15 +117,18 @@ export function CustomHeader({
   }
 
   return (
-    <View style={[styles.staticHeader, headerStyle, { paddingTop: insets.top }]}>
+    <View
+      style={[styles.staticHeader, headerStyle, { paddingTop: insets.top }]}
+    >
       <AnimatedHeader
         scrollY={scrollY}
         style={{
           ...styles.headerContainer,
           ...(headerStyle as object),
+          paddingTop: insets.top,
           transform: [{ translateY: headerTranslateY }],
-          ...(Platform.OS === 'ios' && {
-            shadowColor: '#000',
+          ...(Platform.OS === "ios" && {
+            shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.1,
             shadowRadius: 4,
@@ -153,26 +139,29 @@ export function CustomHeader({
       </AnimatedHeader>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   // Header container styles
   staticHeader: {
     width: "100%",
     backgroundColor: colors.background,
-    paddingTop: 0,
   },
-  
+
   // Inner header container
   headerContainer: {
-    width: '100%',
+    width: "100%",
     backgroundColor: colors.background,
-    paddingTop: Platform.OS === 'ios' ? 44 : StatusBar.currentHeight,
     paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 12,
+    minHeight: 44, // Increased from 44 to provide more vertical space
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -187,24 +176,26 @@ const styles = StyleSheet.create({
 
   // Avatar styles
   avatarContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 16,
+    marginVertical: 4, // Added vertical margin for better spacing
   },
 
   avatarText: {
     color: colors.background,
-    fontWeight: '600',
-    fontSize: 12,
+    fontWeight: "600",
+    fontSize: 14, // Slightly larger text for better visibility
+    lineHeight: 20, // Ensure proper vertical centering
   },
 
   // Title styles
   titleContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
   },
 
   title: {
@@ -221,10 +212,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
   },
-  
+
   leftContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   // Logo styles
@@ -247,12 +238,20 @@ const styles = StyleSheet.create({
   },
 
   backButton: {
-    padding: 5,
-    marginRight: 10,
+    padding: 8,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  
+
   basketButton: {
-    padding: 5,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
   },
 
   // User account button

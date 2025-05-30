@@ -6,6 +6,7 @@ import { AuthScreen } from "./screens/AuthScreen";
 import { AccountScreen } from "./screens/AccountScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Provider as PaperProvider } from "react-native-paper";
 import TabNavigator from "./navigation/TabNavigator";
 import {
   ActivityIndicator,
@@ -186,11 +187,13 @@ function AppContent() {
 // Main app component with necessary providers
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <AppContent />
-      </GestureHandlerRootView>
-    </SafeAreaProvider>
+    <PaperProvider>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <AppContent />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+    </PaperProvider>
   );
 }
 

@@ -7,9 +7,10 @@ type ScreenProps = {
   children: ReactNode;
   style?: ViewStyle;
   noPadding?: boolean;
+  verticalPadding?: boolean;
 };
 
-export function Screen({ children, style, noPadding = false }: ScreenProps) {
+export function Screen({ children, style, noPadding = false, verticalPadding = false }: ScreenProps) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -23,6 +24,7 @@ export function Screen({ children, style, noPadding = false }: ScreenProps) {
           paddingRight: insets.right,
         },
         !noPadding && styles.padding,
+        !verticalPadding && styles.verticalPadding,
         style,
       ]}
     >
@@ -38,5 +40,9 @@ const styles = StyleSheet.create({
   },
   padding: {
     paddingHorizontal: 16,
+  },
+  verticalPadding: {
+    paddingTop: 8,
+    paddingBottom: 8,
   },
 });

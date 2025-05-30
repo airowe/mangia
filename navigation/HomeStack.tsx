@@ -35,7 +35,7 @@ export default function HomeStack() {
       );
     },
     headerShown: true,
-    contentStyle: { backgroundColor: "#fff" },
+    contentStyle: { backgroundColor: "red" },
   };
 
   return (

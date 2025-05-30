@@ -5,8 +5,6 @@ import {
   RefreshControl,
   Alert,
   Animated,
-  StatusBar,
-  Platform,
   ActivityIndicator,
 } from "react-native";
 import { Screen } from "../components/Screen";
@@ -17,6 +15,7 @@ import {
   fetchPantryItems,
   addToPantry,
   updatePantryItemQuantity,
+  removeFromPantry,
 } from "../lib/pantry";
 import { colors } from "../theme/colors";
 import { Button } from "react-native-paper";
@@ -45,8 +44,8 @@ export const HomeScreen: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [pantryItems, setPantryItems] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoadingPantry, setIsLoadingPantry] = useState<boolean>(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
@@ -54,6 +53,11 @@ export const HomeScreen: React.FC = () => {
     total: 0,
     totalPages: 1,
   });
+  
+  // Filter out products that are already in the pantry
+  const availableProducts = allProducts.filter(
+    product => !pantryItems.some(item => item.id === product.id)
+  );
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -98,10 +102,9 @@ export const HomeScreen: React.FC = () => {
         console.error("Error loading products:", error);
         Alert.alert("Error", "Failed to load products");
       } finally {
+        setIsLoadingProducts(false);
         setLoadingMore(false);
-        if (isInitialLoad) {
-          setIsInitialLoad(false);
-        }
+        setIsRefreshing(false);
       }
     },
     [pagination.limit]
@@ -109,14 +112,15 @@ export const HomeScreen: React.FC = () => {
 
   const loadPantryItems = useCallback(async () => {
     try {
-      setIsLoading(true);
       const items = await fetchPantryItems();
       setPantryItems(items);
+      setIsLoadingPantry(false);
+      return items;
     } catch (error) {
       console.error("Error loading pantry items:", error);
       Alert.alert("Error", "Failed to load pantry items");
-    } finally {
-      setIsLoading(false);
+      setIsLoadingPantry(false);
+      return [];
     }
   }, []);
 
@@ -141,6 +145,28 @@ export const HomeScreen: React.FC = () => {
       console.error("Error in handleAddToPantry:", error);
       // Revert optimistic update on error
       setAllProducts((prev) => [...prev, product]);
+    }
+  }, []);
+
+  const handleRemoveFromPantry = useCallback(async (product: Product) => {
+    try {
+      // Optimistically update the UI
+      setPantryItems((prev) => prev.filter((p) => p.id !== product.id));
+
+      const result = await removeFromPantry(product.id);
+      if (!result) {
+        console.error("Error removing from pantry:", result);
+        // Revert optimistic update on error
+        setPantryItems((prev) => [...prev, product]);
+        return;
+      }
+
+      // Remove the item from the pantry items
+      setPantryItems((prev) => prev.filter((item) => item.id !== product.id));
+    } catch (error) {
+      console.error("Error in handleRemoveFromPantry:", error);
+      // Revert optimistic update on error
+      setPantryItems((prev) => [...prev, product]);
     }
   }, []);
 
@@ -187,44 +213,40 @@ export const HomeScreen: React.FC = () => {
     loadPantryItems();
   }, [loadProducts, loadPantryItems]);
 
-  const headerHeight = 60;
-
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, 100],
     outputRange: [0, -100],
     extrapolate: "clamp",
   });
 
-  if (isLoading) {
+  // Show loading indicator while pantry is loading
+  if (isLoadingPantry) {
     return (
-      <View style={styles.loadingContainer}>
+      <Screen style={styles.loadingContainer as any}>
         <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      </Screen>
     );
   }
 
   return (
     <Screen style={styles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={colors.background}
-        translucent={false}
-      />
       <Animated.ScrollView
         style={styles.scrollView}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
-            onRefresh={loadPantryItems}
+            onRefresh={() => {
+              setIsRefreshing(true);
+              loadPantryItems();
+              loadProducts(1);
+            }}
             colors={[colors.primary]}
             tintColor={colors.primary}
           />
         }
         contentContainerStyle={[
           styles.scrollViewContent,
-          { paddingTop: headerHeight },
         ]}
-        // Removed refresh control
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           {
@@ -242,27 +264,28 @@ export const HomeScreen: React.FC = () => {
           <PantryList
             title="My Pantry"
             products={pantryItems}
-            onAddToPantry={handleAddToPantry}
+            onRemoveFromPantry={handleRemoveFromPantry}
             onQuantityChange={handleQuantityChange}
             pantryItems={pantryItems}
             onEndReached={handleLoadMore}
-            isInitialLoad={isInitialLoad}
             loadingMore={loadingMore}
             hasMore={pagination.page < pagination.totalPages}
+            isInitialLoad={isLoadingPantry}
           />
 
-          {/* All Products */}
+          {/* Available Products (not in pantry) */}
           <PantryList
-            title="All Products"
-            products={allProducts}
+            title="Available Products"
+            products={availableProducts}
             onAddToPantry={handleAddToPantry}
             onQuantityChange={handleQuantityChange}
             pantryItems={pantryItems}
             onEndReached={handleLoadMore}
             loadingMore={loadingMore}
             hasMore={pagination.page < pagination.totalPages}
-            isInitialLoad={isInitialLoad}
+            isInitialLoad={isLoadingProducts}
           />
+
         </View>
       </Animated.ScrollView>
 
@@ -303,7 +326,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
   },
   scrollViewContent: {
     paddingBottom: 80,
@@ -311,7 +333,6 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: 16,
-    paddingTop: 8,
   },
   buttonContainer: {
     flexDirection: "row",
