@@ -35,7 +35,6 @@ export default function RecipeLibraryStack() {
       );
     },
     headerShown: true,
-    contentStyle: { backgroundColor: "red" },
   }), [scrollY]);
 
   return (

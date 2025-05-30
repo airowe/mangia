@@ -29,14 +29,12 @@ interface CustomHeaderProps {
   showBackButton?: boolean;
   title?: string;
   scrollY?: Animated.Value;
-  headerStyle?: StyleProp<ViewStyle>;
 }
 
 export function CustomHeader({
   title,
   showBackButton = false,
   scrollY,
-  headerStyle,
 }: CustomHeaderProps) {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -81,7 +79,7 @@ export function CustomHeader({
               onPress={() => navigation.navigate("HomeScreen" as never)}
               style={styles.basketButton}
             >
-              <Ionicons name="basket" size={24} color={colors.primary} />
+              <Ionicons name="basket" size={36} color={colors.primary} />
             </TouchableOpacity>
           )}
         </View>
@@ -109,7 +107,7 @@ export function CustomHeader({
   if (!scrollY) {
     return (
       <View style={styles.staticHeader}>
-        <View style={[styles.headerContainer, { paddingTop: insets.top }]}>
+        <View style={[styles.headerContainer, { paddingTop: insets.top / 2 }]}>
           {headerContent}
         </View>
       </View>
@@ -117,15 +115,11 @@ export function CustomHeader({
   }
 
   return (
-    <View
-      style={[styles.staticHeader, headerStyle, { paddingTop: insets.top }]}
-    >
+    <View style={[styles.staticHeader, { paddingTop: insets.top / 2 }]}>
       <AnimatedHeader
         scrollY={scrollY}
         style={{
           ...styles.headerContainer,
-          ...(headerStyle as object),
-          paddingTop: insets.top,
           transform: [{ translateY: headerTranslateY }],
           ...(Platform.OS === "ios" && {
             shadowColor: "#000",
@@ -153,7 +147,6 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: colors.background,
     paddingHorizontal: 16,
-    paddingTop: 8,
     paddingBottom: 12,
     minHeight: 44, // Increased from 44 to provide more vertical space
     flexDirection: "row",
@@ -172,6 +165,7 @@ const styles = StyleSheet.create({
   // Header content styles
   headerContent: {
     width: "100%",
+    paddingBottom: 12,
   },
 
   // Avatar styles
@@ -210,7 +204,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingBottom: 16,
   },
 
   leftContainer: {
@@ -252,22 +246,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "transparent",
-  },
-
-  // User account button
-  accountButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  userInitialsContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
   },
 
   userInitials: {

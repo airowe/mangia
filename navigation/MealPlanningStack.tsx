@@ -22,7 +22,6 @@ export default function MealPlanningStack() {
       );
     },
     headerShown: true,
-    contentStyle: { backgroundColor: "red" },
   };
 
   return (
