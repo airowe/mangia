@@ -11,7 +11,6 @@ import { Screen } from "../components/Screen";
 import PantryList from "../components/PantryList";
 import { Product } from "../models/Product";
 import {
-  fetchAllProducts,
   fetchPantryItems,
   addToPantry,
   updatePantryItemQuantity,
@@ -21,6 +20,7 @@ import { colors } from "../theme/colors";
 import { Button } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { fetchAllProducts } from "../lib/products";
 
 type RootStackParamList = {
   BarcodeScreen: undefined;

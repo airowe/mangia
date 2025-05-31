@@ -34,7 +34,6 @@ export default function RecipeDetailScreen() {
   const loadRecipe = useCallback(async () => {
     try {
       setLoading(true);
-      Alert.alert("Loading recipe...", id);
       const data = await fetchRecipeById(id);
       setRecipe(data);
     } catch (err) {

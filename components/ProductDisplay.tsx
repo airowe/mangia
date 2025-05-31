@@ -8,7 +8,7 @@ interface ProductDisplayProps {
 const ProductDisplay: React.FC<ProductDisplayProps> = ({ product }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.name}>{product.name}</Text>
+      <Text style={styles.name}>{product.title}</Text>
       <Text style={styles.category}>{product.category}</Text>
       <Text style={styles.quantity}>
         {product.quantity} {product.unit}

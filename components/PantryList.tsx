@@ -78,8 +78,9 @@ const PantryList: React.FC<PantryListProps> = ({
         scrollEventThrottle={400}
       >
         {products.map((product) => (
-          <View key={product.id} style={styles.itemWrapper}>
+          <View key={`pantry-item-${product.id}`} style={styles.itemWrapper}>
             <PantryItem
+              key={`pantry-item-${product.id}-content`}
               product={product}
               onAddToPantry={onAddToPantry}
               onRemoveFromPantry={onRemoveFromPantry}

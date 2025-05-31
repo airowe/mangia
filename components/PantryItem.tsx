@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -27,7 +27,6 @@ const PantryItem: React.FC<PantryItemProps> = ({
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const [showRemoveDialog, setShowRemoveDialog] = React.useState(false);
-  const pendingDecrement = useRef(false);
 
   const handlePress = () => {
     navigation.navigate("ProductDetail", { product });
