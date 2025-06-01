@@ -1,8 +1,14 @@
-import React from 'react';
-import { View, StyleSheet, Text, ScrollView, RefreshControl } from 'react-native';
-import { Product } from '../models/Product';
-import PantryItem from './PantryItem';
-import { colors } from '../theme/colors';
+import React from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
+import { Product } from "../models/Product";
+import PantryItem from "./PantryItem";
+import { colors } from "../theme/colors";
 
 interface PantryListProps {
   products: Product[];
@@ -14,7 +20,7 @@ interface PantryListProps {
   refreshing?: boolean;
   contentContainerStyle?: object;
   onEndReached?: () => void;
-  loadingMore?: boolean;  
+  loadingMore?: boolean;
   hasMore?: boolean;
   title?: string;
   isInitialLoad?: boolean;
@@ -33,11 +39,11 @@ const PantryList: React.FC<PantryListProps> = ({
   loadingMore = false,
   hasMore = false,
   title,
-  isInitialLoad = false
+  isInitialLoad = false,
 }) => {
   // Check if a product is in the pantry
   const isInPantry = (productId: string) => {
-    return pantryItems.some(item => item.id === productId);
+    return pantryItems.some((item) => item.id === productId);
   };
 
   // Return null or an empty view during initial load
@@ -45,8 +51,12 @@ const PantryList: React.FC<PantryListProps> = ({
     return null;
   }
 
-  // If there are no products, show a message
-  if (!products || products.length === 0) {
+  // Filter out products with undefined IDs
+  const validProducts =
+    products?.filter((product) => product.id !== undefined) || [];
+
+  // If there are no valid products, show a message
+  if (validProducts.length === 0) {
     return (
       <View style={[styles.emptyContainer, contentContainerStyle]}>
         <Text style={styles.emptyText}>No products found</Text>
@@ -60,7 +70,10 @@ const PantryList: React.FC<PantryListProps> = ({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[styles.horizontalContainer, contentContainerStyle]}
+        contentContainerStyle={[
+          styles.horizontalContainer,
+          contentContainerStyle,
+        ]}
         refreshControl={
           onRefresh ? (
             <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} />
@@ -68,8 +81,11 @@ const PantryList: React.FC<PantryListProps> = ({
         }
         onScrollEndDrag={({ nativeEvent }) => {
           if (onEndReached && !loadingMore) {
-            const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-            const isCloseToEnd = layoutMeasurement.width + contentOffset.x >= contentSize.width - 50;
+            const { layoutMeasurement, contentOffset, contentSize } =
+              nativeEvent;
+            const isCloseToEnd =
+              layoutMeasurement.width + contentOffset.x >=
+              contentSize.width - 50;
             if (isCloseToEnd) {
               onEndReached();
             }
@@ -77,7 +93,7 @@ const PantryList: React.FC<PantryListProps> = ({
         }}
         scrollEventThrottle={400}
       >
-        {products.map((product) => (
+        {validProducts.map((product) => (
           <View key={`pantry-item-${product.id}`} style={styles.itemWrapper}>
             <PantryItem
               key={`pantry-item-${product.id}-content`}
@@ -89,7 +105,6 @@ const PantryList: React.FC<PantryListProps> = ({
             />
           </View>
         ))}
-
       </ScrollView>
       {onEndReached && !loadingMore && hasMore && (
         <View style={styles.loadMorePlaceholder} />
@@ -106,7 +121,7 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
     marginLeft: 16,
     marginBottom: 4,
@@ -115,7 +130,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 4,
     paddingBottom: 12, // Extra padding for scroll indicator
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   itemWrapper: {
     marginRight: 16,
@@ -124,8 +139,8 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   emptyText: {
@@ -134,20 +149,20 @@ const styles = StyleSheet.create({
   },
   loadingMore: {
     width: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadMorePlaceholder: {
     width: 20,
     height: 20,
   },
   debugText: {
-    color: 'red',
+    color: "red",
     fontSize: 14,
   },
   collectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 12,
     marginHorizontal: 16,
     color: colors.text,

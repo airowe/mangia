@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { Button } from "react-native-paper";
 import {
   View,
   Text,
@@ -73,12 +74,11 @@ const RecipeSection: React.FC<RecipeSectionProps> = ({
   </View>
 );
 
+type RecipesScreenNavigationProp = NativeStackNavigationProp<RecipeLibraryStackParamList, 'RecipesScreen'>;
+
 export const RecipesScreen = () => {
   const user = getCurrentUser();
-  const navigation =
-    useNavigation<
-      NativeStackNavigationProp<RecipeLibraryStackParamList, "RecipesScreen">
-    >();
+  const navigation = useNavigation<RecipesScreenNavigationProp>();
 
   const [userRecipes, setUserRecipes] = useState<Recipe[]>([]);
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
@@ -92,7 +92,7 @@ export const RecipesScreen = () => {
     all: null as string | null,
   });
 
-  const loadUserRecipes = async (showLoading = true) => {
+  const loadUserRecipes = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoading((prev) => ({ ...prev, user: true }));
       setError((prev) => ({ ...prev, user: null }));
@@ -107,9 +107,9 @@ export const RecipesScreen = () => {
     } finally {
       setLoading((prev) => ({ ...prev, user: false }));
     }
-  };
+  }, []);
 
-  const loadAllRecipes = async (showLoading = true) => {
+  const loadAllRecipes = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoading((prev) => ({ ...prev, all: true }));
       setError((prev) => ({ ...prev, all: null }));
@@ -125,7 +125,7 @@ export const RecipesScreen = () => {
       setLoading((prev) => ({ ...prev, all: false }));
       setRefreshing(false);
     }
-  };
+  }, [fetchRecipes]); // Add fetchRecipes to dependencies if it's defined outside the component
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -152,7 +152,7 @@ export const RecipesScreen = () => {
   useEffect(() => {
     loadUserRecipes();
     loadAllRecipes();
-  }, [loadUserRecipes, loadAllRecipes]);
+  }, [loadUserRecipes, loadAllRecipes]); // These are now stable due to useCallback
 
   return (
     <Screen>
@@ -184,34 +184,28 @@ export const RecipesScreen = () => {
           onRetry={loadAllRecipes}
           onPressRecipe={handlePressRecipe}
         />
-        <View style={styles.fabContainer}>
-          <FAB
-            icon="book-search"
-            style={[styles.fab, styles.fabLeft]}
-            onPress={handleBrowseCatalog}
-            color={colors.white}
-          />
-          <FAB
-            icon="plus"
-            style={[styles.fab, styles.fabRight]}
-            onPress={handleAddRecipe}
-            color={colors.white}
-          />
-        </View>
       </ScrollView>
-      <View style={styles.fabContainer}>
-        <FAB
-          icon="book-search"
-          style={styles.fab}
+      <View style={styles.buttonContainer}>
+        <Button
+          mode="contained"
           onPress={handleBrowseCatalog}
-          color={colors.white}
-        />
-        <FAB
-          icon="plus"
-          style={[styles.fab, { marginLeft: 16 }]}
+          style={[styles.button, styles.containedButton]}
+          labelStyle={[styles.buttonLabel, { color: "white" }]}
+          theme={{ colors: { primary: colors.primary } }}
+          icon="book-search"
+        >
+          Browse Catalog
+        </Button>
+        <Button
+          mode="outlined"
           onPress={handleAddRecipe}
-          color={colors.white}
-        />
+          style={[styles.button, styles.outlinedButton]}
+          labelStyle={[styles.buttonLabel, { color: colors.primary }]}
+          theme={{ colors: { primary: colors.primary } }}
+          icon="plus"
+        >
+          Add Recipe
+        </Button>
       </View>
     </Screen>
   );
@@ -287,23 +281,36 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontWeight: "500",
   },
-  fabContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     padding: 16,
-    zIndex: 1,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  fab: {
+  button: {
+    flex: 1,
+    marginHorizontal: 8,
+    height: 48,
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  buttonLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginVertical: 0,
+    paddingVertical: 0,
+    height: 20,
+    lineHeight: 20,
+  },
+  containedButton: {
     backgroundColor: colors.primary,
+    elevation: 0,
   },
-  fabLeft: {
-    alignSelf: "flex-start",
-  },
-  fabRight: {
-    alignSelf: "flex-end",
+  outlinedButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
 });

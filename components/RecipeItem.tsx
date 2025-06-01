@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Recipe } from '../models/Recipe';
-import { colors } from '../theme/colors';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { Recipe } from "../models/Recipe";
+import { colors } from "../theme/colors";
 
 interface RecipeItemProps {
   recipe: Recipe;
@@ -10,26 +10,23 @@ interface RecipeItemProps {
   isSelected?: boolean;
 }
 
-export const RecipeItem: React.FC<RecipeItemProps> = ({ 
-  recipe, 
-  onPress, 
-  showMealType = true, 
-  isSelected = false 
+export const RecipeItem: React.FC<RecipeItemProps> = ({
+  recipe,
+  onPress,
+  showMealType = true,
+  isSelected = false,
 }) => {
-  const imageUrl = recipe.image_url;
-  
+  const imageurl = recipe.image_url;
+
   return (
-    <TouchableOpacity 
-      style={[
-        styles.container, 
-        isSelected && styles.selectedContainer
-      ]} 
+    <TouchableOpacity
+      style={[styles.container, isSelected && styles.selectedContainer]}
       onPress={() => onPress(recipe)}
       activeOpacity={0.7}
     >
-      {imageUrl ? (
+      {imageurl ? (
         <Image
-          source={{ uri: imageUrl }}
+          source={{ uri: imageurl }}
           style={styles.recipeImage}
           resizeMode="cover"
         />
@@ -54,7 +51,7 @@ export const RecipeItem: React.FC<RecipeItemProps> = ({
         {(recipe.cook_time || recipe.servings) && (
           <Text style={styles.recipeMeta}>
             {recipe.cook_time && `${recipe.cook_time} min`}
-            {recipe.cook_time && recipe.servings && ' • '}
+            {recipe.cook_time && recipe.servings && " • "}
             {recipe.servings && `${recipe.servings} servings`}
             {showMealType && recipe.meal_type && ` • ${recipe.meal_type}`}
           </Text>
@@ -70,9 +67,9 @@ const styles = StyleSheet.create({
     margin: 8,
     borderRadius: 8,
     backgroundColor: colors.surface,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -82,15 +79,15 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   recipeImage: {
-    width: '100%',
+    width: "100%",
     height: 160,
   },
   placeholderImage: {
-    width: '100%',
+    width: "100%",
     height: 160,
     backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   placeholderText: {
     color: colors.textTertiary,
@@ -101,7 +98,7 @@ const styles = StyleSheet.create({
   },
   recipeTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
     marginBottom: 4,
   },

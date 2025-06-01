@@ -25,40 +25,40 @@ type RootStackParamList = {
 
 type ProductDetailScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  'ProductDetail'
+  "ProductDetail"
 >;
 
-type ProductDetailRouteProp = RouteProp<RootStackParamList, 'ProductDetail'>;
+type ProductDetailRouteProp = RouteProp<RootStackParamList, "ProductDetail">;
 
 export default function ProductDetailScreen() {
   const navigation = useNavigation<ProductDetailScreenNavigationProp>();
   const route = useRoute<ProductDetailRouteProp>();
   const { width } = useWindowDimensions();
-  
+
   const [product, setProduct] = useState<Product>(route.params.product);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const handleQuantityChange = async (change: number) => {
     const newQuantity = Math.max(1, (product.quantity || 1) + change);
-    
+
     // Optimistic update
-    setProduct(prev => ({
+    setProduct((prev) => ({
       ...prev,
       quantity: newQuantity,
     }));
-    
+
     try {
       setUpdating(true);
       await updatePantryItemQuantity(product.id, newQuantity);
     } catch (error) {
-      console.error('Error updating quantity:', error);
+      console.error("Error updating quantity:", error);
       // Revert on error
-      setProduct(prev => ({
+      setProduct((prev) => ({
         ...prev,
         quantity: product.quantity || 1,
       }));
-      Alert.alert('Error', 'Failed to update quantity');
+      Alert.alert("Error", "Failed to update quantity");
     } finally {
       setUpdating(false);
     }
@@ -66,24 +66,24 @@ export default function ProductDetailScreen() {
 
   const handleDelete = async () => {
     Alert.alert(
-      'Remove Item',
+      "Remove Item",
       `Are you sure you want to remove ${product.title} from your pantry?`,
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
         {
-          text: 'Remove',
-          style: 'destructive',
+          text: "Remove",
+          style: "destructive",
           onPress: async () => {
             try {
               setDeleting(true);
               await removeFromPantry(product.id);
-              navigation.navigate('HomeScreen');
+              navigation.navigate("HomeScreen");
             } catch (error) {
-              console.error('Error removing item:', error);
-              Alert.alert('Error', 'Failed to remove item from pantry');
+              console.error("Error removing item:", error);
+              Alert.alert("Error", "Failed to remove item from pantry");
             } finally {
               setDeleting(false);
             }
@@ -102,36 +102,34 @@ export default function ProductDetailScreen() {
           <Text style={styles.title} numberOfLines={2}>
             {product.title}
           </Text>
-          {product.brand && (
-            <Text style={styles.brand}>{product.brand}</Text>
-          )}
+          {product.brand && <Text style={styles.brand}>{product.brand}</Text>}
         </View>
 
-        <View style={[styles.imageContainer, { width: imageSize, height: imageSize }]}>
-          {product.imageUrl ? (
+        <View
+          style={[
+            styles.imageContainer,
+            { width: imageSize, height: imageSize },
+          ]}
+        >
+          {product.imageurl ? (
             <Image
-              source={{ uri: product.imageUrl }}
+              source={{ uri: product.imageurl }}
               style={styles.productImage}
               resizeMode="contain"
             />
           ) : (
             <View style={styles.noImage}>
-              <MaterialIcons
-                name="no-photography"
-                size={48}
-                color="#999"
-              />
+              <MaterialIcons name="no-photography" size={48} color="#999" />
               <Text style={styles.noImageText}>No image available</Text>
             </View>
           )}
         </View>
 
-
         <View style={styles.detailsContainer}>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Category:</Text>
             <Text style={styles.detailValue}>
-              {product.category || 'Not specified'}
+              {product.category || "Not specified"}
             </Text>
           </View>
 
@@ -161,9 +159,7 @@ export default function ProductDetailScreen() {
               >
                 <Text style={styles.quantityButtonText}>-</Text>
               </TouchableOpacity>
-              <Text style={styles.quantityText}>
-                {product.quantity || 1}
-              </Text>
+              <Text style={styles.quantityText}>{product.quantity || 1}</Text>
               <TouchableOpacity
                 style={styles.quantityButton}
                 onPress={() => handleQuantityChange(1)}
@@ -173,7 +169,6 @@ export default function ProductDetailScreen() {
               </TouchableOpacity>
             </View>
           </View>
-
 
           {product.description && (
             <View style={styles.descriptionContainer}>
@@ -213,7 +208,7 @@ export default function ProductDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   scrollContainer: {
     paddingBottom: 40,
@@ -224,7 +219,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     marginBottom: 4,
   },
@@ -234,22 +229,22 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   imageContainer: {
-    alignSelf: 'center',
+    alignSelf: "center",
     backgroundColor: colors.background,
     borderRadius: 12,
     margin: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
   },
   productImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   noImage: {
     padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   noImageText: {
     marginTop: 8,
@@ -260,8 +255,8 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -275,40 +270,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     flex: 2,
-    textAlign: 'right',
+    textAlign: "right",
   },
   quantityContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   quantityControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   quantityButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
     backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   quantityButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   quantityText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginHorizontal: 16,
     color: colors.text,
     minWidth: 24,
-    textAlign: 'center',
+    textAlign: "center",
   },
   descriptionContainer: {
     marginTop: 20,
@@ -329,20 +324,20 @@ const styles = StyleSheet.create({
   button: {
     borderRadius: 8,
     padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   secondaryButton: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     borderWidth: 1,
     borderColor: colors.primary,
   },
   deleteButton: {
-    backgroundColor: '#ff3b30',
+    backgroundColor: "#ff3b30",
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
 });

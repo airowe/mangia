@@ -55,11 +55,11 @@ const PantryItem: React.FC<PantryItemProps> = ({
       activeOpacity={0.8}
     >
       <View style={styles.imageContainer}>
-        {product.imageUrl ? (
+        {product.imageurl ? (
           <View style={[styles.imageContainer, styles.imageFallback]}>
             <Image
               source={{
-                uri: product.imageUrl,
+                uri: product.imageurl,
                 cache: "force-cache" as const,
               }}
               style={styles.image}
@@ -97,12 +97,16 @@ const PantryItem: React.FC<PantryItemProps> = ({
           <TouchableOpacity
             style={[
               styles.quantityButton,
-              (product.quantity || 1) <= 1 && styles.quantityButtonDisabled
+              (product.quantity || 1) <= 1 && styles.quantityButtonDisabled,
             ]}
             onPress={handleDecrement}
             disabled={(product.quantity || 1) <= 1}
           >
-            <MaterialIcons name="remove" size={14} color={colors.textSecondary} />
+            <MaterialIcons
+              name="remove"
+              size={14}
+              color={colors.textSecondary}
+            />
           </TouchableOpacity>
           <Text style={styles.quantityText}>{product.quantity || 1}</Text>
           <TouchableOpacity
@@ -134,7 +138,10 @@ const PantryItem: React.FC<PantryItemProps> = ({
             </Text>
           </Dialog.Content>
           <Dialog.Actions style={styles.dialogActions}>
-            <Button onPress={handleCancelRemove} textColor={colors.textSecondary}>
+            <Button
+              onPress={handleCancelRemove}
+              textColor={colors.textSecondary}
+            >
               Cancel
             </Button>
             <Button onPress={handleConfirmRemove} textColor={colors.error}>
@@ -215,7 +222,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
   },
