@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { FlatList, StyleSheet, View, Animated, RefreshControl, Alert, ActivityIndicator, Text } from "react-native";
+import { StyleSheet, View, Animated, RefreshControl, Alert, ActivityIndicator } from "react-native";
 import { Screen } from "../components/Screen";
 import PantryList from "../components/PantryList";
-import PantryItemComponent from "../components/PantryItemComponent";
+import ProductList from "../components/ProductList";
 import { PantryItem, Product } from "../models/Product";
 import {
   fetchPantryItems,
@@ -286,30 +286,14 @@ export const HomeScreen: React.FC = () => {
 
           {/* Available Products (not in pantry) */}
           {availableProducts.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Available Products</Text>
-              <FlatList
-                data={availableProducts}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <PantryItemComponent
-                    product={{
-                      ...item,
-                      quantity: 0, // Default quantity for available products
-                    }}
-                    isInPantry={false}
-                    onAddToPantry={handleAddToPantry}
-                    onRemoveFromPantry={() => {}}
-                    onQuantityChange={() => {}}
-                  />
-                )}
-                onEndReached={handleLoadMore}
-                onEndReachedThreshold={0.5}
-                contentContainerStyle={styles.productsList}
-                numColumns={2}
-                columnWrapperStyle={styles.productsRow}
-              />
-            </View>
+            <ProductList
+              title="Available Products"
+              products={availableProducts}
+              onAddToPantry={handleAddToPantry}
+              onEndReached={handleLoadMore}
+              loadingMore={loadingMore}
+              hasMore={pagination.page < pagination.totalPages}
+            />
           )}
 
         </View>

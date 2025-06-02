@@ -1,9 +1,9 @@
 import React, { useRef } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { Portal, Dialog, Button } from "react-native-paper";
+import { Portal, Dialog, Button, Text } from "react-native-paper";
 import { RootStackParamList } from "../navigation/HomeStack";
 import { PantryItem } from "../models/Product";
 import { colors } from "../theme/colors";
@@ -119,7 +119,10 @@ const PantryItemComponent: React.FC<PantryItemProps> = ({
         </View>
       </View>
 
-      <Text style={styles.name} numberOfLines={1}>
+      <Text 
+        variant="bodyMedium"
+        style={styles.name}
+      >
         {product.title || "Product Name"}
       </Text>
       {product.price !== undefined && (
@@ -241,8 +244,6 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   name: {
-    fontSize: 14,
-    fontWeight: "500",
     marginTop: 8,
     marginHorizontal: 8,
     marginBottom: 2,
