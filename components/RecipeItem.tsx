@@ -16,7 +16,7 @@ export const RecipeItem: React.FC<RecipeItemProps> = ({
   showMealType = true,
   isSelected = false,
 }) => {
-  const imageurl = recipe.image_url;
+  const imageUrl = recipe.image_url;
 
   return (
     <TouchableOpacity
@@ -24,9 +24,9 @@ export const RecipeItem: React.FC<RecipeItemProps> = ({
       onPress={() => onPress(recipe)}
       activeOpacity={0.7}
     >
-      {imageurl ? (
+      {imageUrl ? (
         <Image
-          source={{ uri: imageurl }}
+          source={{ uri: imageUrl }}
           style={styles.recipeImage}
           resizeMode="cover"
         />

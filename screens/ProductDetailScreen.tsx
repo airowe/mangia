@@ -14,12 +14,12 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { Product } from "../models/Product";
+import { PantryItem } from "../models/Product";
 import { colors } from "../theme/colors";
 import { updatePantryItemQuantity, removeFromPantry } from "../lib/pantry";
 
 type RootStackParamList = {
-  ProductDetail: { product: Product };
+  ProductDetail: { product: PantryItem };
   HomeScreen: undefined;
 };
 
@@ -35,7 +35,7 @@ export default function ProductDetailScreen() {
   const route = useRoute<ProductDetailRouteProp>();
   const { width } = useWindowDimensions();
 
-  const [product, setProduct] = useState<Product>(route.params.product);
+  const [product, setProduct] = useState<PantryItem>(route.params.product);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -111,9 +111,9 @@ export default function ProductDetailScreen() {
             { width: imageSize, height: imageSize },
           ]}
         >
-          {product.imageurl ? (
+          {product.imageUrl ? (
             <Image
-              source={{ uri: product.imageurl }}
+              source={{ uri: product.imageUrl }}
               style={styles.productImage}
               resizeMode="contain"
             />

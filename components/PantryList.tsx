@@ -6,16 +6,16 @@ import {
   ScrollView,
   RefreshControl,
 } from "react-native";
-import { Product } from "../models/Product";
-import PantryItem from "./PantryItem";
+import { PantryItem } from "../models/Product";
+import PantryItemComponent from "./PantryItemComponent";
 import { colors } from "../theme/colors";
 
 interface PantryListProps {
-  products: Product[];
-  onAddToPantry?: (product: Product) => void;
-  onRemoveFromPantry?: (product: Product) => void;
+  products: PantryItem[];
+  onAddToPantry?: (product: PantryItem) => void;
+  onRemoveFromPantry?: (product: PantryItem) => void;
   onQuantityChange: (productId: string, change: number) => void;
-  pantryItems: Product[];
+  pantryItems: PantryItem[];
   onRefresh?: () => void;
   refreshing?: boolean;
   contentContainerStyle?: object;
@@ -95,7 +95,7 @@ const PantryList: React.FC<PantryListProps> = ({
       >
         {validProducts.map((product) => (
           <View key={`pantry-item-${product.id}`} style={styles.itemWrapper}>
-            <PantryItem
+            <PantryItemComponent
               key={`pantry-item-${product.id}-content`}
               product={product}
               onAddToPantry={onAddToPantry}

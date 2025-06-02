@@ -64,7 +64,7 @@ type ProductPlaceholderProps = {
   location?: string;
   size?: number;
   style?: ViewStyle;
-  imageurl?: string | null;
+  imageUrl?: string | null;
 };
 
 export const ProductPlaceholder: React.FC<ProductPlaceholderProps> = ({
@@ -72,10 +72,10 @@ export const ProductPlaceholder: React.FC<ProductPlaceholderProps> = ({
   location,
   size = 100,
   style,
-  imageurl,
+  imageUrl,
 }) => {
   // Use the provided image URL or fallback to loremflickr
-  const imageSource = imageurl || "https://loremflickr.com/320/240/food";
+  const imageSource = imageUrl || "https://loremflickr.com/320/240/food";
 
   return (
     <View style={[styles.container, { width: size, height: size }, style]}>

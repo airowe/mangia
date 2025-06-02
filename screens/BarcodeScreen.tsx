@@ -335,7 +335,7 @@ export default function BarcodeScannerScreen({
         quantity: 1,
         unit: product.unit || "pcs",
         barcode: product.EAN13 || product.UPCA || "",
-        imageurl: product.image,
+        imageUrl: product.image,
         description:
           product.attributes.long_desc || product.attributes.description,
         ...(product.attributes.asin_com && {

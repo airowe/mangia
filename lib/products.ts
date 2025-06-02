@@ -23,7 +23,7 @@ const validateAndCleanProduct = (product: any): Product | null => {
     ...(product.location && { location: product.location }),
     ...(product.price && { price: Number(product.price) }),
     ...(product.image && { image: product.image }),
-    ...(product.imageurl && { imageurl: product.imageurl }),
+    ...(product.imageUrl && { imageUrl: product.imageUrl }),
     ...(product.barcode && { barcode: product.barcode }),
     ...(product.brand && { brand: product.brand }),
     ...(product.EAN13 && { EAN13: product.EAN13 }),

@@ -1,14 +1,14 @@
-import { Product } from "../models/Product";
+import { PantryItem, Product } from "../models/Product";
 import { apiClient } from "./api/client";
 import { supabase } from "./supabase";
 import { ApiResponse } from "./api/client";
 import { AxiosError } from "axios";
 
 export const addToPantry = async (
-  product: Product
-): Promise<{ data: Product | null; error: Error | null }> => {
+  product: PantryItem
+): Promise<{ data: PantryItem | null; error: Error | null }> => {
   try {
-    const response = await apiClient.post<ApiResponse<Product>>(
+    const response = await apiClient.post<ApiResponse<PantryItem>>(
       "/pantry/items",
       {
         ...product,
@@ -34,9 +34,9 @@ export const addToPantry = async (
 };
 
 // Fetch user's pantry items
-export const fetchPantryItems = async (): Promise<Product[]> => {
+export const fetchPantryItems = async (): Promise<PantryItem[]> => {
   try {
-    const response = await apiClient.get<ApiResponse<Product[]>>(
+    const response = await apiClient.get<ApiResponse<PantryItem[]>>(
       "/pantry/items"
     );
 
@@ -61,7 +61,7 @@ export const fetchPantryItems = async (): Promise<Product[]> => {
           throw new Error("Session expired. Please log in again.");
         }
 
-        const retryResponse = await apiClient.get<ApiResponse<Product[]>>(
+        const retryResponse = await apiClient.get<ApiResponse<PantryItem[]>>(
           "/pantry/items"
         );
 
@@ -89,9 +89,9 @@ export const fetchPantryItems = async (): Promise<Product[]> => {
 export const updatePantryItemQuantity = async (
   productId: string,
   quantity: number
-): Promise<{ data: Product | null; error: Error | null }> => {
+): Promise<{ data: PantryItem | null; error: Error | null }> => {
   try {
-    const response = await apiClient.put<ApiResponse<Product>>(
+    const response = await apiClient.put<ApiResponse<PantryItem>>(
       `/pantry/items/${productId}`,
       { quantity }
     );

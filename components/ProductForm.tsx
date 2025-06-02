@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { generateId } from "../utils/id";
-import { addProduct } from "../storage/pantryStorage";
-import { Product } from "../models/Product";
+import { addToPantry } from "../lib/pantry";
+import { PantryItem } from "../models/Product";
 import { STORAGE_CATEGORIES } from "../models/constants";
 
 export const ProductForm = ({ onAdded }: { onAdded: () => void }) => {
@@ -22,14 +22,14 @@ export const ProductForm = ({ onAdded }: { onAdded: () => void }) => {
 
   const handleSubmit = async () => {
     if (!title || !quantity || !unit) return;
-    const newProduct: Product = {
+    const newProduct: PantryItem = {
       id: generateId(),
       location,
       quantity: parseFloat(quantity),
       unit,
-      title
+      title,
     };
-    await addProduct(newProduct);
+    await addToPantry(newProduct);
     onAdded();
     setTitle("");
     setQuantity("");

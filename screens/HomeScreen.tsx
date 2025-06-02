@@ -1,15 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  View,
-  StyleSheet,
-  RefreshControl,
-  Alert,
-  Animated,
-  ActivityIndicator,
-} from "react-native";
+import { FlatList, StyleSheet, View, Animated, RefreshControl, Alert, ActivityIndicator, Text } from "react-native";
 import { Screen } from "../components/Screen";
 import PantryList from "../components/PantryList";
-import { Product } from "../models/Product";
+import PantryItemComponent from "../components/PantryItemComponent";
+import { PantryItem, Product } from "../models/Product";
 import {
   fetchPantryItems,
   addToPantry,
@@ -42,7 +36,7 @@ interface PaginationState {
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
-  const [pantryItems, setPantryItems] = useState<Product[]>([]);
+  const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoadingPantry, setIsLoadingPantry] = useState<boolean>(true);
   const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(true);
@@ -124,7 +118,7 @@ export const HomeScreen: React.FC = () => {
     }
   }, []);
 
-  const handleAddToPantry = useCallback(async (product: Product) => {
+  const handleAddToPantry = useCallback(async (product: PantryItem) => {
     try {
       // Optimistically update the UI
       setAllProducts((prev) => prev.filter((p) => p.id !== product.id));
@@ -148,26 +142,43 @@ export const HomeScreen: React.FC = () => {
     }
   }, []);
 
-  const handleRemoveFromPantry = useCallback(async (product: Product) => {
-    try {
-      // Optimistically update the UI
-      setPantryItems((prev) => prev.filter((p) => p.id !== product.id));
+  const handleRemoveFromPantry = useCallback(async (product: PantryItem) => {
 
-      const result = await removeFromPantry(product.id);
-      if (!result) {
-        console.error("Error removing from pantry:", result);
-        // Revert optimistic update on error
-        setPantryItems((prev) => [...prev, product]);
-        return;
-      }
+    //Add a confirm alert
+    Alert.alert(
+      "Remove Item",
+      `Are you sure you want to remove ${product.title} from your pantry?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Optimistically update the UI
+              setPantryItems((prev) => prev.filter((p) => p.id !== product.id));
 
-      // Remove the item from the pantry items
-      setPantryItems((prev) => prev.filter((item) => item.id !== product.id));
-    } catch (error) {
-      console.error("Error in handleRemoveFromPantry:", error);
-      // Revert optimistic update on error
-      setPantryItems((prev) => [...prev, product]);
-    }
+              const result = await removeFromPantry(product.id);
+              if (!result) {
+                console.error("Error removing from pantry:", result);
+                // Revert optimistic update on error
+                setPantryItems((prev) => [...prev, product]);
+                return;
+              }
+
+              // The item was already removed optimistically at the start
+            } catch (error) {
+              console.error("Error in handleRemoveFromPantry:", error);
+              // Revert optimistic update on error
+              setPantryItems((prev) => [...prev, product]);
+            }
+          },
+        },
+      ]
+    );
   }, []);
 
   const handleQuantityChange = useCallback(
@@ -221,11 +232,11 @@ export const HomeScreen: React.FC = () => {
 
   // Show loading indicator while pantry is loading
   if (isLoadingPantry) {
-    return (
-      <Screen style={styles.loadingContainer as any}>
+    return isLoadingProducts ? (
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-      </Screen>
-    );
+      </View>
+    ) : null;
   }
 
   return (
@@ -274,17 +285,32 @@ export const HomeScreen: React.FC = () => {
           />
 
           {/* Available Products (not in pantry) */}
-          <PantryList
-            title="Available Products"
-            products={availableProducts}
-            onAddToPantry={handleAddToPantry}
-            onQuantityChange={handleQuantityChange}
-            pantryItems={pantryItems}
-            onEndReached={handleLoadMore}
-            loadingMore={loadingMore}
-            hasMore={pagination.page < pagination.totalPages}
-            isInitialLoad={isLoadingProducts}
-          />
+          {availableProducts.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Available Products</Text>
+              <FlatList
+                data={availableProducts}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <PantryItemComponent
+                    product={{
+                      ...item,
+                      quantity: 0, // Default quantity for available products
+                    }}
+                    isInPantry={false}
+                    onAddToPantry={handleAddToPantry}
+                    onRemoveFromPantry={() => {}}
+                    onQuantityChange={() => {}}
+                  />
+                )}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                contentContainerStyle={styles.productsList}
+                numColumns={2}
+                columnWrapperStyle={styles.productsRow}
+              />
+            </View>
+          )}
 
         </View>
       </Animated.ScrollView>
@@ -317,6 +343,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    padding: 8,
+  },
+  section: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+    paddingHorizontal: 8,
+  },
+  productsList: {
+    paddingBottom: 16,
+  },
+  productsRow: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
   },
   loadingContainer: {
     flex: 1,

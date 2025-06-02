@@ -1,4 +1,4 @@
-import { apiClient } from './api/client';
+import { apiClient, PaginationParams, PaginatedResponse } from './api/client';
 import { Recipe } from '../models/Recipe';
 
 export interface MealPlanFilters {
@@ -128,9 +128,36 @@ export const recipeApi = {
     }
   },
 
-  // Fetch all recipes (alias for fetchRecipes for backward compatibility)
-  async fetchAllRecipes(): Promise<Recipe[]> {
-    return this.fetchRecipes();
+  // Fetch recipes with optional filters and pagination
+  async fetchAllRecipes(params: { 
+    search?: string;
+    ingredient?: string;
+    meal?: string;
+  } & PaginationParams = {
+  }): Promise<PaginatedResponse<Recipe>> {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      // Add search filters
+      if (params.search) queryParams.append('search', params.search);
+      if (params.ingredient) queryParams.append('ingredient', params.ingredient);
+      if (params.meal) queryParams.append('meal', params.meal);
+      
+      // Add pagination parameters
+      const page = params.page || 1;
+      const limit = params.limit || 10;
+      queryParams.append('page', page.toString());
+      queryParams.append('limit', limit.toString());
+      
+      const queryString = queryParams.toString();
+      const url = `/fetch-all-recipes${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await apiClient.get<PaginatedResponse<Recipe>>(url);
+      return response;
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch recipes');
+    }
   },
 
   // Search recipes with optional filters

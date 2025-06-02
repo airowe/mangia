@@ -5,19 +5,19 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { Portal, Dialog, Button } from "react-native-paper";
 import { RootStackParamList } from "../navigation/HomeStack";
-import { Product } from "../models/Product";
+import { PantryItem } from "../models/Product";
 import { colors } from "../theme/colors";
 import { ProductPlaceholder } from "./ProductPlaceholder";
 
 interface PantryItemProps {
-  product: Product;
+  product: PantryItem;
   isInPantry: boolean;
-  onAddToPantry?: (product: Product) => void;
-  onRemoveFromPantry?: (product: Product) => void;
+  onAddToPantry?: (product: PantryItem) => void;
+  onRemoveFromPantry?: (product: PantryItem) => void;
   onQuantityChange: (productId: string, change: number) => void;
 }
 
-const PantryItem: React.FC<PantryItemProps> = ({
+const PantryItemComponent: React.FC<PantryItemProps> = ({
   product,
   isInPantry,
   onAddToPantry,
@@ -48,6 +48,7 @@ const PantryItem: React.FC<PantryItemProps> = ({
   const handleCancelRemove = () => {
     setShowRemoveDialog(false);
   };
+
   return (
     <TouchableOpacity
       style={styles.container}
@@ -55,11 +56,11 @@ const PantryItem: React.FC<PantryItemProps> = ({
       activeOpacity={0.8}
     >
       <View style={styles.imageContainer}>
-        {product.imageurl ? (
+        {product.imageUrl ? (
           <View style={[styles.imageContainer, styles.imageFallback]}>
             <Image
               source={{
-                uri: product.imageurl,
+                uri: product.imageUrl,
                 cache: "force-cache" as const,
               }}
               style={styles.image}
@@ -267,4 +268,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PantryItem;
+export default PantryItemComponent;
