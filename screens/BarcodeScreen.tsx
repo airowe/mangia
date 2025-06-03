@@ -12,12 +12,11 @@ import {
   Dimensions,
 } from "react-native";
 import { addToPantry } from "../lib/pantry";
-import { BarcodeProduct, lookupBarcode } from "../lib/ai";
+import { lookupBarcode } from "../lib/ai";
 import { CameraView, Camera } from "expo-camera";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { STORAGE_CATEGORIES } from "../models/constants";
-import type { PantryItem, Product } from "../models/Product";
+import type { Product } from "../models/Product";
 
 // Simple debounce function
 const debounce = <F extends (...args: any[]) => any>(func: F, wait: number) => {
@@ -40,146 +39,6 @@ interface BarcodeScannerScreenProps {
 
 const { width } = Dimensions.get("window");
 
-// Helper function to map API categories to our storage categories
-const mapCategoryToStorage = (apiCategory: string): string => {
-  if (!apiCategory) return STORAGE_CATEGORIES[0];
-  const lowerCategory = apiCategory.toLowerCase();
-
-  // Map common API categories to our storage categories
-  if (
-    lowerCategory.includes("dairy") ||
-    lowerCategory.includes("milk") ||
-    lowerCategory.includes("cheese")
-  ) {
-    return "Dairy";
-  } else if (
-    lowerCategory.includes("meat") ||
-    lowerCategory.includes("poultry") ||
-    lowerCategory.includes("beef") ||
-    lowerCategory.includes("chicken")
-  ) {
-    return "Meat";
-  } else if (
-    lowerCategory.includes("produce") ||
-    lowerCategory.includes("vegetable") ||
-    lowerCategory.includes("fruit")
-  ) {
-    return "Produce";
-  } else if (lowerCategory.includes("frozen")) {
-    return "Frozen";
-  } else if (
-    lowerCategory.includes("beverage") ||
-    lowerCategory.includes("drink")
-  ) {
-    return "Beverages";
-  } else if (lowerCategory.includes("snack")) {
-    return "Snacks";
-  } else if (
-    lowerCategory.includes("bakery") ||
-    lowerCategory.includes("bread")
-  ) {
-    return "Bakery";
-  } else if (
-    lowerCategory.includes("canned") ||
-    lowerCategory.includes("can")
-  ) {
-    return "Canned Goods";
-  } else if (
-    lowerCategory.includes("dry") ||
-    lowerCategory.includes("pantry")
-  ) {
-    return "Dry Goods";
-  } else if (lowerCategory.includes("baking")) {
-    return "Baking";
-  } else if (
-    lowerCategory.includes("spice") ||
-    lowerCategory.includes("seasoning")
-  ) {
-    return "Spices";
-  } else if (
-    lowerCategory.includes("condiment") ||
-    lowerCategory.includes("sauce")
-  ) {
-    return "Condiments";
-  } else if (
-    lowerCategory.includes("oil") ||
-    lowerCategory.includes("vinegar")
-  ) {
-    return "Oils & Vinegars";
-  } else if (
-    lowerCategory.includes("pasta") ||
-    lowerCategory.includes("noodle") ||
-    lowerCategory.includes("rice")
-  ) {
-    return "Grains & Pasta";
-  } else if (
-    lowerCategory.includes("cereal") ||
-    lowerCategory.includes("breakfast")
-  ) {
-    return "Breakfast";
-  } else if (
-    lowerCategory.includes("spread") ||
-    lowerCategory.includes("nut butter") ||
-    lowerCategory.includes("jam")
-  ) {
-    return "Spreads";
-  } else if (
-    lowerCategory.includes("soup") ||
-    lowerCategory.includes("broth")
-  ) {
-    return "Soups & Broths";
-  } else if (
-    lowerCategory.includes("nut") ||
-    lowerCategory.includes("seed") ||
-    lowerCategory.includes("trail mix")
-  ) {
-    return "Nuts & Seeds";
-  } else if (
-    lowerCategory.includes("dessert") ||
-    lowerCategory.includes("candy") ||
-    lowerCategory.includes("chocolate")
-  ) {
-    return "Sweets";
-  } else if (
-    lowerCategory.includes("coffee") ||
-    lowerCategory.includes("tea") ||
-    lowerCategory.includes("cocoa")
-  ) {
-    return "Coffee & Tea";
-  } else if (
-    lowerCategory.includes("alcohol") ||
-    lowerCategory.includes("beer") ||
-    lowerCategory.includes("wine") ||
-    lowerCategory.includes("liquor")
-  ) {
-    return "Alcohol";
-  } else if (
-    lowerCategory.includes("baby") ||
-    lowerCategory.includes("infant")
-  ) {
-    return "Baby";
-  } else if (
-    lowerCategory.includes("pet") ||
-    lowerCategory.includes("dog") ||
-    lowerCategory.includes("cat")
-  ) {
-    return "Pet Supplies";
-  } else if (
-    lowerCategory.includes("health") ||
-    lowerCategory.includes("beauty") ||
-    lowerCategory.includes("personal care")
-  ) {
-    return "Health & Beauty";
-  } else if (
-    lowerCategory.includes("household") ||
-    lowerCategory.includes("cleaning") ||
-    lowerCategory.includes("paper")
-  ) {
-    return "Household";
-  }
-  return STORAGE_CATEGORIES[0];
-};
-
 export default function BarcodeScannerScreen({
   navigation,
 }: BarcodeScannerScreenProps) {
@@ -188,7 +47,7 @@ export default function BarcodeScannerScreen({
   const [loading, setLoading] = useState(false);
   const [flashMode, setFlashMode] = useState<"on" | "off">("off");
   const [cameraType, setCameraType] = useState<"front" | "back">("back");
-  const [product, setProduct] = useState<BarcodeProduct | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const isFirstScan = useRef(true);
   const insets = useSafeAreaInsets();
@@ -219,69 +78,21 @@ export default function BarcodeScannerScreen({
     try {
       const response = await lookupBarcode(barcode);
 
-      if (!response || !response.product) {
-        const errorProduct: BarcodeProduct = {
-          attributes: {
-            product: "Error",
-            description: "Failed to perform barcode lookup",
-            category: "",
-            category_text: "Error",
-            category_text_long: "Error",
-            long_desc: "Failed to perform barcode lookup",
-          },
-          EAN13: barcode,
-          UPCA: barcode,
-          barcode: {
-            EAN13: `error`,
-            UPCA: `error`,
-          },
-          image: "",
-          error: "Failed to perform barcode lookup",
-        };
-        setProduct(errorProduct);
+      if (!response) {
+        setProduct(null);
         return;
       }
 
-      const productData = response.product;
-      const categoryGuess = mapCategoryToStorage(
-        productData.attributes?.category || ""
-      );
+      const productData = response.data;
 
-      setProduct({
-        ...productData,
-        unit: "pcs",
-        attributes: {
-          ...productData.attributes,
-          category: STORAGE_CATEGORIES.includes(categoryGuess as any)
-            ? categoryGuess
-            : "Pantry",
-        },
-      });
+      setProduct(productData);
     } catch (error) {
       console.error("Error looking up product:", error);
       Alert.alert(
         "Error",
         error instanceof Error ? error.message : "Unknown error occurred"
       );
-      setProduct({
-        attributes: {
-          product: "Error",
-          description: "Failed to perform barcode lookup",
-          category: "",
-          category_text: "Error",
-          category_text_long: "Error",
-          long_desc: "Failed to perform barcode lookup",
-        },
-        EAN13: barcode,
-        UPCA: barcode,
-        barcode: {
-          EAN13: barcode,
-          UPCA: barcode,
-        },
-        image: "",
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      });
+      setProduct(null);
     } finally {
       setLoading(false);
     }
@@ -332,7 +143,7 @@ export default function BarcodeScannerScreen({
   };
 
   const handleSaveToPantry = async () => {
-    if (!product || !product.attributes?.product) {
+    if (!product) {
       Alert.alert("Error", "Product information is incomplete");
       return;
     }
@@ -340,33 +151,47 @@ export default function BarcodeScannerScreen({
     setSaving(true);
 
     try {
-      const categoryGuess = mapCategoryToStorage(
-        product.attributes.category || ""
-      );
+      // Normalize all possible product sources (OpenFoodFacts, internal, etc)
+      // Prefer top-level fields, fallback to legacy or OpenFoodFacts fields
+      const p: any = product;
 
-      const productToSave: PantryItem = {
-        id: product.EAN13 || product.UPCA || Date.now().toString(),
-        title: product.attributes.product,
-        category: STORAGE_CATEGORIES.includes(categoryGuess as any)
-          ? categoryGuess
-          : "Pantry",
-        quantity: 1,
-        unit: product.unit || "pcs",
-        barcode: product.EAN13 || product.UPCA || "",
-        imageUrl: product.image,
+      const productToSave: Product = {
+        id: p.id || p.EAN13 || p.UPCA || p.code || p.barcode || Date.now().toString(),
+        title:
+          p.title ||
+          p.product_name ||
+          p.product_name_en ||
+          "Unknown Product",
+        category: p.category || "Pantry",
+        unit: p.unit || "pcs",
+        barcode:
+          p.barcode ||
+          p.code ||
+          p.EAN13 ||
+          p.UPCA ||
+          "",
+        imageUrl:
+          p.imageUrl ||
+          p.image_url ||
+          p.image_front_url ||
+          p.image ||
+          "",
         description:
-          product.attributes.long_desc || product.attributes.description,
-        ...(product.attributes.asin_com && {
-          asin: product.attributes.asin_com,
-        }),
+          p.ingredients_text ||
+          p.description ||
+          p.long_desc ||
+          p.generic_name ||
+          (p.attributes?.description ?? ""),
+        brand: p.brand || p.brands || p.brand_owner || undefined,
       };
+
 
       // Use the saveToPantry function from the pantry library
       await addToPantry(productToSave);
 
       Alert.alert(
         "Success",
-        `${product.attributes.product} has been added to your pantry`,
+        `${product.title} has been added to your pantry`,
         [
           {
             text: "Scan Another",
@@ -493,11 +318,11 @@ export default function BarcodeScannerScreen({
             <View style={styles.productContainer}>
               <View style={styles.productHeader}>
                 <Text style={styles.productTitle} numberOfLines={2}>
-                  {product.attributes.product}
+                  {product.title}
                 </Text>
-                {product.attributes.asin_com && (
+                {product.barcode && (
                   <Text style={styles.productBrand}>
-                    ASIN: {product.attributes.asin_com}
+                    Barcode: {product.barcode}
                   </Text>
                 )}
               </View>
@@ -536,7 +361,7 @@ export default function BarcodeScannerScreen({
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Category:</Text>
                   <Text style={styles.detailValue}>
-                    {product.attributes.category_text_long || "Not specified"}
+                    {product.category || "Not specified"}
                   </Text>
                 </View>
 
