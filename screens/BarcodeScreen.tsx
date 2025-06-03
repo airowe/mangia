@@ -317,6 +317,9 @@ export default function BarcodeScannerScreen({
           ) : product ? (
             <View style={styles.productContainer}>
               <View style={styles.productHeader}>
+                <Text style={styles.productTitle}>
+                  {product.brand}
+                </Text>
                 <Text style={styles.productTitle} numberOfLines={2}>
                   {product.title}
                 </Text>
