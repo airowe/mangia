@@ -50,7 +50,18 @@ const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner"];
 const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
   // State management
   const [loading, setLoading] = useState<boolean>(false);
-  const [mealPlan, setMealPlan] = useState<MealPlanDay[]>([]);
+  const [mealPlan, setMealPlan] = useState<MealPlanDay[]>(() => 
+    DAYS_OF_WEEK.map(day => ({
+      date: day,
+      meals: {
+        breakfast: null,
+        lunch: null,
+        dinner: null,
+        snacks: []
+      },
+      snacks: []
+    }))
+  );
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [pantryItems, setPantryItems] = useState<Product[]>([]);
@@ -60,6 +71,7 @@ const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
   const [selectedMeals, setSelectedMeals] = useState<Set<string>>(
     new Set(MEAL_TYPES)
   );
+  const [showRecipePicker, setShowRecipePicker] = useState<{day: string, mealType: string} | null>(null);
 
   // Filter state
   const [filters, setFilters] = useState<MealPlanFilters>({
@@ -200,17 +212,19 @@ const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
   const renderMealCell = (day: string, mealType: string) => {
     const dayPlan = mealPlan.find((plan) => plan.date === day);
     const meal = dayPlan?.meals[mealType.toLowerCase() as MealType];
+    const isDisabled = !selectedDays.has(day) || !selectedMeals.has(mealType);
 
     return (
       <TouchableOpacity
         style={[
           styles.mealCell,
-          !selectedDays.has(day) && styles.disabledCell,
-          !selectedMeals.has(mealType) && styles.disabledCell,
+          isDisabled && styles.disabledCell,
         ]}
         onPress={() => {
           if (meal) {
             navigation.navigate("RecipeDetails", { recipe: meal });
+          } else if (!isDisabled) {
+            openRecipePicker(day, mealType);
           }
         }}
       >
@@ -219,9 +233,53 @@ const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
             {meal.title}
           </Text>
         ) : (
-          <Text style={styles.emptyMealText}>No meal planned</Text>
+          <Text style={isDisabled ? styles.disabledText : styles.emptyMealText}>
+            {isDisabled ? "Disabled" : "Tap to add meal"}
+          </Text>
         )}
       </TouchableOpacity>
+    );
+  };
+
+  const handleAddMeal = (day: string, mealType: string, recipe: Recipe) => {
+    setMealPlan(prevPlan => 
+      prevPlan.map(dayPlan => {
+        if (dayPlan.date === day) {
+          return {
+            ...dayPlan,
+            meals: {
+              ...dayPlan.meals,
+              [mealType.toLowerCase()]: {
+                id: recipe.id,
+                recipe,
+                title: recipe.title,
+                type: mealType.toLowerCase() as MealType
+              }
+            }
+          };
+        }
+        return dayPlan;
+      })
+    );
+    setShowRecipePicker(null);
+  };
+
+  const openRecipePicker = (day: string, mealType: string) => {
+    setShowRecipePicker({ day, mealType });
+  };
+
+  const clearAllMeals = () => {
+    setMealPlan(prevPlan => 
+      prevPlan.map(day => ({
+        ...day,
+        meals: { 
+          breakfast: null, 
+          lunch: null, 
+          dinner: null,
+          snacks: []
+        },
+        snacks: []
+      }))
     );
   };
 
@@ -251,17 +309,69 @@ const MealPlannerScreen: React.FC<NavigationProps> = ({ navigation }) => {
   }
 
   // Render the main content
+  // Filter recipes for the picker
+  const availableRecipes = recipes.filter((recipe) =>
+    !mealPlan.some((day) =>
+      Object.entries(day.meals).some(([key, meal]) =>
+        key !== "snacks" && meal && "id" in meal && meal.id === recipe.id
+      )
+    )
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Meal Plan</Text>
-        <TouchableOpacity
-          style={styles.generateButton}
-          onPress={handleGenerateMealPlan}
-        >
-          <Text style={styles.buttonText}>Generate Plan</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={[styles.generateButton, { marginRight: 8 }]}
+            onPress={handleGenerateMealPlan}
+          >
+            <Text style={styles.buttonText}>Generate Plan</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={clearAllMeals}
+          >
+            <Text style={styles.clearButtonText}>Clear All</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {showRecipePicker && (
+        <View style={styles.recipePickerContainer}>
+          <Text style={styles.pickerTitle}>
+            Select a recipe for {showRecipePicker.day}'s {showRecipePicker.mealType}
+          </Text>
+          <ScrollView style={styles.recipeList}>
+            {availableRecipes.length > 0 ? (
+              availableRecipes.map((recipe) => (
+                <TouchableOpacity
+                  key={recipe.id}
+                  style={styles.recipeItem}
+                  onPress={() =>
+                    handleAddMeal(
+                      showRecipePicker.day,
+                      showRecipePicker.mealType,
+                      recipe
+                    )
+                  }
+                >
+                  <Text style={styles.recipeItemText}>{recipe.title}</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={styles.noRecipesText}>No recipes available</Text>
+            )}
+          </ScrollView>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => setShowRecipePicker(null)}
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.selectionContainer}>
         <Text style={styles.sectionTitle}>Select Days</Text>
@@ -368,21 +478,54 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.lightGray,
-    flexDirection: "row" as const,
-    justifyContent: "space-between" as const,
-    alignItems: "center" as const,
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold" as const,
+    fontWeight: 'bold' as const,
     color: colors.text,
+  },
+  headerActions: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+
+  // Buttons
+  generateButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignSelf: 'center' as const,
+    marginLeft: 8,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: '600' as const,
+    fontSize: 16,
+  },
+  clearButton: {
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: colors.lightGray,
+    marginLeft: 8,
+  },
+  clearButtonText: {
+    color: colors.error || '#dc3545',
+    fontWeight: '500' as const,
+  },
+  buttonDisabled: {
+    backgroundColor: colors.mediumGray,
+    opacity: 0.7,
   },
 
   // Loading State
   loadingContainer: {
     flex: 1,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
     backgroundColor: colors.background,
   },
   loadingText: {
@@ -394,8 +537,8 @@ const styles = StyleSheet.create({
   // Empty State
   emptyContainer: {
     flex: 1,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
     padding: 20,
     backgroundColor: colors.background,
   },
@@ -403,27 +546,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.mediumGray,
     marginBottom: 20,
-    textAlign: "center" as const,
+    textAlign: 'center' as const,
   },
 
-  // Buttons
-  generateButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignSelf: "center" as const,
+  // Selection container
+  selectionContainer: {
+    padding: 16,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
   },
-  buttonText: {
-    color: colors.white,
-    fontWeight: "600" as const,
+  sectionTitle: {
     fontSize: 16,
+    fontWeight: '600' as const,
+    marginBottom: 12,
+    color: colors.text,
   },
-  buttonDisabled: {
-    backgroundColor: colors.mediumGray,
-    opacity: 0.7,
-  },
-
+  
   // Days Selector
   daysSelector: {
     padding: 16,
@@ -437,15 +576,153 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.primary,
+    backgroundColor: colors.lightGray,
   },
   dayButtonActive: {
     backgroundColor: colors.primary,
   },
   dayButtonText: {
-    color: colors.primary,
+    color: colors.text,
   },
   dayButtonTextActive: {
-    color: colors.white,
+    color: 'white',
+  },
+  
+  // Meal selection
+  mealButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    backgroundColor: colors.lightGray,
+  },
+  mealButtonText: {
+    color: colors.text,
+  },
+  selectedButton: {
+    backgroundColor: colors.primary,
+  },
+  selectedButtonText: {
+    color: 'white',
+  },
+
+  // Grid styles
+  gridContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  gridHeader: {
+    flexDirection: 'row' as const,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+    marginBottom: 8,
+  },
+  headerCell: {
+    flex: 1,
+    padding: 8,
+    minWidth: 100,
+  },
+  headerText: {
+    fontWeight: '600' as const,
+    textAlign: 'center' as const,
+    color: colors.text,
+  },
+  gridRow: {
+    flexDirection: 'row' as const,
+    minHeight: 80,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+  },
+  mealTypeCell: {
+    width: 100,
+    padding: 8,
+    justifyContent: 'center' as const,
+    backgroundColor: colors.lightGray,
+  },
+  mealTypeText: {
+    fontWeight: '600' as const,
+    textAlign: 'center' as const,
+    color: colors.text,
+  },
+  mealCellContainer: {
+    flex: 1,
+    padding: 4,
+  },
+  mealCell: {
+    flex: 1,
+    padding: 8,
+    justifyContent: 'center' as const,
+    backgroundColor: colors.white,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+  },
+  mealTitle: {
+    textAlign: 'center' as const,
+    color: colors.text,
+  },
+  emptyMealText: {
+    textAlign: 'center' as const,
+    color: colors.mediumGray,
+    fontStyle: 'italic' as const,
+  },
+  disabledCell: {
+    opacity: 0.5,
+  },
+  disabledText: {
+    color: colors.lightGray,
+    fontStyle: 'italic' as const,
+  },
+
+  // Recipe picker styles
+  recipePickerContainer: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    zIndex: 1000,
+    justifyContent: 'center' as const,
+    padding: 20,
+  },
+  pickerTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    marginBottom: 15,
+    textAlign: 'center' as const,
+  },
+  recipeList: {
+    maxHeight: 300,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  recipeItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+  },
+  recipeItemText: {
+    fontSize: 16,
+  },
+  noRecipesText: {
+    padding: 20,
+    textAlign: 'center' as const,
+    color: colors.text,
+  },
+  cancelButton: {
+    backgroundColor: colors.error || '#dc3545',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center' as const,
+    marginTop: 10,
+  },
+  cancelButtonText: {
+    color: 'white',
+    fontWeight: 'bold' as const,
+    fontSize: 16,
   },
 
   // Meal Plan
@@ -454,7 +731,7 @@ const styles = StyleSheet.create({
   },
   dayTitle: {
     fontSize: 20,
-    fontWeight: "bold" as const,
+    fontWeight: 'bold' as const,
     marginBottom: 16,
     color: colors.darkGray,
   },
@@ -477,9 +754,9 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginBottom: 8,
   },
-  mealTitle: {
+  mealCardTitle: {
     fontSize: 18,
-    fontWeight: "bold" as const,
+    fontWeight: 'bold' as const,
     marginBottom: 8,
     color: colors.darkGray,
   },
@@ -498,34 +775,34 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
     padding: 8,
     borderRadius: 8,
-    alignItems: "center",
+    alignItems: "center" as const,
     marginTop: 8,
   },
   viewRecipeText: {
     color: colors.primary,
-    fontWeight: "600",
+    fontWeight: "600" as const,
   },
   shoppingListContainer: {
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing?.lg || 16,
     backgroundColor: colors.white,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius?.md || 8,
+    padding: theme.spacing?.md || 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
   },
-  sectionTitle: {
-    fontSize: theme.text.lg,
-    fontWeight: "bold",
-    marginBottom: theme.spacing.md,
+  shoppingListTitle: {
+    fontSize: theme.text?.lg || 18,
+    fontWeight: 'bold' as const,
+    marginBottom: theme.spacing?.md || 16,
     color: colors.darkGray,
   },
   shoppingItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: theme.spacing.sm,
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    paddingVertical: theme.spacing?.sm || 8,
     borderBottomWidth: 1,
     borderBottomColor: colors.lightGray,
   },
@@ -538,105 +815,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inPantryItemText: {
-    textDecorationLine: "line-through",
+    textDecorationLine: 'line-through' as const,
     color: colors.mediumGray,
   },
   inPantryText: {
     fontSize: 12,
     color: colors.success,
-    fontStyle: "italic",
+    fontStyle: 'italic' as const,
     marginLeft: 8,
   },
   emptyMessage: {
     color: colors.mediumGray,
-    fontStyle: "italic",
-    textAlign: "center",
+    fontStyle: 'italic' as const,
+    textAlign: 'center' as const,
     marginVertical: 16,
   },
   instructions: {
     marginTop: 8,
     color: colors.text,
     lineHeight: 22,
-  },
-  selectionContainer: {
-    padding: 16,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
-  },
-  mealButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  selectedButton: {
-    backgroundColor: colors.primary,
-  },
-  mealButtonText: {
-    color: colors.primary,
-  },
-  selectedButtonText: {
-    color: colors.white,
-  },
-  gridContainer: {
-    flex: 1,
-  },
-  gridHeader: {
-    flexDirection: "row",
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
-  },
-  headerCell: {
-    flex: 1,
-    padding: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 100,
-  },
-  headerText: {
-    fontWeight: "600",
-    color: colors.text,
-  },
-  gridRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
-  },
-  mealTypeCell: {
-    width: 100,
-    padding: 8,
-    backgroundColor: colors.white,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRightWidth: 1,
-    borderRightColor: colors.lightGray,
-  },
-  mealTypeText: {
-    fontWeight: "600",
-    color: colors.text,
-  },
-  mealCellContainer: {
-    flex: 1,
-    minWidth: 100,
-  },
-  mealCell: {
-    padding: 8,
-    height: 120,
-    backgroundColor: colors.white,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyMealText: {
-    fontSize: 12,
-    color: colors.mediumGray,
-    textAlign: "center",
-  },
-  disabledCell: {
-    opacity: 0.5,
   },
 });
 

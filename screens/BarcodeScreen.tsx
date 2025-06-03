@@ -17,7 +17,7 @@ import { CameraView, Camera } from "expo-camera";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { STORAGE_CATEGORIES } from "../models/constants";
-import type { Product } from "../models/Product";
+import type { PantryItem, Product } from "../models/Product";
 
 // Simple debounce function
 const debounce = <F extends (...args: any[]) => any>(func: F, wait: number) => {
@@ -190,6 +190,7 @@ export default function BarcodeScannerScreen({
   const [cameraType, setCameraType] = useState<"front" | "back">("back");
   const [product, setProduct] = useState<BarcodeProduct | null>(null);
   const [saving, setSaving] = useState(false);
+  const isFirstScan = useRef(true);
   const insets = useSafeAreaInsets();
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const flashModeForCamera = flashMode === "on" ? "torch" : ("off" as const);
@@ -290,7 +291,7 @@ export default function BarcodeScannerScreen({
   const debouncedBarcodeLookup = useCallback(
     debounce((barcode: string) => {
       handleBarcodeLookup(barcode);
-    }, 500), // 500ms debounce time
+    }, 500), // 500ms debounce time for subsequent scans
     []
   );
 
@@ -298,8 +299,14 @@ export default function BarcodeScannerScreen({
     ({ data: barcode }: { data: string }) => {
       if (!barcode || scanned || loading) return;
 
-      // Use the debounced function
-      debouncedBarcodeLookup(barcode);
+      if (isFirstScan.current) {
+        // First scan is immediate
+        isFirstScan.current = false;
+        handleBarcodeLookup(barcode);
+      } else {
+        // Subsequent scans use debounce
+        debouncedBarcodeLookup(barcode);
+      }
     },
     [scanned, loading, debouncedBarcodeLookup]
   );
@@ -312,6 +319,17 @@ export default function BarcodeScannerScreen({
       }
     };
   }, []);
+
+  const resetScanner = () => {
+    setScanned(false);
+    setProduct(null);
+    setLoading(false);
+    isFirstScan.current = true;
+  };
+
+  const handleScanAgain = () => {
+    resetScanner();
+  };
 
   const handleSaveToPantry = async () => {
     if (!product || !product.attributes?.product) {
@@ -326,7 +344,7 @@ export default function BarcodeScannerScreen({
         product.attributes.category || ""
       );
 
-      const productToSave: Product = {
+      const productToSave: PantryItem = {
         id: product.EAN13 || product.UPCA || Date.now().toString(),
         title: product.attributes.product,
         category: STORAGE_CATEGORIES.includes(categoryGuess as any)
@@ -351,8 +369,13 @@ export default function BarcodeScannerScreen({
         `${product.attributes.product} has been added to your pantry`,
         [
           {
-            text: "OK",
+            text: "Scan Another",
+            onPress: resetScanner,
+          },
+          {
+            text: "Done",
             onPress: () => navigation.goBack(),
+            style: "default",
           },
         ]
       );
