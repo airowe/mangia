@@ -350,18 +350,6 @@ export default function BarcodeScannerScreen({
 
               <View style={styles.detailsContainer}>
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>EAN-13:</Text>
-                  <Text style={styles.detailValue} numberOfLines={1}>
-                    {product.EAN13}
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>UPC-A:</Text>
-                  <Text style={styles.detailValue} numberOfLines={1}>
-                    {product.UPCA}
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Category:</Text>
                   <Text style={styles.detailValue}>
                     {product.category || "Not specified"}
@@ -618,7 +606,7 @@ const styles = StyleSheet.create({
   },
   productContainer: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
   },
   productHeader: {
     marginBottom: 20,
