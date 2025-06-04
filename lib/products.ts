@@ -1,5 +1,6 @@
 import { Product } from "../models/Product";
 import { apiClient, PaginatedResponse, PaginationParams } from "./api";
+import { Alert } from "react-native";
 
 // Helper function to validate and clean product data
 const validateAndCleanProduct = (product: any): Product | null => {
@@ -35,6 +36,86 @@ const validateAndCleanProduct = (product: any): Product | null => {
   return cleanProduct;
 };
 
+/**
+ * Create a new product
+ * @param productData The product data to create
+ * @returns The created product
+ */
+export const createProduct = async (productData: Omit<Product, 'id' | 'created_at'>): Promise<Product> => {
+  try {
+    const response = await apiClient.post<Product>('/api/products', productData);
+    const product = validateAndCleanProduct(response);
+    if (!product) {
+      throw new Error('Failed to create product: Invalid response from server');
+    }
+    return product;
+  } catch (error) {
+    console.error('Error creating product:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update an existing product
+ * @param id The ID of the product to update
+ * @param updates The fields to update
+ * @returns The updated product
+ */
+export const updateProduct = async (id: string, updates: Partial<Omit<Product, 'id' | 'created_at'>>): Promise<Product> => {
+  try {
+    const response = await apiClient.put<Product>(`/api/products/${id}`, updates);
+    const product = validateAndCleanProduct(response);
+    if (!product) {
+      throw new Error('Failed to update product: Invalid response from server');
+    }
+    return product;
+  } catch (error) {
+    console.error(`Error updating product ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Get a product by ID
+ * @param id The ID of the product to fetch
+ * @returns The product if found, null otherwise
+ */
+export const getProduct = async (id: string): Promise<Product | null> => {
+  try {
+    const response = await apiClient.get<Product>(`/api/products/${id}`);
+    return validateAndCleanProduct(response);
+  } catch (error: any) {
+    if (error.status === 404) {
+      return null;
+    }
+    console.error(`Error fetching product ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Search for products by barcode
+ * @param barcode The barcode to search for
+ * @returns The product if found, null otherwise
+ */
+export const getProductByBarcode = async (barcode: string): Promise<Product | null> => {
+  try {
+    const response = await apiClient.get<Product>(`/api/products/barcode/${barcode}`);
+    return validateAndCleanProduct(response);
+  } catch (error: any) {
+    if (error.status === 404) {
+      return null;
+    }
+    console.error(`Error fetching product with barcode ${barcode}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch all products with pagination
+ * @param pagination Pagination parameters
+ * @returns Paginated response of products
+ */
 export const fetchAllProducts = async ({
   page = 1,
   limit = 20,

@@ -14,9 +14,11 @@ import {
 import { addToPantry } from "../lib/pantry";
 import { lookupBarcode } from "../lib/ai";
 import { CameraView, Camera } from "expo-camera";
+import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Product } from "../models/Product";
+import { updateProduct } from "../lib/products";
 
 // Simple debounce function
 const debounce = <F extends (...args: any[]) => any>(func: F, wait: number) => {
@@ -49,10 +51,12 @@ export default function BarcodeScannerScreen({
   const [cameraType, setCameraType] = useState<"front" | "back">("back");
   const [product, setProduct] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const isFirstScan = useRef(true);
   const insets = useSafeAreaInsets();
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const flashModeForCamera = flashMode === "on" ? "torch" : ("off" as const);
+  const cameraRef = useRef<CameraView>(null);
 
   const toggleFlash = () => {
     setFlashMode(flashMode === "on" ? "off" : "on");
@@ -142,6 +146,61 @@ export default function BarcodeScannerScreen({
     resetScanner();
   };
 
+  const handleTakePhoto = async () => {
+    if (!product) return;
+    
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Camera permission is required to take photos');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        await handleImageUpload(asset.uri, `product_${Date.now()}.jpg`);
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'Failed to take photo. Please try again.');
+    }
+  };
+
+  const handleImageUpload = async (uri: string, fileName: string) => {
+    if (!product) return;
+    
+    try {
+      setUploading(true);
+      
+      // In a real app, you would upload the image to your server here
+      // For now, we'll just use the local URI as a placeholder
+      // Replace this with your actual image upload logic
+      const imageUrl = uri; // This should be replaced with the URL from your server
+      
+      // Update the product with the new image URL
+      const updatedProduct = await updateProduct(product.id, { 
+        ...product,
+        image: imageUrl,
+        imageUrl: imageUrl,
+      });
+      
+      setProduct(updatedProduct);
+      Alert.alert('Success', 'Image uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Error', 'Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSaveToPantry = async () => {
     if (!product) {
       Alert.alert("Error", "Product information is incomplete");
@@ -156,26 +215,20 @@ export default function BarcodeScannerScreen({
       const p: any = product;
 
       const productToSave: Product = {
-        id: p.id || p.EAN13 || p.UPCA || p.code || p.barcode || Date.now().toString(),
-        title:
-          p.title ||
-          p.product_name ||
-          p.product_name_en ||
-          "Unknown Product",
-        category: p.category || "Pantry",
-        unit: p.unit || "pcs",
-        barcode:
-          p.barcode ||
-          p.code ||
+        id:
+          p.id ||
           p.EAN13 ||
           p.UPCA ||
-          "",
+          p.code ||
+          p.barcode ||
+          Date.now().toString(),
+        title:
+          p.title || p.product_name || p.product_name_en || "Unknown Product",
+        category: p.category || "Pantry",
+        unit: p.unit || "pcs",
+        barcode: p.barcode || p.code || p.EAN13 || p.UPCA || "",
         imageUrl:
-          p.imageUrl ||
-          p.image_url ||
-          p.image_front_url ||
-          p.image ||
-          "",
+          p.imageUrl || p.image_url || p.image_front_url || p.image || "",
         description:
           p.ingredients_text ||
           p.description ||
@@ -185,25 +238,20 @@ export default function BarcodeScannerScreen({
         brand: p.brand || p.brands || p.brand_owner || undefined,
       };
 
-
       // Use the saveToPantry function from the pantry library
       await addToPantry(productToSave);
 
-      Alert.alert(
-        "Success",
-        `${product.title} has been added to your pantry`,
-        [
-          {
-            text: "Scan Another",
-            onPress: resetScanner,
-          },
-          {
-            text: "Done",
-            onPress: () => navigation.goBack(),
-            style: "default",
-          },
-        ]
-      );
+      Alert.alert("Success", `${product.title} has been added to your pantry`, [
+        {
+          text: "Scan Another",
+          onPress: resetScanner,
+        },
+        {
+          text: "Done",
+          onPress: () => navigation.goBack(),
+          style: "default",
+        },
+      ]);
     } catch (error) {
       console.error("Error saving product:", error);
       Alert.alert(
@@ -317,9 +365,7 @@ export default function BarcodeScannerScreen({
           ) : product ? (
             <View style={styles.productContainer}>
               <View style={styles.productHeader}>
-                <Text style={styles.productTitle}>
-                  {product.brand}
-                </Text>
+                <Text style={styles.productTitle}>{product.brand}</Text>
                 <Text style={styles.productTitle} numberOfLines={2}>
                   {product.title}
                 </Text>
@@ -331,20 +377,31 @@ export default function BarcodeScannerScreen({
               </View>
 
               <View style={styles.imageContainer}>
-                {product.image ? (
+                {product.image || product.imageUrl ? (
                   <Image
-                    source={{ uri: product.image }}
+                    source={{ uri: product.image || product.imageUrl }}
                     style={styles.productImage}
                     resizeMode="contain"
                   />
                 ) : (
-                  <View style={styles.noImage}>
-                    <MaterialIcons
-                      name="no-photography"
-                      size={48}
-                      color="#999"
-                    />
-                  </View>
+                  <TouchableOpacity 
+                    style={styles.noImage}
+                    onPress={handleTakePhoto}
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <ActivityIndicator size="large" color="#007AFF" />
+                    ) : (
+                      <>
+                        <MaterialIcons
+                          name="add-a-photo"
+                          size={48}
+                          color="#007AFF"
+                        />
+                        <Text style={styles.addPhotoText}>Add Photo</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
                 )}
               </View>
 
@@ -637,6 +694,13 @@ const styles = StyleSheet.create({
   noImage: {
     justifyContent: "center",
     alignItems: "center",
+    padding: 20,
+  },
+  addPhotoText: {
+    marginTop: 8,
+    color: '#007AFF',
+    fontSize: 16,
+    textAlign: 'center',
   },
   detailsContainer: {
     flex: 1,
