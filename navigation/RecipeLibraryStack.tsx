@@ -1,7 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RecipesScreen } from "../screens/RecipesScreen";
-import RecipeCatalogScreen from "../screens/RecipeCatalogScreen";
+import RecipeSearchScreen from "../screens/RecipeSearchScreen";
 import RecipeDetailScreen from "../screens/RecipeDetailScreen";
 import RecipeCreateScreen from "../screens/RecipeCreateScreen";
 import { SearchResultsScreen } from "../screens/SearchResultsScreen";
@@ -14,7 +14,7 @@ const Stack = createNativeStackNavigator();
 
 export type RecipeLibraryStackParamList = {
   RecipesScreen: undefined;
-  RecipeCatalog: undefined;
+  RecipeSearch: undefined;
   RecipeDetail: { id: string };
   RecipeCreate: undefined;
   SearchResults: { searchQuery: string };
@@ -43,7 +43,7 @@ export default function RecipeLibraryStack() {
       screenOptions={screenOptions}
     >
       <Stack.Screen name="RecipesScreen" component={RecipesScreen} />
-      <Stack.Screen name="RecipeCatalog" component={RecipeCatalogScreen} />
+      <Stack.Screen name="RecipeSearch" component={RecipeSearchScreen} />
       <Stack.Screen name="RecipeDetail" component={RecipeDetailScreen} />
       <Stack.Screen
         name="RecipeCreate"

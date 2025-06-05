@@ -76,7 +76,10 @@ const RecipeSection: React.FC<RecipeSectionProps> = ({
   </View>
 );
 
-type RecipesScreenNavigationProp = NativeStackNavigationProp<RecipeLibraryStackParamList, 'RecipesScreen'>;
+type RecipesScreenNavigationProp = NativeStackNavigationProp<
+  RecipeLibraryStackParamList,
+  "RecipesScreen"
+>;
 
 export const RecipesScreen = () => {
   const user = getCurrentUser();
@@ -117,47 +120,49 @@ export const RecipesScreen = () => {
     }
   }, []);
 
-  const loadAllRecipes = useCallback(async (showLoading = true, loadMore = false) => {
-    try {
-      if (showLoading) {
-        setLoading((prev) => ({ ...prev, all: true }));
-      } else {
-        setPagination((prev) => ({ ...prev, isFetching: true }));
+  const loadAllRecipes = useCallback(
+    async (showLoading = true, loadMore = false) => {
+      try {
+        if (showLoading) {
+          setLoading((prev) => ({ ...prev, all: true }));
+        } else {
+          setPagination((prev) => ({ ...prev, isFetching: true }));
+        }
+
+        setError((prev) => ({ ...prev, all: null }));
+
+        const page = loadMore ? pagination.page + 1 : 1;
+        const response = await fetchAllRecipes({
+          page,
+          limit: pagination.limit,
+        });
+
+        const responseData =
+          response.data as unknown as PaginatedResponse<Recipe>;
+
+        setAllRecipes((prev) =>
+          loadMore ? [...prev, ...responseData.data] : responseData.data
+        );
+
+        setPagination((prev) => ({
+          ...prev,
+          page,
+          hasMore: responseData.page < responseData.totalPages,
+          isFetching: false,
+        }));
+      } catch (err) {
+        console.error("Failed to load recipes:", err);
+        setError((prev) => ({
+          ...prev,
+          all: "Failed to load recipes. Please try again.",
+        }));
+      } finally {
+        setLoading((prev) => ({ ...prev, all: false }));
+        setRefreshing(false);
       }
-      
-      setError((prev) => ({ ...prev, all: null }));
-      
-      const page = loadMore ? pagination.page + 1 : 1;
-      const response = await fetchAllRecipes({
-        page,
-        limit: pagination.limit,
-      });
-      
-      const responseData = response.data as unknown as PaginatedResponse<Recipe>;
-      
-      setAllRecipes(prev => 
-        loadMore 
-          ? [...prev, ...responseData.data] 
-          : responseData.data
-      );
-      
-      setPagination(prev => ({
-        ...prev,
-        page,
-        hasMore: responseData.page < responseData.totalPages,
-        isFetching: false,
-      }));
-    } catch (err) {
-      console.error("Failed to load recipes:", err);
-      setError(prev => ({
-        ...prev,
-        all: "Failed to load recipes. Please try again.",
-      }));
-    } finally {
-      setLoading(prev => ({ ...prev, all: false }));
-      setRefreshing(false);
-    }
-  }, [fetchAllRecipes, pagination.page, pagination.limit]);
+    },
+    [fetchAllRecipes, pagination.page, pagination.limit]
+  );
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -183,12 +188,17 @@ export const RecipesScreen = () => {
   }) => {
     const paddingToBottom = 20;
     return (
-      layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - paddingToBottom
     );
   };
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (isCloseToBottom(event.nativeEvent) && !pagination.isFetching && pagination.hasMore) {
+    if (
+      isCloseToBottom(event.nativeEvent) &&
+      !pagination.isFetching &&
+      pagination.hasMore
+    ) {
       handleLoadMore();
     }
   };
@@ -206,7 +216,7 @@ export const RecipesScreen = () => {
   }, [navigation]);
 
   const handleBrowseCatalog = useCallback(() => {
-    navigation.navigate("RecipeCatalog");
+    navigation.navigate("RecipeSearch");
   }, [navigation]);
 
   useEffect(() => {
@@ -248,7 +258,10 @@ export const RecipesScreen = () => {
           onPressRecipe={handlePressRecipe}
         />
         {pagination.hasMore && !pagination.isFetching && (
-          <TouchableOpacity style={styles.loadMoreButton} onPress={handleLoadMore}>
+          <TouchableOpacity
+            style={styles.loadMoreButton}
+            onPress={handleLoadMore}
+          >
             <Text style={styles.loadMoreText}>Load More</Text>
           </TouchableOpacity>
         )}
@@ -378,8 +391,8 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     padding: 16,
     backgroundColor: colors.background,
     borderTopWidth: 1,
@@ -389,12 +402,12 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 8,
     height: 48,
-    justifyContent: 'center',
+    justifyContent: "center",
     borderRadius: 8,
   },
   buttonLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginVertical: 0,
     paddingVertical: 0,
     height: 20,
@@ -405,7 +418,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   outlinedButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderWidth: 1,
     borderColor: colors.primary,
   },

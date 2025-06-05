@@ -18,11 +18,11 @@ import { colors } from '../theme/colors';
 import { TextInput as PaperTextInput, Button } from 'react-native-paper';
 
 
-export default function RecipeCatalogScreen() {
+export default function RecipeSearchScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const navigation = useNavigation<NativeStackNavigationProp<RecipeLibraryStackParamList, 'RecipeCatalog'>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RecipeLibraryStackParamList, 'RecipeSearch'>>();
   const [mealFilter, setMealFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [search, setSearch] = useState('');
@@ -268,7 +268,6 @@ export default function RecipeCatalogScreen() {
                 navigation.navigate('RecipeDetail', { id: recipe.id });
               }
             }}
-            groupByCategory={!searchQuery}
             showMealType={false}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
