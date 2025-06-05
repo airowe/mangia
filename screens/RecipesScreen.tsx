@@ -10,8 +10,10 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 import { FAB } from "react-native-paper";
-import { fetchRecipes, recipeApi } from "../lib/recipes";
+import { fetchAllRecipes, fetchRecipes, recipeApi } from "../lib/recipes";
+import { PaginatedResponse } from "../lib/api/client";
 import { Recipe } from "../models/Recipe";
 import { Screen } from "../components/Screen";
 import { colors } from "../theme/colors";
@@ -21,7 +23,7 @@ import { getCurrentUser } from "../lib/auth";
 
 interface RecipeSectionProps {
   title: string;
-  recipes: Recipe[];
+  recipes?: Recipe[];
   loading: boolean;
   error: string | null;
   onRetry: () => void;
@@ -38,7 +40,7 @@ const RecipeSection: React.FC<RecipeSectionProps> = ({
 }) => (
   <View style={styles.section}>
     <Text style={styles.sectionTitle}>{title}</Text>
-    {loading && recipes.length === 0 ? (
+    {loading && recipes?.length === 0 ? (
       <View style={styles.loadingContainer}>
         <Text>Loading...</Text>
       </View>
@@ -49,7 +51,7 @@ const RecipeSection: React.FC<RecipeSectionProps> = ({
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
-    ) : recipes.length === 0 ? (
+    ) : recipes?.length === 0 ? (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>No recipes found</Text>
       </View>
@@ -59,7 +61,7 @@ const RecipeSection: React.FC<RecipeSectionProps> = ({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.horizontalScroll}
       >
-        {recipes.map((recipe) => (
+        {recipes?.map((recipe) => (
           <View key={recipe.id} style={styles.recipeCard}>
             <RecipeList
               recipes={[recipe]}
@@ -82,15 +84,21 @@ export const RecipesScreen = () => {
 
   const [userRecipes, setUserRecipes] = useState<Recipe[]>([]);
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState({
-    user: true,
-    all: true,
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    hasMore: true,
+    isFetching: false,
   });
-  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState({
+    all: false,
+    user: false,
+  });
   const [error, setError] = useState({
     user: null as string | null,
     all: null as string | null,
   });
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadUserRecipes = useCallback(async (showLoading = true) => {
     try {
@@ -109,28 +117,80 @@ export const RecipesScreen = () => {
     }
   }, []);
 
-  const loadAllRecipes = useCallback(async (showLoading = true) => {
+  const loadAllRecipes = useCallback(async (showLoading = true, loadMore = false) => {
     try {
-      if (showLoading) setLoading((prev) => ({ ...prev, all: true }));
+      if (showLoading) {
+        setLoading((prev) => ({ ...prev, all: true }));
+      } else {
+        setPagination((prev) => ({ ...prev, isFetching: true }));
+      }
+      
       setError((prev) => ({ ...prev, all: null }));
-      const data = await fetchRecipes();
-      setAllRecipes(data);
+      
+      const page = loadMore ? pagination.page + 1 : 1;
+      const response = await fetchAllRecipes({
+        page,
+        limit: pagination.limit,
+      });
+      
+      const responseData = response.data as unknown as PaginatedResponse<Recipe>;
+      
+      setAllRecipes(prev => 
+        loadMore 
+          ? [...prev, ...responseData.data] 
+          : responseData.data
+      );
+      
+      setPagination(prev => ({
+        ...prev,
+        page,
+        hasMore: responseData.page < responseData.totalPages,
+        isFetching: false,
+      }));
     } catch (err) {
-      console.error("Failed to load all recipes:", err);
-      setError((prev) => ({
+      console.error("Failed to load recipes:", err);
+      setError(prev => ({
         ...prev,
         all: "Failed to load recipes. Please try again.",
       }));
     } finally {
-      setLoading((prev) => ({ ...prev, all: false }));
+      setLoading(prev => ({ ...prev, all: false }));
       setRefreshing(false);
     }
-  }, [fetchRecipes]); // Add fetchRecipes to dependencies if it's defined outside the component
+  }, [fetchAllRecipes, pagination.page, pagination.limit]);
 
   const handleRefresh = () => {
     setRefreshing(true);
+    setPagination((prev) => ({ ...prev, page: 1, hasMore: true }));
     loadUserRecipes(false);
-    loadAllRecipes(false);
+    loadAllRecipes(false, false);
+  };
+
+  const handleLoadMore = () => {
+    if (!pagination.isFetching && pagination.hasMore) {
+      loadAllRecipes(false, true);
+    }
+  };
+
+  const isCloseToBottom = ({
+    layoutMeasurement,
+    contentOffset,
+    contentSize,
+  }: {
+    layoutMeasurement: { height: number };
+    contentOffset: { y: number };
+    contentSize: { height: number };
+  }) => {
+    const paddingToBottom = 20;
+    return (
+      layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom
+    );
+  };
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (isCloseToBottom(event.nativeEvent) && !pagination.isFetching && pagination.hasMore) {
+      handleLoadMore();
+    }
   };
 
   const handlePressRecipe = (recipe: Recipe) => {
@@ -158,6 +218,8 @@ export const RecipesScreen = () => {
     <Screen>
       <ScrollView
         style={styles.container}
+        onScroll={handleScroll}
+        scrollEventThrottle={400}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -166,6 +228,7 @@ export const RecipesScreen = () => {
             tintColor={colors.primary}
           />
         }
+        scrollEnabled={!pagination.isFetching}
       >
         <RecipeSection
           title="Your Recipes"
@@ -184,6 +247,19 @@ export const RecipesScreen = () => {
           onRetry={loadAllRecipes}
           onPressRecipe={handlePressRecipe}
         />
+        {pagination.hasMore && !pagination.isFetching && (
+          <TouchableOpacity style={styles.loadMoreButton} onPress={handleLoadMore}>
+            <Text style={styles.loadMoreText}>Load More</Text>
+          </TouchableOpacity>
+        )}
+        {pagination.hasMore && pagination.isFetching && (
+          <View style={styles.loadingMore}>
+            <Text>Loading...</Text>
+          </View>
+        )}
+        {!pagination.hasMore && (
+          <Text style={styles.endOfList}>End of list</Text>
+        )}
       </ScrollView>
       <View style={styles.buttonContainer}>
         <Button
@@ -250,7 +326,27 @@ const styles = StyleSheet.create({
   loadingContainer: {
     padding: 20,
     alignItems: "center",
-    justifyContent: "center",
+  },
+  loadingMore: {
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  loadMoreButton: {
+    padding: 15,
+    alignItems: "center",
+    backgroundColor: colors.lightGray,
+    borderRadius: 8,
+    margin: 10,
+  },
+  loadMoreText: {
+    color: colors.primary,
+    fontWeight: "600",
+  },
+  endOfList: {
+    textAlign: "center",
+    color: colors.mediumGray,
+    padding: 20,
+    fontStyle: "italic",
   },
   emptyContainer: {
     padding: 20,

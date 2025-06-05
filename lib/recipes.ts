@@ -150,7 +150,7 @@ export const recipeApi = {
       queryParams.append('limit', limit.toString());
       
       const queryString = queryParams.toString();
-      const url = `/fetch-all-recipes${queryString ? `?${queryString}` : ''}`;
+      const url = `/recipes/fetch-all-recipes${queryString ? `?${queryString}` : ''}`;
       
       const response = await apiClient.get<PaginatedResponse<Recipe>>(url);
       return response;
