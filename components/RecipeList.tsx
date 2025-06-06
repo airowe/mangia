@@ -22,6 +22,7 @@ export interface RecipeListProps {
   numColumns?: number;
   selectedRecipeIds?: Set<string> | string[];
   style?: any;
+  scrollEnabled?: boolean;
 }
 
 export const RecipeList: React.FC<RecipeListProps> = ({
@@ -36,6 +37,7 @@ export const RecipeList: React.FC<RecipeListProps> = ({
   numColumns = 1,
   selectedRecipeIds = new Set<string>(),
   style,
+  scrollEnabled = true,
 }) => {
   // All hooks must be called unconditionally at the top level
   const isSelected = useCallback((recipeId: string): boolean => {
@@ -76,6 +78,7 @@ export const RecipeList: React.FC<RecipeListProps> = ({
       renderItem={renderRecipeItem}
       numColumns={numColumns}
       contentContainerStyle={styles.listContent}
+      scrollEnabled={scrollEnabled !== false}
       refreshControl={
         onRefresh ? (
           <RefreshControl

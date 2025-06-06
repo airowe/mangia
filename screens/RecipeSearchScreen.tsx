@@ -37,15 +37,17 @@ export default function RecipeSearchScreen() {
       
       if (searchText && searchText.trim()) {
         // Only search if there's a search query
-        data = await searchRecipes({ 
+        const response = await searchRecipes({ 
           query: searchText,
           meal_type: mealFilter 
         });
+        data = response.data;
       } else {
         // Otherwise, fetch all recipes (optionally filtered by meal type)
-        data = await fetchRecipes({ 
+        const response = await fetchRecipes({ 
           meal_type: mealFilter 
         });
+        data = response.data;
       }
       
       setRecipes(data);
