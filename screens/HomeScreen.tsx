@@ -19,6 +19,7 @@ import { fetchAllProducts } from "../lib/products";
 type RootStackParamList = {
   BarcodeScreen: undefined;
   ManualEntryScreen: undefined;
+  ReceiptScanner: undefined;
 };
 
 type HomeScreenNavigationProp = StackNavigationProp<
@@ -61,6 +62,10 @@ export const HomeScreen: React.FC = () => {
 
   const handleManualEntry = useCallback(() => {
     navigation.navigate("ManualEntryScreen");
+  }, [navigation]);
+
+  const handleReceiptScan = useCallback(() => {
+    navigation.navigate("ReceiptScanner");
   }, [navigation]);
 
   const loadProducts = useCallback(
@@ -300,24 +305,39 @@ export const HomeScreen: React.FC = () => {
       </Animated.ScrollView>
 
       <View style={styles.buttonContainer}>
-        <Button
-          mode="contained"
-          onPress={handleBarcodeScan}
-          style={[styles.button, styles.containedButton]}
-          labelStyle={[styles.buttonLabel, { color: "white" }]}
-          theme={{ colors: { primary: colors.primary } }}
-        >
-          Scan Barcode
-        </Button>
-        <Button
-          mode="outlined"
-          onPress={handleManualEntry}
-          style={[styles.button, styles.outlinedButton]}
-          labelStyle={[styles.buttonLabel, { color: colors.primary }]}
-          theme={{ colors: { primary: colors.primary } }}
-        >
-          Add Manually
-        </Button>
+        <View style={styles.buttonRow}>
+          <Button
+            mode="contained"
+            onPress={handleBarcodeScan}
+            style={[styles.button, styles.containedButton]}
+            labelStyle={[styles.buttonLabel, { color: "white" }]}
+            theme={{ colors: { primary: colors.primary } }}
+            compact
+          >
+            Barcode
+          </Button>
+          <Button
+            mode="outlined"
+            onPress={handleManualEntry}
+            style={[styles.button, styles.outlinedButton]}
+            labelStyle={[styles.buttonLabel, { color: colors.primary }]}
+            theme={{ colors: { primary: colors.primary } }}
+            compact
+          >
+            Manual
+          </Button>
+          <Button
+            mode="contained"
+            onPress={handleReceiptScan}
+            style={[styles.button, { backgroundColor: colors.secondary }]}
+            labelStyle={[styles.buttonLabel, { color: 'white' }]}
+            icon="receipt"
+            theme={{ colors: { primary: colors.secondary } }}
+            compact
+          >
+            Receipt
+          </Button>
+        </View>
       </View>
     </Screen>
   );
@@ -362,10 +382,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    padding: 16,
     backgroundColor: "rgba(253, 246, 240, 0.85)",
     position: "absolute",
     bottom: 0,
@@ -375,21 +392,24 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -1 },
     shadowOpacity: 0.08,
-    shadowRadius: 2,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    overflow: "hidden",
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   button: {
     flex: 1,
-    marginHorizontal: 6,
-    height: 38,
-    justifyContent: "center",
+    minWidth: 0, // Allows buttons to shrink below their content width
+    height: 42,
+    justifyContent: 'center',
     borderRadius: 8,
   },
   buttonLabel: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: '600',
     marginVertical: 0,
     paddingVertical: 0,
     height: 20,
@@ -403,6 +423,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderWidth: 1,
     borderColor: colors.primary,
+  },
+  receiptButton: {
+    width: '100%',
+    backgroundColor: colors.secondary,
   },
 });
 

@@ -26,6 +26,7 @@ export const colors = {
   // Common colors
   white: '#FFFFFF',
   black: '#000000',
+  buttonText: '#FFFFFF',
   transparent: 'transparent',
   
   // Additional colors

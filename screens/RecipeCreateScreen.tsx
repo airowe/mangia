@@ -1,43 +1,94 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  StyleSheet, 
-  TouchableOpacity, 
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
-  Platform
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { addRecipe } from '../lib/recipes';
-import { RecipeIngredient } from '../models/Recipe';
-import { Screen } from '../components/Screen';
-import { colors } from '../theme/colors';
+  Platform,
+  Alert,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { addRecipe } from "../lib/recipes";
+import { RecipeIngredient } from "../models/Recipe";
+import { Screen } from "../components/Screen";
+import { colors } from "../theme/colors";
+import { extractRecipeFromUrl, mapToRecipeFormat } from "../lib/firecrawl";
+import { Button } from "react-native-paper";
+
+const apiKey = process.env.EXPO_PUBLIC_FIRECRAWL_API_KEY;
 
 export default function RecipeCreateScreen({ navigation }: any) {
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState("");
   const [instructions, setInstructions] = useState<string[]>([]);
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
-  const [currentName, setCurrentName] = useState('');
-  const [currentQuantity, setCurrentQuantity] = useState('');
-  const [currentUnit, setCurrentUnit] = useState('');
+  const [currentName, setCurrentName] = useState("");
+  const [currentQuantity, setCurrentQuantity] = useState("");
+  const [currentUnit, setCurrentUnit] = useState("");
+  const [importUrl, setImportUrl] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
+
+  if (!apiKey) {
+    Alert.alert("Error", "No API key found");
+    return;
+  }
+
+  const handleImportRecipe = async () => {
+    if (!importUrl.trim()) {
+      Alert.alert("Error", "Please enter a valid URL");
+      return;
+    }
+
+    try {
+      setIsImporting(true);
+      const recipeData = await extractRecipeFromUrl(importUrl, apiKey);
+      const mappedRecipe = mapToRecipeFormat(recipeData);
+
+      setTitle(mappedRecipe.title);
+      setInstructions(mappedRecipe.instructions);
+
+      // Ensure ingredients have all required properties
+      const formattedIngredients: RecipeIngredient[] =
+        mappedRecipe.ingredients.map((ing) => ({
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name: ing.name,
+          quantity: 0,
+          unit: "",
+          recipe_id: "",
+        }));
+
+      setIngredients(formattedIngredients);
+
+      Alert.alert("Success", "Recipe imported successfully!");
+    } catch (error) {
+      console.error("Error importing recipe:", error);
+      Alert.alert(
+        "Error",
+        "Failed to import recipe. Please check the URL and try again."
+      );
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   const addIngredient = () => {
-    if (!currentName) return;
-    setIngredients([
-      ...ingredients,
-      {
-        id: Math.random().toString(),
-        name: currentName,
-        quantity: parseFloat(currentQuantity || '1'),
-        unit: currentUnit,
-        recipe_id: '', // will be filled in backend
-      },
-    ]);
-    setCurrentName('');
-    setCurrentQuantity('');
-    setCurrentUnit('');
+    if (currentName.trim()) {
+      setIngredients([
+        ...ingredients,
+        {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name: currentName,
+          quantity: parseFloat(currentQuantity) || 0,
+          unit: currentUnit,
+          recipe_id: "", // will be filled in backend
+        },
+      ]);
+      setCurrentName("");
+      setCurrentQuantity("");
+      setCurrentUnit("");
+    }
   };
 
   const submit = async () => {
@@ -46,31 +97,53 @@ export default function RecipeCreateScreen({ navigation }: any) {
         title,
         instructions,
         ingredients,
-        description: '',
-        image_url: ''
+        description: "",
+        image_url: "",
       });
       navigation.goBack();
     } catch (e) {
-      console.error('Failed to save recipe:', e);
+      console.error("Failed to save recipe:", e);
     }
   };
 
   return (
     <Screen>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={100}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          <Text style={styles.sectionTitle}>Import from URL</Text>
+          <View style={styles.importContainer}>
+            <TextInput
+              style={[styles.input, styles.urlInput]}
+              value={importUrl}
+              onChangeText={setImportUrl}
+              placeholder="Paste recipe URL"
+              autoCapitalize="none"
+              keyboardType="url"
+              autoCorrect={false}
+            />
+            <Button
+              mode="contained"
+              onPress={handleImportRecipe}
+              loading={isImporting}
+              disabled={isImporting}
+              style={styles.importButton}
+            >
+              Import
+            </Button>
+          </View>
+          <Text style={styles.sectionTitle}>Or create manually</Text>
           <Text style={styles.sectionTitle}>Recipe Details</Text>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Title</Text>
-            <TextInput 
-              value={title} 
-              onChangeText={setTitle} 
-              style={styles.input} 
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              style={styles.input}
               placeholder="Enter recipe title"
               placeholderTextColor={colors.textSecondary}
             />
@@ -79,8 +152,8 @@ export default function RecipeCreateScreen({ navigation }: any) {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Instructions</Text>
             <TextInput
-              value={instructions.join('\n')}
-              onChangeText={(text) => setInstructions(text.split('\n'))}
+              value={instructions.join("\n")}
+              onChangeText={(text) => setInstructions(text.split("\n"))}
               style={[styles.input, styles.textArea]}
               multiline
               numberOfLines={4}
@@ -89,13 +162,14 @@ export default function RecipeCreateScreen({ navigation }: any) {
             />
           </View>
 
-
           <View style={styles.inputGroup}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Ingredients</Text>
-              <Text style={styles.ingredientsCount}>{ingredients.length} added</Text>
+              <Text style={styles.ingredientsCount}>
+                {ingredients.length} added
+              </Text>
             </View>
-            
+
             <View style={styles.ingredientInputRow}>
               <TextInput
                 placeholder="Ingredient name"
@@ -122,8 +196,11 @@ export default function RecipeCreateScreen({ navigation }: any) {
                   onChangeText={setCurrentUnit}
                   style={[styles.input, styles.unitInput]}
                 />
-                <TouchableOpacity 
-                  style={[styles.addButton, !currentName && styles.addButtonDisabled]}
+                <TouchableOpacity
+                  style={[
+                    styles.addButton,
+                    !currentName && styles.addButtonDisabled,
+                  ]}
                   onPress={addIngredient}
                   disabled={!currentName}
                 >
@@ -142,8 +219,12 @@ export default function RecipeCreateScreen({ navigation }: any) {
                         {item.quantity} {item.unit}
                       </Text>
                     </View>
-                    <TouchableOpacity 
-                      onPress={() => setIngredients(ingredients.filter((_, i) => i !== index))}
+                    <TouchableOpacity
+                      onPress={() =>
+                        setIngredients(
+                          ingredients.filter((_, i) => i !== index)
+                        )
+                      }
                       style={styles.removeButton}
                     >
                       <Ionicons name="close" size={20} color={colors.error} />
@@ -153,25 +234,39 @@ export default function RecipeCreateScreen({ navigation }: any) {
               </View>
             ) : (
               <View style={styles.emptyIngredients}>
-                <Ionicons name="pizza-outline" size={48} color={colors.border} />
+                <Ionicons
+                  name="pizza-outline"
+                  size={48}
+                  color={colors.border}
+                />
                 <Text style={styles.emptyText}>No ingredients added yet</Text>
-                <Text style={styles.emptySubtext}>Add your first ingredient above</Text>
+                <Text style={styles.emptySubtext}>
+                  Add your first ingredient above
+                </Text>
               </View>
             )}
           </View>
 
-
           <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              style={[styles.saveButton, (!title || ingredients.length === 0) && styles.saveButtonDisabled]}
+            <TouchableOpacity
+              style={[
+                styles.saveButton,
+                (!title || ingredients.length === 0) &&
+                  styles.saveButtonDisabled,
+              ]}
               onPress={submit}
               disabled={!title || ingredients.length === 0}
             >
               <Text style={styles.saveButtonText}>Save Recipe</Text>
-              <Ionicons name="checkmark-circle" size={20} color="#fff" style={styles.saveButtonIcon} />
+              <Ionicons
+                name="checkmark-circle"
+                size={20}
+                color="#fff"
+                style={styles.saveButtonIcon}
+              />
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => navigation.goBack()}
             >
@@ -189,13 +284,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  importContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  urlInput: {
+    flex: 1,
+    marginRight: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  importButton: {
+    height: 48,
+    justifyContent: "center",
+  },
   scrollContent: {
     padding: 16,
     paddingBottom: 32,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
     marginBottom: 16,
   },
@@ -204,7 +318,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
     marginBottom: 8,
   },
@@ -219,13 +333,13 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 120,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
     paddingTop: 12,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   ingredientsCount: {
@@ -239,13 +353,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   quantityInput: {
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   unitInput: {
     flex: 2,
@@ -255,8 +369,8 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   addButtonDisabled: {
     opacity: 0.5,
@@ -266,12 +380,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   ingredientItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -297,14 +411,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     padding: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   emptyText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     color: colors.text,
     marginTop: 12,
     marginBottom: 4,
@@ -312,7 +426,7 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 14,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   buttonContainer: {
     marginTop: 8,
@@ -321,18 +435,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: 8,
     padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 12,
   },
   saveButtonDisabled: {
     opacity: 0.5,
   },
   saveButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginRight: 8,
   },
   saveButtonIcon: {
@@ -340,11 +454,11 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelButtonText: {
     color: colors.primary,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

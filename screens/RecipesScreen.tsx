@@ -1,30 +1,18 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Button } from "react-native-paper";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-  FlatList,
-  ScrollView,
-} from "react-native";
+import { View, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Text } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NativeSyntheticEvent, NativeScrollEvent } from "react-native";
-import { FAB } from "react-native-paper";
 import { fetchAllRecipes, fetchRecipes } from "../lib/recipes";
-import { PaginatedResponse } from "../lib/api/client";
 import { Recipe } from "../models/Recipe";
 import { Screen } from "../components/Screen";
 import { colors } from "../theme/colors";
 import { RecipeItem } from "../components/RecipeItem";
-import { RecipeList } from "../components/RecipeList";
+import { RecipeList as RecipeListComponent } from '../components/RecipeList';
 import { RecipeLibraryStackParamList } from "../navigation/RecipeLibraryStack";
-import { getCurrentUser } from "../lib/auth";
 
-interface RecipeSectionProps {
+interface RecipeListProps {
   title: string;
   recipes: Recipe[];
   loading?: boolean;
@@ -33,10 +21,11 @@ interface RecipeSectionProps {
   onPressRecipe: (recipe: Recipe) => void;
   hasMore?: boolean;
   isFetching?: boolean;
-  onLoadMore?: () => void;
+  onEndReached?: () => void;
+  horizontal?: boolean;
 }
 
-const RecipeSection: React.FC<RecipeSectionProps> = ({
+const RecipeList: React.FC<RecipeListProps> = ({
   title,
   recipes,
   loading = false,
@@ -45,7 +34,8 @@ const RecipeSection: React.FC<RecipeSectionProps> = ({
   onPressRecipe,
   hasMore = false,
   isFetching = false,
-  onLoadMore,
+  onEndReached,
+  horizontal = false,
 }) => {
   // If no recipes and not loading, don't render anything
   if (recipes.length === 0 && !loading) {
@@ -76,18 +66,18 @@ const RecipeSection: React.FC<RecipeSectionProps> = ({
       </View>
       
       <ScrollView
-        horizontal
+        horizontal={horizontal}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.recipesContainer}
         onScrollEndDrag={({ nativeEvent }) => {
-          if (onLoadMore && !isFetching && hasMore) {
+          if (onEndReached && !isFetching && hasMore) {
             const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
             const isCloseToEnd =
               layoutMeasurement.width + contentOffset.x >=
               contentSize.width - 50; // 50px from the end
             
             if (isCloseToEnd) {
-              onLoadMore();
+              onEndReached();
             }
           }
         }}
@@ -118,10 +108,7 @@ type RecipesScreenNavigationProp = NativeStackNavigationProp<
   "RecipesScreen"
 >;
 
-
-
 export const RecipesScreen = () => {
-  const user = getCurrentUser();
   const navigation = useNavigation<RecipesScreenNavigationProp>();
 
   const [userRecipes, setUserRecipes] = useState<Recipe[]>([]);
@@ -314,7 +301,7 @@ export const RecipesScreen = () => {
         }
         scrollEnabled={!userRecipesPagination.isFetching}
       >
-        <RecipeSection
+        <RecipeListComponent
           title="Your Recipes"
           recipes={userRecipes}
           loading={loading.user}
@@ -323,7 +310,8 @@ export const RecipesScreen = () => {
           onPressRecipe={handlePressRecipe}
           hasMore={userRecipesPagination.hasMore}
           isFetching={userRecipesPagination.isFetching}
-          onLoadMore={handleLoadMoreUserRecipes}
+          onEndReached={handleLoadMoreUserRecipes}
+          horizontal
         />
       </ScrollView>
       <ScrollView
@@ -340,7 +328,7 @@ export const RecipesScreen = () => {
         }
         scrollEnabled={!allRecipesPagination.isFetching}
       >
-        <RecipeSection
+        <RecipeListComponent
           title="All Recipes"
           recipes={allRecipes}
           loading={loading.all}
@@ -349,7 +337,8 @@ export const RecipesScreen = () => {
           onPressRecipe={handlePressRecipe}
           hasMore={allRecipesPagination.hasMore}
           isFetching={allRecipesPagination.isFetching}
-          onLoadMore={handleLoadMoreAllRecipes}
+          onEndReached={handleLoadMoreAllRecipes}
+          horizontal
         />
         {allRecipesPagination.hasMore && allRecipesPagination.isFetching && (
           <View style={styles.loadingMore}>

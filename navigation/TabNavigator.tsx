@@ -50,6 +50,7 @@ export default function TabNavigator() {
         component={RecipeLibraryStack}
         options={{ title: "Recipes" }}
       />
+
     </Tab.Navigator>
   );
 }
