@@ -9,7 +9,7 @@ import {
   Modal,
   IconButton,
 } from "react-native-paper";
-import { Product } from "../models/Product";
+import { PantryItem, Product } from "../models/Product";
 import { addToPantry } from "../lib/pantry";
 
 interface ManualEntryScreenProps {
@@ -22,7 +22,7 @@ export const ManualEntryScreen = ({
   route,
 }: ManualEntryScreenProps) => {
   const { colors } = useTheme();
-  const [product, setProduct] = useState<Partial<Product>>({
+  const [product, setProduct] = useState<Partial<PantryItem>>({
     title: "",
     category: "Other",
     quantity: 1,
@@ -77,7 +77,7 @@ export const ManualEntryScreen = ({
 
     setIsLoading(true);
     try {
-      const newProduct: Product = {
+      const newProduct: PantryItem = {
         id: Date.now().toString(),
         title: product.title || "",
         category: product.category || "Other",

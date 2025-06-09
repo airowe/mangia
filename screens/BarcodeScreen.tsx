@@ -22,15 +22,19 @@ import { updateProduct } from "../lib/products";
 
 // Simple debounce function
 const debounce = <F extends (...args: any[]) => any>(func: F, wait: number) => {
-  let timeout: NodeJS.Timeout;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
 
   return function executedFunction(...args: Parameters<F>) {
     const later = () => {
-      clearTimeout(timeout);
+      if (timeout) {
+        clearTimeout(timeout);
+      }
       func(...args);
     };
 
-    clearTimeout(timeout);
+    if (timeout) {
+      clearTimeout(timeout);
+    }
     timeout = setTimeout(later, wait);
   };
 };
