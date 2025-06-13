@@ -3,286 +3,124 @@ import {
   View,
   Text,
   StyleSheet,
-  Button,
   ActivityIndicator,
-  Image,
   Alert,
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
 } from "react-native";
-import { addToPantry } from "../lib/pantry";
 import { lookupBarcode } from "../lib/ai";
-import { CameraView, Camera } from "expo-camera";
-import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Product } from "../models/Product";
-import { updateProduct } from "../lib/products";
+import { CameraViewer, CameraViewerRef } from "../components/CameraViewer";
+import { Camera } from "expo-camera";
 
-// Simple debounce function
-const debounce = <F extends (...args: any[]) => any>(func: F, wait: number) => {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-
-  return function executedFunction(...args: Parameters<F>) {
-    const later = () => {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-      func(...args);
+type BarcodeScannerScreenProps = {
+  navigation: {
+    navigate: (screen: string, params?: any) => void;
+    goBack: () => void;
+  };
+  route: {
+    params?: {
+      onBarcodeScanned: (barcode: string, product: Product) => void;
     };
-
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-    timeout = setTimeout(later, wait);
   };
 };
 
-interface BarcodeScannerScreenProps {
-  navigation: any;
-}
-
 const { width } = Dimensions.get("window");
 
+// Main component
 export default function BarcodeScannerScreen({
   navigation,
+  route,
 }: BarcodeScannerScreenProps) {
+  // Refs
+  const cameraViewRef = useRef<CameraViewerRef>(null);
+  const isFirstScan = useRef(true);
+  const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // State
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
   const [flashMode, setFlashMode] = useState<"on" | "off">("off");
   const [cameraType, setCameraType] = useState<"front" | "back">("back");
-  const [product, setProduct] = useState<Product | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const isFirstScan = useRef(true);
   const insets = useSafeAreaInsets();
-  const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const flashModeForCamera = flashMode === "on" ? "torch" : ("off" as const);
-  const cameraRef = useRef<CameraView>(null);
 
-  const toggleFlash = () => {
-    setFlashMode(flashMode === "on" ? "off" : "on");
-  };
-
-  const toggleCameraType = () => {
-    setCameraType((current) => (current === "back" ? "front" : "back"));
-  };
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
-    })();
+  // Handlers
+  const toggleFlash = useCallback(() => {
+    setFlashMode(prev => prev === "on" ? "off" : "on");
   }, []);
 
-  const handleBarcodeLookup = async (barcode: string) => {
+  const toggleCameraType = useCallback(() => {
+    setCameraType(prev => prev === "back" ? "front" : "back");
+  }, []);
+
+  const requestPermission = useCallback(async () => {
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    setHasPermission(status === 'granted');
+  }, []);
+
+  // Handle barcode lookup
+  const handleBarcodeLookup = useCallback(async (barcode: string) => {
     if (!barcode || loading) return;
 
-    setScanned(true);
     setLoading(true);
 
     try {
       const response = await lookupBarcode(barcode);
-
-      if (!response) {
-        setProduct(null);
-        return;
+      if (response?.data) {
+        // If there's a callback from the parent, call it with the scanned data
+        if (route.params?.onBarcodeScanned) {
+          route.params.onBarcodeScanned(barcode, response.data);
+          navigation.goBack();
+        } else {
+          // Otherwise, navigate to the product details screen
+          navigation.navigate('ProductDetails', { product: response.data });
+        }
+      } else {
+        Alert.alert("Product Not Found", "We couldn't find this product. Please try again or enter the details manually.");
       }
-
-      const productData = response.data;
-
-      setProduct(productData);
     } catch (error) {
       console.error("Error looking up product:", error);
       Alert.alert(
         "Error",
-        error instanceof Error ? error.message : "Unknown error occurred"
+        error instanceof Error ? error.message : "Failed to look up product"
       );
-      setProduct(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [loading, navigation, route.params]);
 
-  // Create a debounced version of handleBarcodeLookup
-  const debouncedBarcodeLookup = useCallback(
-    debounce((barcode: string) => {
-      handleBarcodeLookup(barcode);
-    }, 500), // 500ms debounce time for subsequent scans
-    []
-  );
+  // Handle barcode scanned event
+  const handleBarcodeScanned = useCallback(({ data }: { data: string }) => {
+    if (isFirstScan.current) {
+      isFirstScan.current = false;
+      handleBarcodeLookup(data);
+    }
+  }, [handleBarcodeLookup]);
 
-  const handleBarCodeScanned = useCallback(
-    ({ data: barcode }: { data: string }) => {
-      if (!barcode || scanned || loading) return;
-
-      if (isFirstScan.current) {
-        // First scan is immediate
-        isFirstScan.current = false;
-        handleBarcodeLookup(barcode);
-      } else {
-        // Subsequent scans use debounce
-        debouncedBarcodeLookup(barcode);
-      }
-    },
-    [scanned, loading, debouncedBarcodeLookup]
-  );
-
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (scanTimeoutRef.current) {
-        clearTimeout(scanTimeoutRef.current);
-      }
-    };
+  // Reset the first scan flag to allow scanning again
+  const handleRetry = useCallback(() => {
+    isFirstScan.current = true;
   }, []);
 
-  const resetScanner = () => {
-    setScanned(false);
-    setProduct(null);
-    setLoading(false);
-    isFirstScan.current = true;
-  };
+  // Request camera permission on mount
+  useEffect(() => {
+    requestPermission();
+  }, [requestPermission]);
 
-  const handleScanAgain = () => {
-    resetScanner();
-  };
-
-  const handleTakePhoto = async () => {
-    if (!product) return;
-    
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission required', 'Camera permission is required to take photos');
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        await handleImageUpload(asset.uri, `product_${Date.now()}.jpg`);
-      }
-    } catch (error) {
-      console.error('Error taking photo:', error);
-      Alert.alert('Error', 'Failed to take photo. Please try again.');
-    }
-  };
-
-  const handleImageUpload = async (uri: string, fileName: string) => {
-    if (!product) return;
-    
-    try {
-      setUploading(true);
-      
-      // In a real app, you would upload the image to your server here
-      // For now, we'll just use the local URI as a placeholder
-      // Replace this with your actual image upload logic
-      const imageUrl = uri; // This should be replaced with the URL from your server
-      
-      // Update the product with the new image URL
-      const updatedProduct = await updateProduct(product.id, { 
-        ...product,
-        image: imageUrl,
-        imageUrl: imageUrl,
-      });
-      
-      setProduct(updatedProduct);
-      Alert.alert('Success', 'Image uploaded successfully');
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      Alert.alert('Error', 'Failed to upload image. Please try again.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSaveToPantry = async () => {
-    if (!product) {
-      Alert.alert("Error", "Product information is incomplete");
-      return;
-    }
-
-    setSaving(true);
-
-    try {
-      // Normalize all possible product sources (OpenFoodFacts, internal, etc)
-      // Prefer top-level fields, fallback to legacy or OpenFoodFacts fields
-      const p: any = product;
-
-      const productToSave: Product = {
-        id:
-          p.id ||
-          p.EAN13 ||
-          p.UPCA ||
-          p.code ||
-          p.barcode ||
-          Date.now().toString(),
-        title:
-          p.title || p.product_name || p.product_name_en || "Unknown Product",
-        category: p.category || "Pantry",
-        unit: p.unit || "pcs",
-        barcode: p.barcode || p.code || p.EAN13 || p.UPCA || "",
-        imageUrl:
-          p.imageUrl || p.image_url || p.image_front_url || p.image || "",
-        description:
-          p.ingredients_text ||
-          p.description ||
-          p.long_desc ||
-          p.generic_name ||
-          (p.attributes?.description ?? ""),
-        brand: p.brand || p.brands || p.brand_owner || undefined,
-      };
-
-      // Use the saveToPantry function from the pantry library
-      await addToPantry(productToSave);
-
-      Alert.alert("Success", `${product.title} has been added to your pantry`, [
-        {
-          text: "Scan Another",
-          onPress: resetScanner,
-        },
-        {
-          text: "Done",
-          onPress: () => navigation.goBack(),
-          style: "default",
-        },
-      ]);
-    } catch (error) {
-      console.error("Error saving product:", error);
-      Alert.alert(
-        "Error",
-        error instanceof Error ? error.message : "Failed to save product"
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const requestPermission = async () => {
-    const { status } = await Camera.requestCameraPermissionsAsync();
-    setHasPermission(status === "granted");
-  };
-
+  // Render loading state while checking permission
   if (hasPermission === null) {
     return (
-      <View style={styles.permissionContainer}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.permissionText}>
-          Requesting camera permission...
-        </Text>
+        <Text style={styles.loadingText}>Requesting camera permission...</Text>
       </View>
     );
   }
 
+  // Render permission denied state
   if (hasPermission === false) {
     return (
       <View style={styles.permissionContainer}>
@@ -290,492 +128,265 @@ export default function BarcodeScannerScreen({
         <Text style={styles.permissionText}>
           Camera access is required to scan barcodes
         </Text>
-        <Button title="Grant Permission" onPress={requestPermission} />
+        <TouchableOpacity 
+          style={styles.permissionButton}
+          onPress={requestPermission}
+        >
+          <Text style={styles.permissionButtonText}>Grant Permission</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
+  // Main render
   return (
-    <SafeAreaView style={styles.container}>
-      {!scanned ? (
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={{ flex: 1 }}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.closeButton}
+            onPress={() => navigation.goBack()}
+          >
+            <MaterialIcons name="close" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.screenTitle}>Scan Barcode</Text>
+          <View style={{ width: 24 }} />
+        </View>
+        
         <View style={styles.cameraContainer}>
-          <CameraView
-            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-            barcodeScannerSettings={{
-              barcodeTypes: ["ean13", "upc_a", "upc_e", "qr", "pdf417"],
-            }}
-            style={styles.camera}
-            facing={cameraType}
-            flash={flashModeForCamera as any}
+          <CameraViewer
+            ref={cameraViewRef}
+            onBarcodeScanned={handleBarcodeScanned}
+            flashMode={flashMode}
+            cameraType={cameraType}
+            onFlashToggle={toggleFlash}
+            onCameraToggle={toggleCameraType}
+            isScanning={true}
+            showControls={false}
           />
-
-          <View style={styles.overlay}>
-            <View style={[styles.topOverlay, { paddingTop: insets.top + 20 }]}>
-              <Text style={styles.overlayText}>Position barcode in frame</Text>
-            </View>
-
-            <View style={styles.middleOverlay}>
-              <View style={styles.viewfinder}>
-                <View style={styles.cornerTopLeft} />
-                <View style={styles.cornerTopRight} />
-                <View style={styles.cornerBottomLeft} />
-                <View style={styles.cornerBottomRight} />
-              </View>
-            </View>
-
-            <View
-              style={[
-                styles.bottomOverlay,
-                { paddingBottom: insets.bottom + 20 },
-              ]}
-            >
-              <View style={styles.buttonRow}>
-                <TouchableOpacity
-                  style={styles.iconButton}
-                  onPress={toggleFlash}
-                >
-                  <MaterialIcons
-                    name={flashMode === "on" ? "flash-on" : "flash-off"}
-                    size={28}
-                    color="white"
-                  />
-                </TouchableOpacity>
-
-                <View style={styles.scanIndicator}>
-                  <View style={styles.scanLine} />
-                </View>
-
-                <TouchableOpacity
-                  style={styles.iconButton}
-                  onPress={toggleCameraType}
-                >
-                  <MaterialIcons
-                    name="flip-camera-ios"
-                    size={28}
-                    color="white"
-                  />
-                </TouchableOpacity>
-              </View>
+          
+          <View style={styles.cameraOverlay}>
+            <View style={styles.cameraOverlayFrame} />
+            <Text style={styles.cameraOverlayText}>Position barcode in frame</Text>
+            
+            <View style={styles.cameraControls}>
+              <TouchableOpacity 
+                style={styles.cameraButton}
+                onPress={toggleFlash}
+              >
+                <MaterialIcons 
+                  name={flashMode === 'on' ? 'flash-on' : 'flash-off'} 
+                  size={28} 
+                  color="white" 
+                />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.cameraButton}
+                onPress={toggleCameraType}
+              >
+                <MaterialIcons 
+                  name="flip-camera-ios" 
+                  size={28} 
+                  color="white" 
+                />
+              </TouchableOpacity>
             </View>
           </View>
         </View>
-      ) : (
-        <View style={[styles.resultContainer, { paddingTop: insets.top }]}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#007AFF" />
-              <Text style={styles.loadingText}>Looking up product...</Text>
-            </View>
-          ) : product ? (
-            <View style={styles.productContainer}>
-              <View style={styles.productHeader}>
-                <Text style={styles.productTitle}>{product.brand}</Text>
-                <Text style={styles.productTitle} numberOfLines={2}>
-                  {product.title}
-                </Text>
-                {product.barcode && (
-                  <Text style={styles.productBrand}>
-                    Barcode: {product.barcode}
-                  </Text>
-                )}
-              </View>
-
-              <View style={styles.imageContainer}>
-                {product.image || product.imageUrl ? (
-                  <Image
-                    source={{ uri: product.image || product.imageUrl }}
-                    style={styles.productImage}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <TouchableOpacity 
-                    style={styles.noImage}
-                    onPress={handleTakePhoto}
-                    disabled={uploading}
-                  >
-                    {uploading ? (
-                      <ActivityIndicator size="large" color="#007AFF" />
-                    ) : (
-                      <>
-                        <MaterialIcons
-                          name="add-a-photo"
-                          size={48}
-                          color="#007AFF"
-                        />
-                        <Text style={styles.addPhotoText}>Add Photo</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              <View style={styles.detailsContainer}>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Category:</Text>
-                  <Text style={styles.detailValue}>
-                    {product.category || "Not specified"}
-                  </Text>
-                </View>
-
-                <View style={styles.quantityContainer}>
-                  <Text style={styles.detailLabel}>Quantity:</Text>
-                  <View style={styles.quantityControls}>
-                    <TouchableOpacity
-                      style={styles.quantityButton}
-                      onPress={() =>
-                        setProduct({
-                          ...product,
-                        })
-                      }
-                      disabled={saving}
-                    >
-                      <Text style={styles.quantityButtonText}>-</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.quantityText}>{1}</Text>
-                    <TouchableOpacity
-                      style={styles.quantityButton}
-                      onPress={() =>
-                        setProduct({
-                          ...product,
-                        })
-                      }
-                      disabled={saving}
-                    >
-                      <Text style={styles.quantityButtonText}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity
-                    style={[styles.button, styles.primaryButton]}
-                    onPress={handleSaveToPantry}
-                    disabled={saving}
-                  >
-                    {saving ? (
-                      <ActivityIndicator color="white" />
-                    ) : (
-                      <Text style={styles.buttonText}>Save to Pantry</Text>
-                    )}
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.button, styles.secondaryButton]}
-                    onPress={() => setScanned(false)}
-                    disabled={saving}
-                  >
-                    <Text style={[styles.buttonText, { color: "#007AFF" }]}>
-                      Scan Again
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.errorContainer}>
-              <MaterialIcons name="error-outline" size={48} color="#FF3B30" />
-              <Text style={styles.errorText}>
-                {product || "Failed to load product information"}
-              </Text>
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  styles.secondaryButton,
-                  { marginTop: 20 },
-                ]}
-                onPress={() => setScanned(false)}
-              >
-                <Text style={[styles.buttonText, { color: "#007AFF" }]}>
-                  Try Again
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      )}
+        
+        {loading && (
+          <View style={styles.overlay}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={styles.overlayText}>Looking up product...</Text>
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  // Container styles
+  // Main container
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: '#000',
   },
-  permissionContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#fff",
+  // Header
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
-  permissionText: {
-    marginTop: 16,
-    fontSize: 16,
-    textAlign: "center",
-    color: "#666",
+  closeButton: {
+    padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
   },
-
-  // Camera styles
+  screenTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  // Camera container
   cameraContainer: {
     flex: 1,
-    position: "relative",
+    backgroundColor: '#000',
+    position: 'relative',
   },
-  camera: {
-    flex: 1,
-  },
-  overlay: {
+  // Camera overlay
+  cameraOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
-  topOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  overlayText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "500",
-    textAlign: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    padding: 8,
-    borderRadius: 8,
-  },
-  middleOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  viewfinder: {
+  cameraOverlayFrame: {
     width: width * 0.7,
-    height: width * 0.5,
+    height: width * 0.7,
     borderWidth: 2,
-    borderColor: "#fff",
-    borderRadius: 12,
-    backgroundColor: "transparent",
-    position: "relative",
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 16,
+    backgroundColor: 'transparent',
+    marginBottom: 20,
   },
-  cornerTopLeft: {
-    position: "absolute",
-    top: -2,
-    left: -2,
-    width: 40,
-    height: 40,
-    borderLeftWidth: 4,
-    borderTopWidth: 4,
-    borderColor: "#007AFF",
-    borderTopLeftRadius: 8,
+  cameraOverlayText: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 20,
+    textAlign: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
   },
-  cornerTopRight: {
-    position: "absolute",
-    top: -2,
-    right: -2,
-    width: 40,
-    height: 40,
-    borderRightWidth: 4,
-    borderTopWidth: 4,
-    borderColor: "#007AFF",
-    borderTopRightRadius: 8,
-  },
-  cornerBottomLeft: {
-    position: "absolute",
-    bottom: -2,
-    left: -2,
-    width: 40,
-    height: 40,
-    borderLeftWidth: 4,
-    borderBottomWidth: 4,
-    borderColor: "#007AFF",
-    borderBottomLeftRadius: 8,
-  },
-  cornerBottomRight: {
-    position: "absolute",
-    bottom: -2,
-    right: -2,
-    width: 40,
-    height: 40,
-    borderRightWidth: 4,
-    borderBottomWidth: 4,
-    borderColor: "#007AFF",
-    borderBottomRightRadius: 8,
-  },
-  bottomOverlay: {
-    position: "absolute",
+  cameraControls: {
+    position: 'absolute',
+    bottom: 60,
     left: 0,
     right: 0,
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 40,
+    paddingHorizontal: 20,
   },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    paddingHorizontal: 40,
+  cameraButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  iconButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scanIndicator: {
-    width: 60,
-    height: 60,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scanLine: {
-    width: 40,
-    height: 4,
-    backgroundColor: "#007AFF",
-    borderRadius: 2,
-  },
-
-  // Result styles
-  resultContainer: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
+  // Loading and permission states
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#666",
+    color: '#fff',
   },
-  errorContainer: {
+  permissionContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+    backgroundColor: '#000',
   },
-  errorText: {
+  permissionText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginVertical: 24,
+    color: '#fff',
+  },
+  permissionButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+  },
+  permissionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Overlay for loading state
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlayText: {
+    color: '#fff',
+    fontSize: 16,
     marginTop: 16,
-    fontSize: 16,
-    color: "#FF3B30",
-    textAlign: "center",
-    marginBottom: 20,
   },
-  productContainer: {
+  // Bottom sheet styles (kept for potential future use)
+  sheetBackground: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  sheetHandle: {
+    backgroundColor: '#ccc',
+    width: 40,
+    height: 5,
+    borderRadius: 2.5,
+    marginTop: 10,
+  },
+  sheetContainer: {
     flex: 1,
-    paddingHorizontal: 20,
-  },
-  productHeader: {
-    marginBottom: 20,
-  },
-  productTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  productBrand: {
-    fontSize: 16,
-    color: "#666",
-  },
-  imageContainer: {
-    width: "100%",
-    height: 200,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 12,
-    marginBottom: 20,
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  productImage: {
-    width: "100%",
-    height: "100%",
-  },
-  noImage: {
-    justifyContent: "center",
-    alignItems: "center",
     padding: 20,
+    alignItems: 'center',
   },
-  addPhotoText: {
-    marginTop: 8,
-    color: '#007AFF',
-    fontSize: 16,
+  sheetTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 8,
     textAlign: 'center',
   },
-  detailsContainer: {
-    flex: 1,
-  },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-    alignItems: "center",
-  },
-  detailLabel: {
-    fontSize: 16,
-    color: "#666",
-    flex: 1,
-  },
-  detailValue: {
-    fontSize: 16,
-    fontWeight: "500",
-    flex: 2,
-    textAlign: "right",
-  },
-  quantityContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  sheetSubtitle: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 24,
+    textAlign: 'center',
   },
-  quantityControls: {
-    flexDirection: "row",
-    alignItems: "center",
+  sheetButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 20,
   },
-  quantityButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F2F2F7",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  quantityButtonText: {
-    fontSize: 20,
-    color: "#007AFF",
-    lineHeight: 20,
-  },
-  quantityText: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginHorizontal: 16,
-    minWidth: 30,
-    textAlign: "center",
-  },
-  buttonContainer: {
-    marginTop: "auto",
-    marginBottom: 20,
-  },
-  button: {
+  sheetButton: {
+    width: '48%',
     padding: 16,
     borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
   },
-  primaryButton: {
-    backgroundColor: "#007AFF",
+  barcodeButton: {
+    borderColor: '#007AFF',
   },
-  secondaryButton: {
-    backgroundColor: "#F2F2F7",
+  receiptButton: {
+    borderColor: '#34C759',
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+  sheetButtonText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });

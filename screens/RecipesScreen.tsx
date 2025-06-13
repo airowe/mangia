@@ -359,7 +359,7 @@ export const RecipesScreen = () => {
           theme={{ colors: { primary: colors.primary } }}
           icon="book-search"
         >
-          Browse Catalog
+          Search Recipes
         </Button>
         <Button
           mode="outlined"

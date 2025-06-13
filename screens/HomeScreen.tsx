@@ -1,6 +1,21 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { StyleSheet, View, Animated, RefreshControl, Alert, ActivityIndicator } from "react-native";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
+import {
+  StyleSheet,
+  View,
+  Animated,
+  RefreshControl,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { Screen } from "../components/Screen";
+import { AddToPantrySheet } from "../components/AddToPantrySheet";
+import BottomSheet, { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import PantryList from "../components/PantryList";
 import ProductList from "../components/ProductList";
 import { PantryItem, Product } from "../models/Product";
@@ -19,7 +34,7 @@ import { fetchAllProducts } from "../lib/products";
 type RootStackParamList = {
   BarcodeScreen: undefined;
   ManualEntryScreen: undefined;
-  ReceiptScanner: undefined;
+  ReceiptScanScreen: undefined;
 };
 
 type HomeScreenNavigationProp = StackNavigationProp<
@@ -36,7 +51,40 @@ interface PaginationState {
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const snapPoints = useMemo(() => ["40%"], []);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
+
+  // For debugging
+  useEffect(() => {
+    console.log("BottomSheet ref:", bottomSheetRef.current);
+  }, []);
+
+  const handleAddToPantryPress = useCallback(() => {
+    console.log("Add to pantry pressed");
+    console.log("BottomSheet ref current:", bottomSheetRef.current);
+    if (bottomSheetRef.current) {
+      console.log("Expanding bottom sheet...");
+      bottomSheetRef.current.expand();
+    } else {
+      console.error("BottomSheet ref is not attached");
+    }
+  }, []);
+
+  const handleBarcodePress = useCallback(() => {
+    bottomSheetRef.current?.close();
+    navigation.navigate("BarcodeScreen");
+  }, [navigation]);
+
+  const handleManualPress = useCallback(() => {
+    bottomSheetRef.current?.close();
+    navigation.navigate("ManualEntryScreen");
+  }, [navigation]);
+
+  const handleReceiptPress = useCallback(() => {
+    bottomSheetRef.current?.close();
+    navigation.navigate("ReceiptScanScreen");
+  }, [navigation]);
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoadingPantry, setIsLoadingPantry] = useState<boolean>(true);
@@ -48,25 +96,13 @@ export const HomeScreen: React.FC = () => {
     total: 0,
     totalPages: 1,
   });
-  
+
   // Filter out products that are already in the pantry
   const availableProducts = allProducts.filter(
-    product => !pantryItems.some(item => item.id === product.id)
+    (product) => !pantryItems.some((item) => item.id === product.id)
   );
 
   const scrollY = useRef(new Animated.Value(0)).current;
-
-  const handleBarcodeScan = useCallback(() => {
-    navigation.navigate("BarcodeScreen");
-  }, [navigation]);
-
-  const handleManualEntry = useCallback(() => {
-    navigation.navigate("ManualEntryScreen");
-  }, [navigation]);
-
-  const handleReceiptScan = useCallback(() => {
-    navigation.navigate("ReceiptScanner");
-  }, [navigation]);
 
   const loadProducts = useCallback(
     async (pageNum: number = 1) => {
@@ -148,7 +184,6 @@ export const HomeScreen: React.FC = () => {
   }, []);
 
   const handleRemoveFromPantry = useCallback(async (product: PantryItem) => {
-
     //Add a confirm alert
     Alert.alert(
       "Remove Item",
@@ -260,9 +295,7 @@ export const HomeScreen: React.FC = () => {
             tintColor={colors.primary}
           />
         }
-        contentContainerStyle={[
-          styles.scrollViewContent,
-        ]}
+        contentContainerStyle={[styles.scrollViewContent]}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           {
@@ -300,50 +333,55 @@ export const HomeScreen: React.FC = () => {
               hasMore={pagination.page < pagination.totalPages}
             />
           )}
-
         </View>
       </Animated.ScrollView>
 
       <View style={styles.buttonContainer}>
-        <View style={styles.buttonRow}>
-          <Button
-            mode="contained"
-            onPress={handleBarcodeScan}
-            style={[styles.button, styles.containedButton]}
-            labelStyle={[styles.buttonLabel, { color: "white" }]}
-            theme={{ colors: { primary: colors.primary } }}
-            compact
-          >
-            Barcode
-          </Button>
-          <Button
-            mode="outlined"
-            onPress={handleManualEntry}
-            style={[styles.button, styles.outlinedButton]}
-            labelStyle={[styles.buttonLabel, { color: colors.primary }]}
-            theme={{ colors: { primary: colors.primary } }}
-            compact
-          >
-            Manual
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handleReceiptScan}
-            style={[styles.button, { backgroundColor: colors.secondary }]}
-            labelStyle={[styles.buttonLabel, { color: 'white' }]}
-            icon="receipt"
-            theme={{ colors: { primary: colors.secondary } }}
-            compact
-          >
-            Receipt
-          </Button>
-        </View>
+        <Button
+          mode="contained"
+          onPress={handleAddToPantryPress}
+          style={[styles.addButton]}
+          labelStyle={styles.addButtonLabel}
+          theme={{ colors: { primary: colors.primary } }}
+          icon="plus"
+        >
+          Add to Pantry
+        </Button>
       </View>
+
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={snapPoints}
+        enablePanDownToClose={true}
+        enableContentPanningGesture={true}
+        handleComponent={null}
+        backgroundStyle={styles.sheetBackground}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            opacity={0.5}
+          />
+        )}
+      >
+        <AddToPantrySheet
+          onBarcodePress={handleBarcodePress}
+          onManualPress={handleManualPress}
+          onReceiptPress={handleReceiptPress}
+        />
+      </BottomSheet>
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
+  sheetBackground: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -354,7 +392,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
     paddingHorizontal: 8,
   },
@@ -362,13 +400,13 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   productsRow: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     paddingHorizontal: 4,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: colors.background,
   },
   scrollView: {
@@ -383,7 +421,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     padding: 16,
-    backgroundColor: "rgba(253, 246, 240, 0.85)",
+    backgroundColor: "rgba(253, 246, 240, 0.95)",
     position: "absolute",
     bottom: 0,
     left: 0,
@@ -395,21 +433,31 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
+  addButton: {
+    width: "100%",
+    borderRadius: 8,
+    paddingVertical: 8,
+  },
+  addButtonLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    paddingVertical: 4,
+  },
   buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 12,
   },
   button: {
     flex: 1,
     minWidth: 0, // Allows buttons to shrink below their content width
     height: 42,
-    justifyContent: 'center',
+    justifyContent: "center",
     borderRadius: 8,
   },
   buttonLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginVertical: 0,
     paddingVertical: 0,
     height: 20,
@@ -425,7 +473,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   receiptButton: {
-    width: '100%',
+    width: "100%",
     backgroundColor: colors.secondary,
   },
 });

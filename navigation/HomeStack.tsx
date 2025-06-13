@@ -5,6 +5,7 @@ import BarcodeScreen from "../screens/BarcodeScreen";
 import { CustomHeader } from "../components/CustomHeader";
 import { ManualEntryScreen } from "../screens/ManualEntryScreen";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
+import ReceiptScanScreen from "../screens/ReceiptScanScreen";
 import { Product } from "../models/Product";
 import { Animated } from "react-native";
 
@@ -14,6 +15,7 @@ export type RootStackParamList = {
   BarcodeScreen: undefined;
   ManualEntryScreen: undefined;
   ProductDetail: { product: Product };
+  ReceiptScanScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -61,6 +63,11 @@ export default function HomeStack() {
         name="ProductDetail"
         component={ProductDetailScreen}
         options={{ title: "Product Details" }}
+      />
+      <Stack.Screen
+        name="ReceiptScanScreen"
+        component={ReceiptScanScreen}
+        options={{ title: "Scan Receipt" }}
       />
     </Stack.Navigator>
   );

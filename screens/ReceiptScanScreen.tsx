@@ -1,36 +1,72 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator, Alert, ScrollView, Platform } from 'react-native';
-import { Camera as ExpoCamera } from 'expo-camera';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  View, 
+  StyleSheet, 
+  Text, 
+  TouchableOpacity, 
+  ScrollView,
+  Alert,
+  Dimensions,
+} from 'react-native';
+import { Camera } from "expo-camera";
 import { colors } from '../theme/colors';
 import { StackNavigationProp } from '@react-navigation/stack';
-import * as FileSystem from 'expo-file-system';
-import { scanReceipt, mockScanReceipt, ReceiptData } from '../services/receiptScanner';
-import { addToPantry } from '../lib/pantry';
+import { RootStackParamList } from '../navigation/HomeStack';
+import { CameraViewer, CameraViewerRef } from '../components/CameraViewer';
 
-type RootStackParamList = {
-  Home: undefined;
-  ReceiptScanner: undefined;
-  // Add other screens as needed
-};
+const { width } = Dimensions.get('window');
 
-type ReceiptScanScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ReceiptScanner'>;
+
+type ReceiptScanScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ReceiptScanScreen'>;
 
 interface ReceiptScanScreenProps {
   navigation: ReceiptScanScreenNavigationProp;
 }
 
-// Using any type for camera ref to avoid TypeScript issues
-const Camera = ExpoCamera as any;
+// Interface for receipt data
+interface ReceiptData {
+  items: Array<{
+    name: string;
+    price: number;
+    quantity: number;
+  }>;
+  total: number;
+  date: string;
+  vendor?: string;
+  subtotal?: number;
+  tax?: number;
+}
 
-export default function ReceiptScanScreen({ navigation }: ReceiptScanScreenProps) {
+// Mock function for scanning receipt
+const mockScanReceipt = async (uri: string): Promise<ReceiptData> => {
+  // Simulate API call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        items: [
+          { name: 'Sample Item 1', price: 9.99, quantity: 1 },
+          { name: 'Sample Item 2', price: 5.99, quantity: 2 },
+        ],
+        total: 21.97,
+        date: new Date().toISOString(),
+        vendor: 'Sample Store',
+        subtotal: 19.97,
+        tax: 2.00
+      });
+    }, 1500);
+  });
+};
+
+const ReceiptScanScreen: React.FC<ReceiptScanScreenProps> = ({ navigation }) => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const cameraRef = useRef<any>(null);
-  
-  // Request camera permissions on mount
+  const [flashMode, setFlashMode] = useState<"on" | "off">("off");
+  const [cameraType, setCameraType] = useState<"front" | "back">("back");
+  const cameraRef = useRef<CameraViewerRef>(null);
+
+  // Request camera permission
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -38,51 +74,51 @@ export default function ReceiptScanScreen({ navigation }: ReceiptScanScreenProps
     })();
   }, []);
 
-  const processReceipt = useCallback(async (photoUri: string) => {
-    try {
-      setIsScanning(true);
-      setError(null);
-      
-      // In development, use mock data to avoid API calls
-      const useMock = __DEV__;
-      const result = useMock 
-        ? await mockScanReceipt()
-        : await scanReceipt(photoUri);
-      
-      setReceiptData(result);
-      
-      // TODO: Save items to pantry
-      console.log('Processed receipt:', result);
+  const toggleFlash = () => {
+    setFlashMode(flashMode === "on" ? "off" : "on");
+  };
 
-      // addToPantry(result.line_items);
-      
-    } catch (err) {
-      console.error('Error processing receipt:', err);
-      setError('Failed to process receipt. Please try again.');
-    } finally {
-      setIsScanning(false);
-    }
-  }, []);
+  const toggleCameraType = () => {
+    setCameraType((current) => (current === "back" ? "front" : "back"));
+  };
 
   const takePicture = async () => {
     if (!cameraRef.current) return;
     
     try {
-      const photo = await cameraRef.current.takePictureAsync({
+      setIsScanning(true);
+      setError(null);
+      
+      const photo = await cameraRef.current.takePicture({
         quality: 0.8,
-        base64: false,
+        base64: true,
         exif: false
       });
       
-      console.log('Photo taken:', photo.uri);
-      await processReceipt(photo.uri);
+      // Use the mock scanner
+      const result = await mockScanReceipt(photo.uri);
+      setReceiptData(result);
       
-    } catch (error) {
-      console.error('Error taking picture:', error);
+    } catch (err) {
+      console.error('Error taking picture:', err);
       setError('Failed to take picture. Please try again.');
+    } finally {
+      setIsScanning(false);
     }
   };
 
+  const retakePicture = () => {
+    setReceiptData(null);
+    setError(null);
+  };
+
+  const saveReceipt = () => {
+    // TODO: Implement save functionality
+    Alert.alert('Success', 'Receipt items have been added to your pantry!');
+    navigation.goBack();
+  };
+
+  // Check camera permissions
   if (hasPermission === null) {
     return (
       <View style={styles.container}>
@@ -99,176 +135,128 @@ export default function ReceiptScanScreen({ navigation }: ReceiptScanScreenProps
     );
   }
 
-  const renderScanButton = () => (
-    <View style={styles.scanButtonContainer}>
-      <TouchableOpacity
-        style={styles.scanButton}
-        onPress={takePicture}
-        disabled={isScanning}
-      >
-        <Ionicons name="camera" size={32} color="white" />
-        <Text style={styles.scanButtonText}>
-          {isScanning ? 'Processing...' : 'Scan Receipt'}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-  
-  if (error) {
-    return (
-      <View style={[styles.container, styles.centered]}>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity 
-          style={styles.retryButton}
-          onPress={() => setError(null)}
-        >
-          <Text style={styles.buttonText}>Try Again</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-  
-  if (receiptData) {
-    return (
-      <View style={styles.container}>
-        <ScrollView style={styles.receiptContainer}>
-          <Text style={styles.receiptHeader}>Receipt Details</Text>
-          <Text style={styles.vendorName}>{receiptData.vendor.name}</Text>
-          <Text style={styles.receiptDate}>
-            {new Date(receiptData.date).toLocaleDateString()}
-          </Text>
-          
-          <View style={styles.itemsContainer}>
-            {receiptData.line_items.map((item, index) => (
-              <View key={index} style={styles.itemRow}>
-                <Text style={styles.itemName}>
-                  {item.quantity > 1 ? `${item.quantity}x ` : ''}{item.name}
-                </Text>
-                <Text style={styles.itemPrice}>
-                  ${item.total.toFixed(2)}
-                </Text>
-              </View>
-            ))}
-          </View>
-          
-          <View style={styles.totalsContainer}>
-            <View style={styles.totalRow}>
-              <Text>Subtotal:</Text>
-              <Text>${receiptData.subtotal.toFixed(2)}</Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text>Tax:</Text>
-              <Text>${receiptData.tax.toFixed(2)}</Text>
-            </View>
-            <View style={[styles.totalRow, styles.grandTotal]}>
-              <Text>Total:</Text>
-              <Text>${receiptData.total.toFixed(2)}</Text>
-            </View>
-          </View>
-        </ScrollView>
-        
-        <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.cancelButton]}
-            onPress={() => setReceiptData(null)}
-          >
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.saveButton]}
-            onPress={() => {
-              // TODO: Save items to pantry
-              Alert.alert(
-                'Success',
-                'Items have been added to your pantry!',
-                [{ text: 'OK', onPress: () => navigation.goBack() }]
-              );
-            }}
-          >
-            <Text style={styles.buttonText}>Add to Pantry</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <View style={styles.cameraContainer}>
-        <Camera
+      {!receiptData ? (
+        <CameraViewer 
           ref={cameraRef}
-          style={styles.camera}
-          type={Camera.Constants.Type.back}
-          ratio="16:9"
-        >
-          <View style={styles.overlay} />
-          {!isScanning && renderScanButton()}
-        </Camera>
-        {Platform.OS === 'ios' && (
-          <View style={styles.scanButtonContainer}>
-            {!isScanning && renderScanButton()}
+          onTakePicture={takePicture}
+          onFlashToggle={setFlashMode}
+          onCameraToggle={setCameraType}
+          isScanning={isScanning}
+          flashMode={flashMode}
+          cameraType={cameraType}
+          overlayText="Align receipt within the frame"
+          showViewfinder={true}
+          showControls={false}
+        />
+      ) : (
+        <View style={styles.receiptContainer}>
+          <ScrollView style={styles.receiptScroll}>
+            <View style={styles.receiptHeader}>
+              <Text style={styles.receiptTitle}>Receipt Scan Results</Text>
+              {receiptData.vendor && (
+                <Text style={styles.receiptVendor}>{receiptData.vendor}</Text>
+              )}
+              <Text style={styles.receiptDate}>
+                {new Date(receiptData.date).toLocaleDateString()}
+              </Text>
+            </View>
+
+            <View style={styles.itemsContainer}>
+              {receiptData.items.map((item, index) => (
+                <View key={index} style={styles.itemRow}>
+                  <Text style={styles.itemName}>
+                    {item.quantity > 1 ? `${item.quantity}x ` : ''}{item.name}
+                  </Text>
+                  <Text style={styles.itemPrice}>
+                    ${(item.price * item.quantity).toFixed(2)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.totalsContainer}>
+              {receiptData.subtotal !== undefined && (
+                <View style={styles.totalRow}>
+                  <Text>Subtotal:</Text>
+                  <Text>${receiptData.subtotal.toFixed(2)}</Text>
+                </View>
+              )}
+              {receiptData.tax !== undefined && (
+                <View style={styles.totalRow}>
+                  <Text>Tax:</Text>
+                  <Text>${receiptData.tax.toFixed(2)}</Text>
+                </View>
+              )}
+              <View style={[styles.totalRow, styles.grandTotal]}>
+                <Text style={styles.grandTotalText}>Total:</Text>
+                <Text style={styles.grandTotalText}>${receiptData.total.toFixed(2)}</Text>
+              </View>
+            </View>
+          </ScrollView>
+
+          <View style={styles.actionButtons}>
+            <TouchableOpacity 
+              style={[styles.primaryButton]}
+              onPress={retakePicture}
+            >
+              <Text style={styles.primaryButtonText}>Retake</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.primaryButton]}
+              onPress={saveReceipt}
+            >
+              <Text style={[styles.primaryButtonText]}>Save to Pantry</Text>
+            </TouchableOpacity>
           </View>
-        )}
-      </View>
+        </View>
+      )}
+
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...Platform.select({
-      android: {
-        elevation: 5,
-      },
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-    }),
   },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: colors.primary,
-    padding: 15,
-    borderRadius: 8,
-    width: '80%',
-    alignItems: 'center',
-  },
+  // Receipt styles
   receiptContainer: {
     flex: 1,
-    padding: 15,
+    backgroundColor: colors.background,
+  },
+  receiptScroll: {
+    flex: 1,
+    padding: 20,
   },
   receiptHeader: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: colors.text,
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-  vendorName: {
-    fontSize: 20,
-    fontWeight: '600',
+  receiptTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
     marginBottom: 5,
     color: colors.text,
   },
+  receiptVendor: {
+    fontSize: 18,
+    color: colors.text,
+    marginBottom: 5,
+  },
   receiptDate: {
-    color: colors.textSecondary,
-    marginBottom: 15,
+    fontSize: 14,
+    color: '#666',
   },
   itemsContainer: {
     marginBottom: 20,
@@ -276,9 +264,10 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    marginBottom: 10,
+    paddingBottom: 5,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#f0f0f0',
   },
   itemName: {
     flex: 2,
@@ -292,93 +281,227 @@ const styles = StyleSheet.create({
   totalsContainer: {
     marginTop: 10,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: 10,
+    borderTopColor: '#eee',
+    paddingTop: 15,
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: 5,
+    marginBottom: 8,
   },
   grandTotal: {
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: '#ddd',
+  },
+  grandTotalText: {
+    fontSize: 18,
     fontWeight: 'bold',
+    color: colors.primary,
   },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 15,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.card,
+    marginTop: 30,
+    paddingHorizontal: 20,
   },
-  actionButton: {
+  primaryButton: {
+    flex: 1,
+    backgroundColor: colors.primary,
     padding: 15,
     borderRadius: 8,
-    width: '48%',
+    marginLeft: 10,
+  },
+  primaryButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  secondaryButton: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: 15,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  secondaryButtonText: {
+    color: colors.primary,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  errorContainer: {
+    backgroundColor: '#ffebee',
+    padding: 15,
+    borderRadius: 8,
+    margin: 20,
     alignItems: 'center',
   },
-  cancelButton: {
-    backgroundColor: colors.border,
+  errorText: {
+    color: '#d32f2f',
+    textAlign: 'center',
   },
-  saveButton: {
-    backgroundColor: colors.primary,
-  },
+  // Camera styles
   buttonText: {
-    color: colors.buttonText,
-    fontWeight: '600',
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  iconButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cameraContainer: {
     flex: 1,
-    width: '100%',
+    position: 'relative',
   },
   camera: {
     flex: 1,
-    width: '100%',
   },
   overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  overlayInner: {
     flex: 1,
-    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlayFrame: {
+    width: '80%',
+    aspectRatio: 3/4,
+    borderWidth: 2,
+    borderColor: '#fff',
     backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  scanButtonContainer: {
-    position: 'absolute',
-    bottom: 40,
-    width: '100%',
-    alignItems: 'center',
-  },
-  scanButton: {
-    backgroundColor: colors.primary,
-    padding: 16,
-    borderRadius: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '70%',
-    ...Platform.select({
-      android: {
-        elevation: 3,
-      },
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-    }),
-  },
-  scanButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 10,
+  overlayText: {
+    color: '#fff',
+    marginTop: 10,
+    fontSize: 16,
   },
   captureButtonDisabled: {
-    backgroundColor: colors.muted,
+    opacity: 0.5,
+  },
+  scanIndicator: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: 'rgba(255, 0, 0, 0.7)',
+  },
+  scanLine: {
+    height: 2,
+    backgroundColor: 'rgba(255, 0, 0, 0.7)',
+    width: '100%',
+  },
+  topOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '30%',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  middleOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewfinder: {
+    width: width * 0.7,
+    height: width * 0.5,
+    borderWidth: 2,
+    borderColor: '#fff',
+    borderRadius: 12,
+    backgroundColor: 'transparent',
+    position: 'relative',
+  },
+  cornerTopLeft: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    width: 40,
+    height: 40,
+    borderLeftWidth: 4,
+    borderTopWidth: 4,
+    borderColor: '#007AFF',
+    borderTopLeftRadius: 8,
+  },
+  cornerTopRight: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 40,
+    height: 40,
+    borderRightWidth: 4,
+    borderTopWidth: 4,
+    borderColor: '#007AFF',
+    borderTopRightRadius: 8,
+  },
+  cornerBottomLeft: {
+    position: 'absolute',
+    bottom: -2,
+    left: -2,
+    width: 40,
+    height: 40,
+    borderLeftWidth: 4,
+    borderBottomWidth: 4,
+    borderColor: '#007AFF',
+    borderBottomLeftRadius: 8,
+  },
+  cornerBottomRight: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 40,
+    height: 40,
+    borderRightWidth: 4,
+    borderBottomWidth: 4,
+    borderColor: '#007AFF',
+    borderBottomRightRadius: 8,
+  },
+  bottomOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 40,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  captureButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
 });
+
+export default ReceiptScanScreen;
