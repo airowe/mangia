@@ -16,6 +16,40 @@ import { CameraViewer, CameraViewerRef } from '../components/CameraViewer';
 
 const { width } = Dimensions.get('window');
 
+// Import ReceiptItem and extend it with id for merging with pantry
+import { ReceiptItem as BaseReceiptItem } from '../utils/receiptParser';
+
+// Import pantry functions and types
+import { fetchPantryItems, addToPantry, updatePantryItemQuantity } from '../lib/pantry';
+import { PantryItem } from '../models/Product';
+
+// Import parseReceipt from receiptParser
+import { parseReceipt } from '../utils/receiptParser';
+
+// Extend ReceiptItem with id for pantry merging
+interface ReceiptItem extends BaseReceiptItem {
+  id?: string;
+  total?: number;
+  title: string;
+  quantity: number;
+  price?: number;
+  unit?: string;
+  category?: string;
+  location?: string;
+}
+
+interface ReceiptData {
+  items: ReceiptItem[];
+  total: number;
+  date: string;
+  vendor?: {
+    name: string;
+    address: string;
+  };
+  subtotal?: number;
+  tax?: number;
+  raw_text?: string;
+}
 
 type ReceiptScanScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ReceiptScanScreen'>;
 
@@ -23,48 +57,15 @@ interface ReceiptScanScreenProps {
   navigation: ReceiptScanScreenNavigationProp;
 }
 
-// Interface for receipt data
-interface ReceiptData {
-  items: Array<{
-    name: string;
-    price: number;
-    quantity: number;
-  }>;
-  total: number;
-  date: string;
-  vendor?: string;
-  subtotal?: number;
-  tax?: number;
-}
-
-// Mock function for scanning receipt
-const mockScanReceipt = async (uri: string): Promise<ReceiptData> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        items: [
-          { name: 'Sample Item 1', price: 9.99, quantity: 1 },
-          { name: 'Sample Item 2', price: 5.99, quantity: 2 },
-        ],
-        total: 21.97,
-        date: new Date().toISOString(),
-        vendor: 'Sample Store',
-        subtotal: 19.97,
-        tax: 2.00
-      });
-    }, 1500);
-  });
-};
-
 const ReceiptScanScreen: React.FC<ReceiptScanScreenProps> = ({ navigation }) => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
+  const cameraRef = useRef<CameraViewerRef>(null);
   const [flashMode, setFlashMode] = useState<"on" | "off">("off");
   const [cameraType, setCameraType] = useState<"front" | "back">("back");
-  const cameraRef = useRef<CameraViewerRef>(null);
 
   // Request camera permission
   useEffect(() => {
@@ -89,19 +90,54 @@ const ReceiptScanScreen: React.FC<ReceiptScanScreenProps> = ({ navigation }) => 
       setIsScanning(true);
       setError(null);
       
+      // Take picture
       const photo = await cameraRef.current.takePicture({
         quality: 0.8,
-        base64: true,
+        base64: false,
         exif: false
       });
       
-      // Use the mock scanner
-      const result = await mockScanReceipt(photo.uri);
-      setReceiptData(result);
+      if (!photo.uri) throw new Error('Failed to capture image');
+      
+      // Process the image with Tesseract.js
+      const receiptItems = await parseReceipt(photo.uri);
+      
+      // Get current pantry items to check for duplicates
+      const pantryItems = await fetchPantryItems();
+      
+      // Merge receipt items with pantry items
+      const mergedItems = receiptItems.map((item: ReceiptItem) => {
+        const matchingPantryItem = pantryItems.find((pantryItem: PantryItem) => 
+          pantryItem.title?.toLowerCase() === item.title.toLowerCase()
+        );
+        
+        return {
+          ...item,
+          id: matchingPantryItem?.id,
+          title: item.title,
+          description: '',
+          created_at: new Date().toISOString(),
+          category: item.category || 'Uncategorized',
+          location: item.location || 'Pantry',
+          unit: item.unit || 'unit',
+          quantity: item.quantity || 1,
+          price: item.price || 0
+        } as PantryItem;
+      });
+      
+      setReceiptData({
+        items: mergedItems,
+        total: mergedItems.reduce((sum: number, item: ReceiptItem) => sum + (item.total || 0), 0),
+        date: new Date().toISOString(),
+        vendor: {
+          name: 'Unknown Store',
+          address: ''
+        }
+      });
       
     } catch (err) {
-      console.error('Error taking picture:', err);
-      setError('Failed to take picture. Please try again.');
+      console.error('Error processing receipt:', err);
+      setError('Failed to process receipt. Please try again.');
     } finally {
       setIsScanning(false);
     }
@@ -112,10 +148,47 @@ const ReceiptScanScreen: React.FC<ReceiptScanScreenProps> = ({ navigation }) => 
     setError(null);
   };
 
-  const saveReceipt = () => {
-    // TODO: Implement save functionality
-    Alert.alert('Success', 'Receipt items have been added to your pantry!');
-    navigation.goBack();
+  const saveReceipt = async () => {
+    if (!receiptData) return;
+    
+    try {
+      setIsSaving(true);
+      
+      // Save each item to pantry
+      for (const item of receiptData.items) {
+        try {
+          if (item.id) {
+            // Update existing item
+            await updatePantryItemQuantity(item.id, item.quantity);
+          } else {
+            // Add new item
+            const newItem: PantryItem = {
+              title: item.title,
+              quantity: item.quantity,
+              price: item.price || 0,
+              category: 'Other',
+              location: 'Pantry',
+              unit: 'unit',
+              expiryDate: '',
+              id: ''
+            };
+            await addToPantry(newItem);
+          }
+        } catch (err) {
+          console.error(`Error saving item ${item.title}:`, err);
+          // Continue with other items even if one fails
+        }
+      }
+      
+      // Navigate back with success
+      navigation.goBack();
+      
+    } catch (err) {
+      console.error('Error saving receipt:', err);
+      setError('Failed to save receipt. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Check camera permissions
@@ -156,7 +229,15 @@ const ReceiptScanScreen: React.FC<ReceiptScanScreenProps> = ({ navigation }) => 
             <View style={styles.receiptHeader}>
               <Text style={styles.receiptTitle}>Receipt Scan Results</Text>
               {receiptData.vendor && (
-                <Text style={styles.receiptVendor}>{receiptData.vendor}</Text>
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Vendor</Text>
+                  <Text style={styles.vendorName}>
+                    {receiptData.vendor.name}
+                  </Text>
+                  <Text style={styles.vendorAddress}>
+                    {receiptData.vendor.address}
+                  </Text>
+                </View>
               )}
               <Text style={styles.receiptDate}>
                 {new Date(receiptData.date).toLocaleDateString()}
@@ -167,10 +248,10 @@ const ReceiptScanScreen: React.FC<ReceiptScanScreenProps> = ({ navigation }) => 
               {receiptData.items.map((item, index) => (
                 <View key={index} style={styles.itemRow}>
                   <Text style={styles.itemName}>
-                    {item.quantity > 1 ? `${item.quantity}x ` : ''}{item.name}
+                    {item.quantity > 1 ? `${item.quantity}x ` : ''}{item.title}
                   </Text>
                   <Text style={styles.itemPrice}>
-                    ${(item.price * item.quantity).toFixed(2)}
+                    ${((item?.price || 0) * item.quantity).toFixed(2)}
                   </Text>
                 </View>
               ))}
@@ -249,14 +330,29 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     color: colors.text,
   },
-  receiptVendor: {
-    fontSize: 18,
-    color: colors.text,
-    marginBottom: 5,
-  },
   receiptDate: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
+    marginBottom: 16,
+  },
+  section: {
+    marginBottom: 16,
+    width: '100%',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
+    marginBottom: 8,
+  },
+  vendorName: {
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 4,
+  },
+  vendorAddress: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
   itemsContainer: {
     marginBottom: 20,
