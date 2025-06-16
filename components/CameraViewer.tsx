@@ -123,7 +123,7 @@ export const CameraViewer = forwardRef<CameraViewerRef, CameraViewerProps>(({
     <View style={styles.cameraContainer}>
       <CameraView
         ref={cameraRef}
-        onBarcodeScanned={isScanning ? undefined : onBarcodeScanned}
+        onBarcodeScanned={isScanning ? onBarcodeScanned : undefined}
         barcodeScannerSettings={{
           barcodeTypes: barcodeTypes as any[],
         }}

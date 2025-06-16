@@ -163,6 +163,7 @@ export default function BarcodeScannerScreen({
             onCameraToggle={toggleCameraType}
             isScanning={true}
             showControls={false}
+            showViewfinder={false}
           />
           
           <View style={styles.cameraOverlay}>
