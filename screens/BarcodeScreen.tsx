@@ -94,15 +94,24 @@ export default function BarcodeScannerScreen({
 
   // Handle barcode scanned event
   const handleBarcodeScanned = useCallback(({ data }: { data: string }) => {
-    if (isFirstScan.current) {
+    if (isFirstScan.current && !loading) {
       isFirstScan.current = false;
-      handleBarcodeLookup(data);
+      handleBarcodeLookup(data).finally(() => {
+        // Re-enable scanning after a short delay
+        setTimeout(() => {
+          isFirstScan.current = true;
+        }, 1000);
+      });
     }
   }, [handleBarcodeLookup]);
 
-  // Reset the first scan flag to allow scanning again
-  const handleRetry = useCallback(() => {
-    isFirstScan.current = true;
+  // Clean up any pending timeouts when component unmounts
+  useEffect(() => {
+    return () => {
+      if (scanTimeoutRef.current) {
+        clearTimeout(scanTimeoutRef.current);
+      }
+    };
   }, []);
 
   // Request camera permission on mount

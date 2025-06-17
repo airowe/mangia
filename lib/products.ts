@@ -185,3 +185,49 @@ export const fetchAllProducts = async ({
     };
   }
 };
+
+export interface FetchProductsParams extends PaginationParams {
+  q?: string;
+  category?: string;
+  barcode?: string;
+  off_id?: string;
+}
+
+export const fetchProductsByQuery = async ({
+  q,
+  category,
+  barcode,
+  off_id,
+  page = 1,
+  limit = 5,
+}: FetchProductsParams = {}): Promise<PaginatedResponse<Partial<Product>>> => {
+  try {
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (q) params.append('q', q);
+    if (category) params.append('category', category);
+    if (barcode) params.append('barcode', barcode);
+    if (off_id) params.append('off_id', off_id);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+
+    const response = await apiClient.get<PaginatedResponse<Partial<Product>>>(`/products?${params.toString()}`);
+    
+    return {
+      data: response.data || [],
+      total: response.total || 0,
+      page: response.page || page,
+      limit: response.limit || limit,
+      totalPages: response.totalPages || 1,
+    };
+  } catch (error) {
+    console.error("Error in fetchProductsByQuery:", error);
+    return {
+      data: [],
+      total: 0,
+      page: 1,
+      limit: 5,
+      totalPages: 1,
+    };
+  }
+};

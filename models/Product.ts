@@ -16,7 +16,7 @@ export interface Product {
 }
 
 export interface PantryItem extends Product {
-  quantity: number;
+  quantity?: number;
   location?: string;
   expiryDate?: string;
   user_id?: string;
