@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, StyleSheet, ScrollView, Alert } from "react-native";
+import React, { useState, useCallback, useEffect } from "react";
+import { View, StyleSheet, ScrollView, Alert, TouchableWithoutFeedback, Keyboard } from "react-native";
 import {
   TextInput,
   Button,
@@ -8,7 +8,10 @@ import {
   Portal,
   Modal,
   IconButton,
+  List,
 } from "react-native-paper";
+import debounce from "lodash/debounce";
+import { fetchProductsByQuery } from "../lib/products";
 import { PantryItem, Product } from "../models/Product";
 import { addToPantry } from "../lib/pantry";
 
@@ -34,6 +37,12 @@ export const ManualEntryScreen = ({
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showUnitModal, setShowUnitModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  
+  // Search related state
+  const [searchResults, setSearchResults] = useState<Array<Partial<Product> & { measurement?: string }>>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchPage, setSearchPage] = useState(1);
+  const [hasMoreResults, setHasMoreResults] = useState(false);
 
   const categories = [
     "Fruits",
@@ -68,6 +77,74 @@ export const ManualEntryScreen = ({
     "Spice Rack",
     "Other",
   ];
+
+  // Search effect with debounce
+  useEffect(() => {
+    const searchProducts = async () => {
+      if (product.title && product.title.length >= 3) {
+        setIsSearching(true);
+        try {
+          const response = await fetchProductsByQuery({ 
+            q: product.title,
+            page: 1,
+            limit: 5
+          });
+          
+          setSearchResults(response.data as Array<Partial<Product> & { measurement?: string }>);
+          setSearchPage(1);
+          setHasMoreResults(response.total > response.data.length);
+        } catch (error) {
+          console.error("Search error:", error);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    };
+
+    const debouncedSearch = debounce(searchProducts, 300);
+    debouncedSearch();
+
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [product.title]);
+
+  const handleLoadMore = async () => {
+    if (isSearching || !hasMoreResults) return;
+    
+    setIsSearching(true);
+    try {
+      const nextPage = searchPage + 1;
+      const response = await fetchProductsByQuery({ 
+        q: product.title || '',
+        page: nextPage,
+        limit: 5
+      });
+
+      setSearchResults(prev => [...prev, ...(response.data as Array<Partial<Product> & { measurement?: string }>)]);
+      setSearchPage(nextPage);
+      setHasMoreResults(response.data.length === 5);
+    } catch (error) {
+      console.error("Error loading more results:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectProduct = (selectedProduct: Partial<Product> & { measurement?: string }) => {
+    setProduct(prev => ({
+      ...prev,
+      title: selectedProduct.title || prev.title,
+      category: selectedProduct.category || prev.category,
+      unit: selectedProduct.unit || prev.unit,
+      brand: selectedProduct.brand || prev.brand,
+      description: selectedProduct.description || prev.description,
+    }));
+    setSearchResults([]);
+  };
 
   const handleSave = async () => {
     if (!product.title) {
@@ -107,13 +184,49 @@ export const ManualEntryScreen = ({
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <TextInput
-          label="Product Name *"
-          value={product.title}
-          onChangeText={(text) => setProduct({ ...product, title: text })}
-          style={styles.input}
-          mode="outlined"
-        />
+        <View style={{ position: 'relative' }}>
+          <TextInput
+            label="Product Name"
+            value={product.title}
+            onChangeText={(text) => setProduct(prev => ({ ...prev, title: text }))}
+            style={styles.input}
+          />
+          {product.title && product.title.length >= 3 && (
+            <View style={[styles.searchResultsContainer, { backgroundColor: colors.surface }]}>
+              {isSearching && searchResults.length === 0 ? (
+                <List.Item
+                  title="Searching..."
+                  left={props => <List.Icon {...props} icon="magnify" />}
+                />
+              ) : searchResults.length > 0 ? (
+                <>
+                  {searchResults.map((item, index) => (
+                    <List.Item
+                      key={item.id || index}
+                      title={item.title}
+                      description={`${item.brand ? `${item.brand} • ` : ''}${item.measurement || ''} ${item.unit || ''}`.trim()}
+                      onPress={() => handleSelectProduct(item)}
+                      left={props => <List.Icon {...props} icon="barcode-scan" />}
+                    />
+                  ))}
+                  {hasMoreResults && (
+                    <List.Item
+                      title="Show more"
+                      onPress={handleLoadMore}
+                      left={props => <List.Icon {...props} icon="chevron-down" />}
+                    />
+                  )}
+                </>
+              ) : (
+                <List.Item
+                  title="No products found"
+                  description="Try a different search term"
+                  left={props => <List.Icon {...props} icon="alert-circle-outline" />}
+                />
+              )}
+            </View>
+          )}
+        </View>
 
         <TextInput
           label="Category"
@@ -291,6 +404,20 @@ export const ManualEntryScreen = ({
 };
 
 const styles = StyleSheet.create({
+  searchResultsContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    marginTop: 4,
+    borderRadius: 4,
+    elevation: 4,
+    maxHeight: 300,
+    zIndex: 1000,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    overflow: 'hidden',
+  },
   container: {
     flex: 1,
     padding: 16,
