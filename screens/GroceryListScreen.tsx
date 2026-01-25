@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
   TouchableOpacity,
+  Share,
 } from "react-native";
 import { Text, Checkbox, Button, IconButton, Chip } from "react-native-paper";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
@@ -167,6 +168,40 @@ export default function GroceryListScreen() {
   );
   const totalToBuy = itemsToBuy.length;
 
+  // Share grocery list
+  const handleShare = useCallback(async () => {
+    let shareText = "🛒 Grocery List\n";
+    shareText += `📅 ${new Date().toLocaleDateString()}\n\n`;
+
+    // Add recipe names
+    if (recipes.length > 0) {
+      shareText += `For: ${recipes.map((r) => r.title).join(", ")}\n\n`;
+    }
+
+    // Add items by category
+    for (const section of sections) {
+      shareText += `${section.title}:\n`;
+      for (const item of section.data) {
+        const checked = item.checked ? "✓" : "☐";
+        const qty = item.need_to_buy > 0 ? item.need_to_buy : item.total_quantity;
+        const unit = item.unit ? ` ${item.unit}` : "";
+        shareText += `${checked} ${qty}${unit} ${item.name}\n`;
+      }
+      shareText += "\n";
+    }
+
+    shareText += "— Shared from Mangia 🍝";
+
+    try {
+      await Share.share({
+        message: shareText,
+        title: "Grocery List",
+      });
+    } catch (error) {
+      console.error("Error sharing grocery list:", error);
+    }
+  }, [recipes, sections]);
+
   // Render a single grocery item
   const renderItem = useCallback(
     ({ item }: { item: GroceryItemWithChecked }) => (
@@ -319,10 +354,18 @@ export default function GroceryListScreen() {
             {totalToBuy} items
           </Text>
         </View>
-        <View style={styles.progressBadge}>
-          <Text style={styles.progressText}>
-            {checkedCount}/{totalToBuy}
-          </Text>
+        <View style={styles.headerActions}>
+          <IconButton
+            icon="share-variant"
+            size={24}
+            iconColor={colors.primary}
+            onPress={handleShare}
+          />
+          <View style={styles.progressBadge}>
+            <Text style={styles.progressText}>
+              {checkedCount}/{totalToBuy}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -438,6 +481,10 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   headerInfo: {},
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
