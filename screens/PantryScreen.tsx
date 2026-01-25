@@ -21,14 +21,26 @@ import {
   Modal,
   IconButton,
   Chip,
+  Surface,
 } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Swipeable from "react-native-gesture-handler/Swipeable";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 import { Screen } from "../components/Screen";
 import { colors } from "../theme/colors";
 import { PantryItem } from "../models/Product";
 import { IngredientCategory } from "../models/Recipe";
+import { usePremiumFeature } from "../hooks/usePremiumFeature";
+
+type PantryStackParamList = {
+  PantryMain: undefined;
+  WhatCanIMakeScreen: undefined;
+  SubscriptionScreen: undefined;
+};
+
+type NavigationProp = StackNavigationProp<PantryStackParamList>;
 import {
   fetchPantryItems,
   addToPantry,
@@ -45,6 +57,9 @@ type StorageLocation = (typeof LOCATIONS)[number];
 const UNITS = ["", "oz", "lb", "g", "kg", "cups", "tbsp", "tsp", "pieces"];
 
 export default function PantryScreen() {
+  const navigation = useNavigation<NavigationProp>();
+  const { isPremium } = usePremiumFeature();
+
   const [items, setItems] = useState<PantryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -58,6 +73,11 @@ export default function PantryScreen() {
     unit: "",
     location: "pantry" as StorageLocation,
   });
+
+  // Navigate to What Can I Make screen
+  const handleWhatCanIMake = useCallback(() => {
+    navigation.navigate("WhatCanIMakeScreen");
+  }, [navigation]);
 
   // Load pantry items
   const loadPantry = useCallback(async () => {
@@ -303,6 +323,37 @@ export default function PantryScreen() {
 
   return (
     <Screen style={styles.container}>
+      {/* What Can I Make? Button */}
+      <TouchableOpacity onPress={handleWhatCanIMake} activeOpacity={0.8}>
+        <Surface style={styles.whatCanIMakeButton} elevation={2}>
+          <View style={styles.whatCanIMakeContent}>
+            <MaterialCommunityIcons
+              name="chef-hat"
+              size={28}
+              color={colors.primary}
+            />
+            <View style={styles.whatCanIMakeText}>
+              <Text style={styles.whatCanIMakeTitle}>What Can I Make?</Text>
+              <Text style={styles.whatCanIMakeSubtitle}>
+                Find recipes using your pantry ingredients
+              </Text>
+            </View>
+          </View>
+          <View style={styles.whatCanIMakeRight}>
+            {!isPremium && (
+              <Chip compact style={styles.premiumChip} textStyle={styles.premiumChipText}>
+                Premium
+              </Chip>
+            )}
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={24}
+              color={colors.textSecondary}
+            />
+          </View>
+        </Surface>
+      </TouchableOpacity>
+
       {/* Header stats */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Pantry</Text>
@@ -459,6 +510,48 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: colors.textSecondary,
     fontSize: 16,
+  },
+  whatCanIMakeButton: {
+    margin: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  whatCanIMakeContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  whatCanIMakeText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  whatCanIMakeTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  whatCanIMakeSubtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  whatCanIMakeRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  premiumChip: {
+    backgroundColor: `${colors.primary}20`,
+    height: 24,
+  },
+  premiumChipText: {
+    fontSize: 11,
+    color: colors.primary,
   },
   header: {
     padding: 16,

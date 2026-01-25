@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import HomeStack from "./HomeStack";
 import MealPlanningStack from "./MealPlanningStack";
 import RecipeLibraryStack from "./RecipeLibraryStack";
-import PantryScreen from "../screens/PantryScreen";
+import PantryStack from "./PantryStack";
 import { colors } from "../theme/colors";
 
 const Tab = createBottomTabNavigator();
@@ -44,7 +44,7 @@ export default function TabNavigator() {
       />
       <Tab.Screen
         name="Pantry"
-        component={PantryScreen}
+        component={PantryStack}
         options={{ title: "Pantry" }}
       />
       <Tab.Screen
