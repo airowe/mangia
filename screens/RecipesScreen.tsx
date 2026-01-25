@@ -281,6 +281,10 @@ export const RecipesScreen = () => {
     navigation.navigate("Collections");
   }, [navigation]);
 
+  const handleCookbooks = useCallback(() => {
+    navigation.navigate("Cookbooks");
+  }, [navigation]);
+
   useEffect(() => {
     const loadData = async () => {
       await loadUserRecipes();
@@ -376,6 +380,17 @@ export const RecipesScreen = () => {
           compact
         >
           Collections
+        </Button>
+        <Button
+          mode="outlined"
+          onPress={handleCookbooks}
+          style={[styles.button, styles.outlinedButton]}
+          labelStyle={[styles.buttonLabel, { color: colors.primary }]}
+          theme={{ colors: { primary: colors.primary } }}
+          icon="bookshelf"
+          compact
+        >
+          Cookbooks
         </Button>
         <Button
           mode="outlined"
