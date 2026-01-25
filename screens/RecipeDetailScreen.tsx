@@ -8,33 +8,72 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Share,
-  Platform,
   Linking,
   Alert,
 } from "react-native";
-import { useRoute, type RouteProp } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { fetchRecipeById } from "../lib/recipes";
-import { Recipe } from "../models/Recipe";
+import {
+  useRoute,
+  useNavigation,
+  type RouteProp,
+} from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Button } from "react-native-paper";
 import { Screen } from "../components/Screen";
 import { colors } from "../theme/colors";
+import { Recipe, RecipeSourceType } from "../models/Recipe";
+import {
+  fetchRecipeById,
+  markAsCooked,
+  archiveRecipe,
+  deleteRecipe,
+  restoreRecipe,
+  RecipeWithIngredients,
+} from "../lib/recipeService";
 
 type RecipeDetailScreenRouteProp = RouteProp<
-  { params: { id: string } },
+  { params: { recipeId: string } },
   "params"
 >;
 
+type RootStackParamList = {
+  WantToCookScreen: undefined;
+  GroceryListScreen: { recipeIds: string[] };
+};
+
+type NavigationProp = StackNavigationProp<RootStackParamList>;
+
+// Platform icons and colors
+const PLATFORM_CONFIG: Record<
+  RecipeSourceType,
+  {
+    icon: keyof typeof MaterialCommunityIcons.glyphMap;
+    color: string;
+    label: string;
+  }
+> = {
+  tiktok: { icon: "music-note", color: "#000000", label: "TikTok" },
+  youtube: { icon: "youtube", color: "#FF0000", label: "YouTube" },
+  instagram: { icon: "instagram", color: "#E4405F", label: "Instagram" },
+  blog: { icon: "web", color: "#4CAF50", label: "Blog" },
+  manual: { icon: "pencil", color: colors.primary, label: "Manual" },
+};
+
 export default function RecipeDetailScreen() {
   const route = useRoute<RecipeDetailScreenRouteProp>();
-  const { id } = route.params;
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const navigation = useNavigation<NavigationProp>();
+  const { recipeId } = route.params;
+
+  const [recipe, setRecipe] = useState<RecipeWithIngredients | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const loadRecipe = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchRecipeById(id);
+      setError(null);
+      const data = await fetchRecipeById(recipeId);
       setRecipe(data);
     } catch (err) {
       console.error("Failed to load recipe:", err);
@@ -42,17 +81,18 @@ export default function RecipeDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [recipeId]);
 
   useEffect(() => {
     loadRecipe();
   }, [loadRecipe]);
 
   const handleShare = async () => {
+    if (!recipe) return;
     try {
       await Share.share({
-        message: `Check out this recipe: ${recipe?.title}\n\n${recipe?.description}`,
-        title: recipe?.title,
+        message: `Check out this recipe: ${recipe.title}\n\n${recipe.source_url || ""}`,
+        title: recipe.title,
       });
     } catch (error) {
       console.error("Error sharing recipe:", error);
@@ -60,10 +100,108 @@ export default function RecipeDetailScreen() {
   };
 
   const openSourceLink = () => {
-    if (recipe?.source) {
-      Linking.openURL(recipe.source);
+    if (recipe?.source_url) {
+      Linking.openURL(recipe.source_url);
     }
   };
+
+  // Mark recipe as cooked
+  const handleMarkCooked = useCallback(async () => {
+    if (!recipe) return;
+
+    Alert.alert("Mark as Cooked", `Did you make "${recipe.title}"?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Yes, I made it!",
+        onPress: async () => {
+          setIsUpdating(true);
+          try {
+            await markAsCooked(recipe.id);
+            // Show celebration
+            Alert.alert("Delicious!", "Recipe marked as cooked. Nice work!", [
+              {
+                text: "OK",
+                onPress: () => navigation.goBack(),
+              },
+            ]);
+          } catch (error) {
+            Alert.alert("Error", "Failed to update recipe");
+          } finally {
+            setIsUpdating(false);
+          }
+        },
+      },
+    ]);
+  }, [recipe, navigation]);
+
+  // Archive recipe
+  const handleArchive = useCallback(async () => {
+    if (!recipe) return;
+
+    setIsUpdating(true);
+    try {
+      await archiveRecipe(recipe.id);
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert("Error", "Failed to archive recipe");
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [recipe, navigation]);
+
+  // Restore to Want to Cook
+  const handleRestore = useCallback(async () => {
+    if (!recipe) return;
+
+    setIsUpdating(true);
+    try {
+      await restoreRecipe(recipe.id);
+      setRecipe({ ...recipe, status: "want_to_cook" });
+      Alert.alert("Restored", "Recipe added back to your queue");
+    } catch (error) {
+      Alert.alert("Error", "Failed to restore recipe");
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [recipe]);
+
+  // Delete recipe
+  const handleDelete = useCallback(() => {
+    if (!recipe) return;
+
+    Alert.alert(
+      "Delete Recipe",
+      `Are you sure you want to delete "${recipe.title}"? This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setIsUpdating(true);
+            try {
+              await deleteRecipe(recipe.id);
+              navigation.goBack();
+            } catch (error) {
+              Alert.alert("Error", "Failed to delete recipe");
+            } finally {
+              setIsUpdating(false);
+            }
+          },
+        },
+      ],
+    );
+  }, [recipe, navigation]);
+
+  // Add to grocery list
+  const handleAddToGroceryList = useCallback(() => {
+    if (!recipe) return;
+    navigation.navigate("GroceryListScreen", { recipeIds: [recipe.id] });
+  }, [recipe, navigation]);
+
+  // Get platform config
+  const sourceType = recipe?.source_type || "manual";
+  const platform = PLATFORM_CONFIG[sourceType] || PLATFORM_CONFIG.manual;
 
   if (loading) {
     return (
@@ -88,15 +226,31 @@ export default function RecipeDetailScreen() {
     );
   }
 
+  const isWantToCook = recipe.status === "want_to_cook";
+  const isCooked = recipe.status === "cooked";
+  const isArchived = recipe.status === "archived";
+
   return (
     <Screen noPadding>
       <ScrollView style={styles.container}>
-        <Image
-          source={{ uri: recipe.image_url }}
-          style={styles.image}
-          resizeMode="cover"
-        />
+        {/* Recipe Image */}
+        {recipe.image_url ? (
+          <Image
+            source={{ uri: recipe.image_url }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.placeholderImage}>
+            <MaterialCommunityIcons
+              name="food"
+              size={80}
+              color={colors.textTertiary}
+            />
+          </View>
+        )}
 
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.titleRow}>
             <Text style={styles.title}>{recipe.title}</Text>
@@ -109,22 +263,62 @@ export default function RecipeDetailScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Platform Badge */}
+          <View style={styles.platformBadge}>
+            <MaterialCommunityIcons
+              name={platform.icon}
+              size={16}
+              color={platform.color}
+            />
+            <Text style={[styles.platformLabel, { color: platform.color }]}>
+              {platform.label}
+            </Text>
+            {recipe.source_url && (
+              <TouchableOpacity
+                onPress={openSourceLink}
+                style={styles.viewOriginal}
+              >
+                <Text style={styles.viewOriginalText}>View Original</Text>
+                <Ionicons
+                  name="open-outline"
+                  size={14}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+
           {recipe.description && (
             <Text style={styles.description}>{recipe.description}</Text>
           )}
 
+          {/* Meta Info */}
           <View style={styles.metaContainer}>
-            {(recipe.cook_time || 0) > 0 && (
+            {recipe.prep_time && recipe.prep_time > 0 && (
               <View style={styles.metaItem}>
                 <Ionicons
-                  name="time-outline"
+                  name="timer-outline"
                   size={16}
                   color={colors.textSecondary}
                 />
-                <Text style={styles.metaText}>{recipe.cook_time} min</Text>
+                <Text style={styles.metaText}>
+                  Prep: {recipe.prep_time} min
+                </Text>
               </View>
             )}
-            {(recipe.servings || 0) > 0 && (
+            {recipe.cook_time && recipe.cook_time > 0 && (
+              <View style={styles.metaItem}>
+                <Ionicons
+                  name="flame-outline"
+                  size={16}
+                  color={colors.textSecondary}
+                />
+                <Text style={styles.metaText}>
+                  Cook: {recipe.cook_time} min
+                </Text>
+              </View>
+            )}
+            {recipe.servings && recipe.servings > 0 && (
               <View style={styles.metaItem}>
                 <Ionicons
                   name="people-outline"
@@ -136,43 +330,141 @@ export default function RecipeDetailScreen() {
             )}
           </View>
 
-          {recipe.source && (
-            <TouchableOpacity
-              onPress={openSourceLink}
-              style={styles.sourceButton}
-            >
-              <Text style={styles.sourceText}>View Original Recipe</Text>
-              <Ionicons name="open-outline" size={16} color={colors.primary} />
-            </TouchableOpacity>
+          {/* Status Badge */}
+          {isCooked && (
+            <View style={styles.statusBadge}>
+              <MaterialCommunityIcons
+                name="check-circle"
+                size={16}
+                color={colors.success}
+              />
+              <Text style={[styles.statusText, { color: colors.success }]}>
+                Cooked
+              </Text>
+            </View>
+          )}
+          {isArchived && (
+            <View style={styles.statusBadge}>
+              <MaterialCommunityIcons
+                name="archive"
+                size={16}
+                color={colors.textSecondary}
+              />
+              <Text
+                style={[styles.statusText, { color: colors.textSecondary }]}
+              >
+                Archived
+              </Text>
+            </View>
           )}
         </View>
 
+        {/* Ingredients */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ingredients</Text>
+          <Text style={styles.sectionTitle}>
+            Ingredients ({recipe.ingredients?.length || 0})
+          </Text>
           <View style={styles.ingredientsList}>
-            {recipe.ingredients.map((ing, idx) => (
-              <View key={idx} style={styles.ingredientItem}>
-                <View style={styles.bulletPoint} />
-                <Text style={styles.ingredientText}>
-                  {ing.quantity ? `${ing.quantity} ${ing.unit || ""} ` : ""}
-                  {ing.name}
-                </Text>
-              </View>
-            ))}
+            {recipe.ingredients && recipe.ingredients.length > 0 ? (
+              recipe.ingredients.map((ing, idx) => (
+                <View key={idx} style={styles.ingredientItem}>
+                  <View style={styles.bulletPoint} />
+                  <Text style={styles.ingredientText}>
+                    {ing.quantity ? `${ing.quantity} ` : ""}
+                    {ing.unit ? `${ing.unit} ` : ""}
+                    {ing.name}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noContent}>No ingredients listed</Text>
+            )}
           </View>
         </View>
 
+        {/* Instructions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Instructions</Text>
           <View style={styles.instructionsContainer}>
-            {recipe.instructions ? (
-              <Text style={styles.instructionsText}>{recipe.instructions}</Text>
+            {recipe.instructions && recipe.instructions.length > 0 ? (
+              recipe.instructions.map((step, idx) => (
+                <View key={idx} style={styles.instructionStep}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>{idx + 1}</Text>
+                  </View>
+                  <Text style={styles.instructionText}>{step}</Text>
+                </View>
+              ))
             ) : (
-              <Text style={styles.noInstructions}>
-                No instructions provided.
-              </Text>
+              <Text style={styles.noContent}>No instructions provided</Text>
             )}
           </View>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionsSection}>
+          {isWantToCook && (
+            <>
+              <Button
+                mode="contained"
+                onPress={handleMarkCooked}
+                loading={isUpdating}
+                disabled={isUpdating}
+                icon="check"
+                style={styles.primaryButton}
+                contentStyle={styles.buttonContent}
+              >
+                Mark as Cooked
+              </Button>
+
+              <Button
+                mode="outlined"
+                onPress={handleAddToGroceryList}
+                disabled={isUpdating}
+                icon="cart"
+                style={styles.secondaryButton}
+                contentStyle={styles.buttonContent}
+              >
+                Add to Grocery List
+              </Button>
+
+              <Button
+                mode="text"
+                onPress={handleArchive}
+                disabled={isUpdating}
+                icon="archive"
+                textColor={colors.textSecondary}
+                style={styles.textButton}
+              >
+                Archive
+              </Button>
+            </>
+          )}
+
+          {(isCooked || isArchived) && (
+            <Button
+              mode="outlined"
+              onPress={handleRestore}
+              loading={isUpdating}
+              disabled={isUpdating}
+              icon="restore"
+              style={styles.secondaryButton}
+              contentStyle={styles.buttonContent}
+            >
+              Add Back to Queue
+            </Button>
+          )}
+
+          <Button
+            mode="text"
+            onPress={handleDelete}
+            disabled={isUpdating}
+            icon="delete"
+            textColor={colors.error}
+            style={styles.deleteButton}
+          >
+            Delete Recipe
+          </Button>
         </View>
 
         <View style={styles.footer} />
@@ -218,6 +510,13 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 250,
   },
+  placeholderImage: {
+    width: "100%",
+    height: 200,
+    backgroundColor: colors.lightGray,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   header: {
     padding: 20,
     borderBottomWidth: 1,
@@ -227,7 +526,7 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   title: {
     flex: 1,
@@ -240,6 +539,26 @@ const styles = StyleSheet.create({
     padding: 8,
     marginLeft: 8,
   },
+  platformBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 12,
+  },
+  platformLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  viewOriginal: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginLeft: 12,
+  },
+  viewOriginalText: {
+    fontSize: 14,
+    color: colors.primary,
+  },
   description: {
     fontSize: 16,
     color: colors.textSecondary,
@@ -249,29 +568,32 @@ const styles = StyleSheet.create({
   metaContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: 16,
+    gap: 16,
+    marginBottom: 8,
   },
   metaItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 20,
-    marginBottom: 8,
+    gap: 4,
   },
   metaText: {
-    marginLeft: 4,
     fontSize: 14,
     color: colors.textSecondary,
   },
-  sourceButton: {
+  statusBadge: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: colors.lightGray,
+    borderRadius: 16,
     alignSelf: "flex-start",
-    marginTop: 8,
   },
-  sourceText: {
-    color: colors.primary,
+  statusText: {
     fontSize: 14,
-    marginRight: 4,
+    fontWeight: "500",
   },
   section: {
     padding: 20,
@@ -284,7 +606,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: colors.text,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   ingredientsList: {
     marginLeft: 4,
@@ -292,7 +614,7 @@ const styles = StyleSheet.create({
   ingredientItem: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   bulletPoint: {
     width: 6,
@@ -309,17 +631,57 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   instructionsContainer: {
-    marginLeft: 4,
+    gap: 16,
   },
-  instructionsText: {
+  instructionStep: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  stepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  stepNumberText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  instructionText: {
+    flex: 1,
     fontSize: 16,
     color: colors.text,
     lineHeight: 24,
-    marginBottom: 8,
   },
-  noInstructions: {
+  noContent: {
     fontStyle: "italic",
     color: colors.textSecondary,
+  },
+  actionsSection: {
+    padding: 20,
+    backgroundColor: colors.card,
+    marginTop: 8,
+    gap: 12,
+  },
+  primaryButton: {
+    borderRadius: 8,
+  },
+  secondaryButton: {
+    borderRadius: 8,
+    borderColor: colors.primary,
+  },
+  buttonContent: {
+    paddingVertical: 8,
+  },
+  textButton: {
+    alignSelf: "center",
+  },
+  deleteButton: {
+    alignSelf: "center",
+    marginTop: 8,
   },
   footer: {
     height: 40,
