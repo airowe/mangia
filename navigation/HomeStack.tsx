@@ -4,6 +4,7 @@ import { WantToCookScreen } from "../screens/WantToCookScreen";
 import { CustomHeader } from "../components/CustomHeader";
 import { ManualEntryScreen } from "../screens/ManualEntryScreen";
 import { ImportRecipeScreen } from "../screens/ImportRecipeScreen";
+import RecipeDetailScreen from "../screens/RecipeDetailScreen";
 import { Animated } from "react-native";
 
 // Define the param list for the root stack
@@ -55,6 +56,11 @@ export default function HomeStack() {
         name="ImportRecipeScreen"
         component={ImportRecipeScreen}
         options={{ title: "Import Recipe" }}
+      />
+      <Stack.Screen
+        name="RecipeDetailScreen"
+        component={RecipeDetailScreen}
+        options={{ title: "Recipe" }}
       />
     </Stack.Navigator>
   );
