@@ -6,6 +6,7 @@ import { ManualEntryScreen } from "../screens/ManualEntryScreen";
 import { ImportRecipeScreen } from "../screens/ImportRecipeScreen";
 import RecipeDetailScreen from "../screens/RecipeDetailScreen";
 import SubscriptionScreen from "../screens/SubscriptionScreen";
+import CookingModeScreen from "../screens/CookingModeScreen";
 import { Animated } from "react-native";
 
 // Define the param list for the root stack
@@ -16,6 +17,7 @@ export type RootStackParamList = {
   RecipeDetailScreen: { recipeId: string };
   GroceryListScreen: { recipeIds: string[] };
   SubscriptionScreen: undefined;
+  CookingModeScreen: { recipeId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -70,6 +72,15 @@ export default function HomeStack() {
         options={{
           title: "Premium",
           presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="CookingModeScreen"
+        component={CookingModeScreen}
+        options={{
+          title: "Cooking Mode",
+          presentation: "fullScreenModal",
           headerShown: false,
         }}
       />

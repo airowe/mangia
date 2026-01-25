@@ -48,6 +48,7 @@ type RecipeDetailScreenRouteProp = RouteProp<
 type RootStackParamList = {
   WantToCookScreen: undefined;
   GroceryListScreen: { recipeIds: string[] };
+  CookingModeScreen: { recipeId: string };
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -227,6 +228,16 @@ export default function RecipeDetailScreen() {
   const handleAddToGroceryList = useCallback(() => {
     if (!recipe) return;
     navigation.navigate("GroceryListScreen", { recipeIds: [recipe.id] });
+  }, [recipe, navigation]);
+
+  // Start cooking mode
+  const handleStartCooking = useCallback(() => {
+    if (!recipe) return;
+    if (!recipe.instructions || recipe.instructions.length === 0) {
+      Alert.alert("No Instructions", "This recipe doesn't have any instructions to follow.");
+      return;
+    }
+    navigation.navigate("CookingModeScreen", { recipeId: recipe.id });
   }, [recipe, navigation]);
 
   // Open add to collection modal
@@ -485,6 +496,18 @@ export default function RecipeDetailScreen() {
         <View style={styles.actionsSection}>
           {isWantToCook && (
             <>
+              <Button
+                mode="contained"
+                onPress={handleStartCooking}
+                disabled={isUpdating}
+                icon="chef-hat"
+                style={styles.cookingButton}
+                contentStyle={styles.buttonContent}
+                buttonColor={colors.success}
+              >
+                Start Cooking
+              </Button>
+
               <Button
                 mode="contained"
                 onPress={handleMarkCooked}
@@ -848,6 +871,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     marginTop: 8,
     gap: 12,
+  },
+  cookingButton: {
+    borderRadius: 8,
+    marginBottom: 8,
   },
   primaryButton: {
     borderRadius: 8,
