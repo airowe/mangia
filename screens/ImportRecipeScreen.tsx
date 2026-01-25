@@ -19,6 +19,7 @@ import {
   Chip,
   List,
   ProgressBar,
+  SegmentedButtons,
 } from "react-native-paper";
 import * as Clipboard from "expo-clipboard";
 import { useNavigation } from "@react-navigation/native";
@@ -55,6 +56,8 @@ const PLATFORM_ICONS: Record<
   blog: { icon: "web", label: "Blog", color: "#4CAF50" },
 };
 
+type InputMode = "url" | "text";
+
 export const ImportRecipeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const {
@@ -67,7 +70,9 @@ export const ImportRecipeScreen: React.FC = () => {
     incrementUsage,
   } = useRecipeLimit();
 
+  const [inputMode, setInputMode] = useState<InputMode>("url");
   const [url, setUrl] = useState("");
+  const [manualText, setManualText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [parsedRecipe, setParsedRecipe] = useState<ParsedRecipe | null>(null);
@@ -80,7 +85,7 @@ export const ImportRecipeScreen: React.FC = () => {
   );
   const [isSaving, setIsSaving] = useState(false);
 
-  // Paste from clipboard
+  // Paste URL from clipboard
   const handlePaste = useCallback(async () => {
     try {
       const text = await Clipboard.getStringAsync();
@@ -96,7 +101,20 @@ export const ImportRecipeScreen: React.FC = () => {
     }
   }, []);
 
-  // Import recipe from URL
+  // Paste text from clipboard (for manual text mode)
+  const handlePasteText = useCallback(async () => {
+    try {
+      const text = await Clipboard.getStringAsync();
+      if (text) {
+        setManualText(text);
+        setError(null);
+      }
+    } catch (err) {
+      console.error("Failed to paste:", err);
+    }
+  }, []);
+
+  // Import recipe from URL or text
   const handleImport = useCallback(async () => {
     // Check import limit for free users
     if (!canImport()) {
@@ -114,37 +132,68 @@ export const ImportRecipeScreen: React.FC = () => {
       return;
     }
 
-    if (!url.trim()) {
-      setError("Please enter a URL");
-      return;
+    if (inputMode === "url") {
+      if (!url.trim()) {
+        setError("Please enter a URL");
+        return;
+      }
+
+      // Basic URL validation
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        setError("Please enter a valid URL starting with http:// or https://");
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      setParsedRecipe(null);
+
+      try {
+        const platform = detectUrlType(url);
+        setDetectedPlatform(platform);
+
+        const recipe = await parseRecipeFromUrl(url);
+
+        setParsedRecipe(recipe);
+        setEditedTitle(recipe.title);
+        setEditedIngredients(recipe.ingredients);
+      } catch (err) {
+        console.error("Import error:", err);
+        setError(err instanceof Error ? err.message : "Failed to import recipe");
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Text mode - parse from pasted text
+      if (!manualText.trim()) {
+        setError("Please paste some recipe text");
+        return;
+      }
+
+      if (manualText.trim().length < 20) {
+        setError("Please provide more recipe content to extract from");
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      setParsedRecipe(null);
+      setDetectedPlatform(null); // No platform for pasted text
+
+      try {
+        const recipe = await parseRecipeFromText(manualText);
+
+        setParsedRecipe(recipe);
+        setEditedTitle(recipe.title);
+        setEditedIngredients(recipe.ingredients);
+      } catch (err) {
+        console.error("Parse error:", err);
+        setError(err instanceof Error ? err.message : "Failed to parse recipe");
+      } finally {
+        setIsLoading(false);
+      }
     }
-
-    // Basic URL validation
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-      setError("Please enter a valid URL starting with http:// or https://");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setParsedRecipe(null);
-
-    try {
-      const platform = detectUrlType(url);
-      setDetectedPlatform(platform);
-
-      const recipe = await parseRecipeFromUrl(url);
-
-      setParsedRecipe(recipe);
-      setEditedTitle(recipe.title);
-      setEditedIngredients(recipe.ingredients);
-    } catch (err) {
-      console.error("Import error:", err);
-      setError(err instanceof Error ? err.message : "Failed to import recipe");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [url, canImport, monthlyLimit, navigation]);
+  }, [inputMode, url, manualText, canImport, monthlyLimit, navigation]);
 
   // Save recipe to database
   const handleSave = useCallback(async () => {
@@ -161,6 +210,10 @@ export const ImportRecipeScreen: React.FC = () => {
         return;
       }
 
+      // Determine source type based on input mode
+      const sourceType = inputMode === "text" ? "manual" : (detectedPlatform || "blog");
+      const sourceUrl = inputMode === "text" ? null : url;
+
       // Create recipe with ingredients
       const { data: recipe, error: recipeError } = await supabase
         .from("recipes")
@@ -173,8 +226,8 @@ export const ImportRecipeScreen: React.FC = () => {
           cook_time: parsedRecipe.cook_time,
           servings: parsedRecipe.servings,
           image_url: parsedRecipe.image_url,
-          source_url: url,
-          source_type: detectedPlatform || "blog",
+          source_url: sourceUrl,
+          source_type: sourceType,
           status: "want_to_cook",
         })
         .select()
@@ -216,6 +269,7 @@ export const ImportRecipeScreen: React.FC = () => {
     editedTitle,
     editedIngredients,
     url,
+    inputMode,
     detectedPlatform,
     navigation,
     incrementUsage,
@@ -305,48 +359,104 @@ export const ImportRecipeScreen: React.FC = () => {
           </TouchableOpacity>
         )}
 
-        {/* URL Input Section */}
+        {/* Input Mode Toggle & Section */}
         {!parsedRecipe && (
           <View style={styles.inputSection}>
-            <Text style={styles.label}>Paste recipe URL</Text>
-            <View style={styles.urlInputContainer}>
-              <TextInput
-                mode="outlined"
-                value={url}
-                onChangeText={(text) => {
-                  setUrl(text);
-                  setError(null);
-                  if (text) setDetectedPlatform(detectUrlType(text));
-                }}
-                placeholder="https://tiktok.com/..."
-                style={styles.urlInput}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="url"
-                right={
-                  <TextInput.Icon icon="content-paste" onPress={handlePaste} />
-                }
-              />
-            </View>
+            {/* Mode Selector */}
+            <SegmentedButtons
+              value={inputMode}
+              onValueChange={(value) => {
+                setInputMode(value as InputMode);
+                setError(null);
+              }}
+              buttons={[
+                {
+                  value: "url",
+                  label: "From URL",
+                  icon: "link",
+                },
+                {
+                  value: "text",
+                  label: "Paste Text",
+                  icon: "text-box",
+                },
+              ]}
+              style={styles.modeToggle}
+            />
 
-            {/* Platform detection chip */}
-            {detectedPlatform && url && (
-              <View style={styles.platformChip}>
-                <Chip
-                  icon={PLATFORM_ICONS[detectedPlatform].icon}
-                  style={{
-                    backgroundColor:
-                      PLATFORM_ICONS[detectedPlatform].color + "20",
-                  }}
-                >
-                  {PLATFORM_ICONS[detectedPlatform].label}
-                </Chip>
-              </View>
+            {/* URL Input Mode */}
+            {inputMode === "url" && (
+              <>
+                <Text style={styles.label}>Paste recipe URL</Text>
+                <View style={styles.urlInputContainer}>
+                  <TextInput
+                    mode="outlined"
+                    value={url}
+                    onChangeText={(text) => {
+                      setUrl(text);
+                      setError(null);
+                      if (text) setDetectedPlatform(detectUrlType(text));
+                    }}
+                    placeholder="https://tiktok.com/..."
+                    style={styles.urlInput}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="url"
+                    right={
+                      <TextInput.Icon icon="content-paste" onPress={handlePaste} />
+                    }
+                  />
+                </View>
+
+                {/* Platform detection chip */}
+                {detectedPlatform && url && (
+                  <View style={styles.platformChip}>
+                    <Chip
+                      icon={PLATFORM_ICONS[detectedPlatform].icon}
+                      style={{
+                        backgroundColor:
+                          PLATFORM_ICONS[detectedPlatform].color + "20",
+                      }}
+                    >
+                      {PLATFORM_ICONS[detectedPlatform].label}
+                    </Chip>
+                  </View>
+                )}
+
+                <Text style={styles.hint}>
+                  Works with TikTok, YouTube, Instagram, and recipe blogs
+                </Text>
+              </>
             )}
 
-            <Text style={styles.hint}>
-              Works with TikTok, YouTube, Instagram, and recipe blogs
-            </Text>
+            {/* Text Paste Mode */}
+            {inputMode === "text" && (
+              <>
+                <Text style={styles.label}>Paste recipe text</Text>
+                <View style={styles.textInputContainer}>
+                  <TextInput
+                    mode="outlined"
+                    value={manualText}
+                    onChangeText={(text) => {
+                      setManualText(text);
+                      setError(null);
+                    }}
+                    placeholder="Paste video caption, recipe description, or ingredients list..."
+                    style={styles.textInput}
+                    multiline
+                    numberOfLines={6}
+                    right={
+                      <TextInput.Icon icon="content-paste" onPress={handlePasteText} />
+                    }
+                  />
+                </View>
+
+                <Text style={styles.hint}>
+                  Paste video captions, descriptions, or any text containing a recipe.
+                  Our AI will extract the ingredients and instructions.
+                </Text>
+              </>
+            )}
 
             {error && <Text style={styles.error}>{error}</Text>}
 
@@ -354,11 +464,11 @@ export const ImportRecipeScreen: React.FC = () => {
               mode="contained"
               onPress={handleImport}
               loading={isLoading}
-              disabled={isLoading || !url.trim()}
+              disabled={isLoading || (inputMode === "url" ? !url.trim() : !manualText.trim())}
               style={styles.importButton}
-              icon="download"
+              icon={inputMode === "url" ? "download" : "auto-fix"}
             >
-              Import Recipe
+              {inputMode === "url" ? "Import Recipe" : "Extract Recipe"}
             </Button>
 
             <Divider style={styles.divider} />
@@ -578,6 +688,9 @@ const styles = StyleSheet.create({
   inputSection: {
     marginBottom: 16,
   },
+  modeToggle: {
+    marginBottom: 16,
+  },
   label: {
     fontSize: 16,
     fontWeight: "600",
@@ -589,6 +702,13 @@ const styles = StyleSheet.create({
   },
   urlInput: {
     backgroundColor: colors.surface,
+  },
+  textInputContainer: {
+    marginBottom: 8,
+  },
+  textInput: {
+    backgroundColor: colors.surface,
+    minHeight: 120,
   },
   platformChip: {
     flexDirection: "row",
