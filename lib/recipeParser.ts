@@ -3,6 +3,7 @@
 
 import { extractRecipeFromUrl } from "./firecrawl";
 import { extractIngredientsWithClaude } from "./ingredientParser";
+import { getVideoTranscript, VideoType } from "./videoTranscript";
 import { ParsedRecipe } from "../models/Recipe";
 
 const FIRECRAWL_API_KEY = process.env.EXPO_PUBLIC_FIRECRAWL_API_KEY!;
@@ -68,31 +69,60 @@ async function parseBlogRecipe(url: string): Promise<ParsedRecipe> {
 
 /**
  * Parse recipe from a video URL (TikTok, YouTube, Instagram)
- * For MVP, we'll use Claude to extract from video descriptions/captions
+ * Attempts transcript extraction, falls back to oEmbed metadata
  */
 async function parseVideoRecipe(
   url: string,
   type: UrlType,
 ): Promise<ParsedRecipe> {
-  // For MVP, we'll try to fetch video metadata and use Claude to extract recipe
-  // Full video transcript support will come in Day 11
+  let content = "";
+  let thumbnailUrl: string | undefined;
 
-  // For now, try to get basic video info and use Claude
-  const videoInfo = await fetchVideoMetadata(url, type);
+  // Step 1: Try to get video transcript (most detailed)
+  try {
+    console.log(`Attempting transcript extraction for ${type} video...`);
+    const transcript = await getVideoTranscript(url, type as VideoType);
+    if (transcript && transcript.length > 50) {
+      console.log(`Got transcript: ${transcript.length} chars`);
+      content = transcript;
+    }
+  } catch (transcriptError) {
+    console.log(`Transcript not available: ${transcriptError}`);
+    // Continue to fallback
+  }
 
-  if (!videoInfo.content || videoInfo.content.length < 20) {
+  // Step 2: If no transcript, try oEmbed metadata (title/description)
+  if (!content) {
+    try {
+      console.log(`Falling back to oEmbed metadata for ${type}...`);
+      const videoInfo = await fetchVideoMetadata(url, type);
+      content = videoInfo.content;
+      thumbnailUrl = videoInfo.thumbnailUrl;
+    } catch (metadataError) {
+      console.log(`oEmbed metadata not available: ${metadataError}`);
+    }
+  }
+
+  // Step 3: If still no content, throw helpful error
+  if (!content || content.length < 20) {
+    const platformName = type.charAt(0).toUpperCase() + type.slice(1);
     throw new Error(
-      `Could not extract recipe content from ${type} video. ` +
-        "Try pasting the recipe description or use a blog URL instead.",
+      `Could not extract recipe from ${platformName} video. ` +
+        "The video may not have captions available.\n\n" +
+        "Try one of these options:\n" +
+        "• Paste the recipe text manually\n" +
+        "• Use a recipe blog URL instead\n" +
+        "• Copy the video description and paste it"
     );
   }
 
   // Use Claude to extract structured recipe from the content
-  const recipe = await extractIngredientsWithClaude(videoInfo.content);
+  console.log(`Extracting recipe with Claude from ${content.length} chars...`);
+  const recipe = await extractIngredientsWithClaude(content);
 
-  // Include image if available
-  if (videoInfo.thumbnailUrl && !recipe.image_url) {
-    recipe.image_url = videoInfo.thumbnailUrl;
+  // Include thumbnail if available
+  if (thumbnailUrl && !recipe.image_url) {
+    recipe.image_url = thumbnailUrl;
   }
 
   return recipe;
