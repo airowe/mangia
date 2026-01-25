@@ -21,7 +21,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button } from "react-native-paper";
 import { Screen } from "../components/Screen";
 import { colors } from "../theme/colors";
-import { Recipe, RecipeSourceType } from "../models/Recipe";
+import { Recipe, RecipeSourceType, RecipeNote } from "../models/Recipe";
+import { RecipeRatingNotes } from "../components/RecipeRatingNotes";
 import {
   fetchRecipeById,
   markAsCooked,
@@ -400,6 +401,15 @@ export default function RecipeDetailScreen() {
             )}
           </View>
         </View>
+
+        {/* Rating & Notes */}
+        <RecipeRatingNotes
+          recipeId={recipeId}
+          currentRating={recipe.rating}
+          onRatingChange={(newRating) => {
+            setRecipe((prev) => (prev ? { ...prev, rating: newRating } : null));
+          }}
+        />
 
         {/* Action Buttons */}
         <View style={styles.actionsSection}>

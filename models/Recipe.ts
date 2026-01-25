@@ -39,6 +39,9 @@ export interface Recipe {
   source_url?: string;         // Original URL (TikTok, YouTube, blog)
   source_type?: RecipeSourceType;
   status?: RecipeStatus;       // Optional, defaults to 'want_to_cook'
+  rating?: number;             // 1-5 star rating
+  times_cooked?: number;       // Number of times recipe was cooked
+  last_cooked_at?: string;     // Date of last cook
   created_at?: string;         // Optional for backward compatibility
   updated_at?: string;
   // Legacy fields for backward compatibility
@@ -46,6 +49,17 @@ export interface Recipe {
   dietary_restrictions?: string[];
   is_ai_generated?: boolean;
   source?: string;
+}
+
+// Recipe note for cooking history
+export interface RecipeNote {
+  id: string;
+  recipe_id: string;
+  user_id: string;
+  note: string;
+  cooked_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // API response type for parsed recipes from external sources
