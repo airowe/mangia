@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "grosheries",
-    "slug": "grosheries",
+    "name": "Mangia",
+    "slug": "mangia",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,10 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.airowe.grosheries",
+      "bundleIdentifier": "com.airowe.mangia",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSCameraUsageDescription": "This app uses the camera to scan barcodes and QR codes."
+        "NSCameraUsageDescription": "This app uses the camera to scan recipes and ingredients."
       },
       "icon": "./assets/icon.png"
     },
@@ -27,7 +27,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.airowe.grosheries"
+      "package": "com.airowe.mangia"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -48,7 +48,8 @@
       ],
       [
         "@logrocket/react-native"
-      ]
+      ],
+      "expo-font"
     ]
   }
 }

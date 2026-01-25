@@ -20,7 +20,6 @@ import { useUser } from "../hooks/useUser";
 type RootStackParamList = {
   HomeScreen: undefined;
   Pantry: undefined;
-  BarcodeScreen: undefined;
   Account: undefined;
   [key: string]: undefined;
 };
