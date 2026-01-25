@@ -33,6 +33,7 @@ import { fetchAllProducts } from "../lib/products";
 
 type RootStackParamList = {
   ManualEntryScreen: undefined;
+  ImportRecipeScreen: undefined;
 };
 
 type HomeScreenNavigationProp = StackNavigationProp<
@@ -73,6 +74,10 @@ export const HomeScreen: React.FC = () => {
     bottomSheetRef.current?.close();
     navigation.navigate("ManualEntryScreen");
   }, [navigation]);
+
+  const handleImportRecipePress = useCallback(() => {
+    navigation.navigate("ImportRecipeScreen");
+  }, [navigation]);
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoadingPantry, setIsLoadingPantry] = useState<boolean>(true);
@@ -87,7 +92,7 @@ export const HomeScreen: React.FC = () => {
 
   // Filter out products that are already in the pantry
   const availableProducts = allProducts.filter(
-    (product) => !pantryItems.some((item) => item.id === product.id)
+    (product) => !pantryItems.some((item) => item.id === product.id),
   );
 
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -110,7 +115,7 @@ export const HomeScreen: React.FC = () => {
 
         // Update products list based on pagination
         setAllProducts((prev) =>
-          pageNum === 1 ? products : [...prev, ...products]
+          pageNum === 1 ? products : [...prev, ...products],
         );
 
         // Update pagination state
@@ -130,7 +135,7 @@ export const HomeScreen: React.FC = () => {
         setIsRefreshing(false);
       }
     },
-    [pagination.limit]
+    [pagination.limit],
   );
 
   const loadPantryItems = useCallback(async () => {
@@ -205,7 +210,7 @@ export const HomeScreen: React.FC = () => {
             }
           },
         },
-      ]
+      ],
     );
   }, []);
 
@@ -222,7 +227,7 @@ export const HomeScreen: React.FC = () => {
       // Optimistically update the UI
       const updatedProduct = { ...currentProduct, quantity: newQuantity };
       setPantryItems((prev) =>
-        prev.map((item) => (item.id === productId ? updatedProduct : item))
+        prev.map((item) => (item.id === productId ? updatedProduct : item)),
       );
 
       try {
@@ -233,12 +238,12 @@ export const HomeScreen: React.FC = () => {
         // Revert optimistic update on error
         console.error("Error updating quantity:", error);
         setPantryItems((prev) =>
-          prev.map((item) => (item.id === productId ? currentProduct : item))
+          prev.map((item) => (item.id === productId ? currentProduct : item)),
         );
         Alert.alert("Error", "Failed to update item quantity");
       }
     },
-    [pantryItems]
+    [pantryItems],
   );
 
   const handleLoadMore = useCallback(() => {
@@ -285,7 +290,7 @@ export const HomeScreen: React.FC = () => {
             listener: (event: any) => {
               // Optional: Add any additional scroll handling here
             },
-          }
+          },
         )}
         scrollEventThrottle={16}
         contentInsetAdjustmentBehavior="automatic"
@@ -319,16 +324,27 @@ export const HomeScreen: React.FC = () => {
       </Animated.ScrollView>
 
       <View style={styles.buttonContainer}>
-        <Button
-          mode="contained"
-          onPress={handleAddToPantryPress}
-          style={[styles.addButton]}
-          labelStyle={styles.addButtonLabel}
-          theme={{ colors: { primary: colors.primary } }}
-          icon="plus"
-        >
-          Add to Pantry
-        </Button>
+        <View style={styles.buttonRow}>
+          <Button
+            mode="outlined"
+            onPress={handleImportRecipePress}
+            style={styles.importButton}
+            labelStyle={styles.importButtonLabel}
+            icon="link-variant"
+          >
+            Import Recipe
+          </Button>
+          <Button
+            mode="contained"
+            onPress={handleAddToPantryPress}
+            style={styles.addButton}
+            labelStyle={styles.addButtonLabel}
+            theme={{ colors: { primary: colors.primary } }}
+            icon="plus"
+          >
+            Add to Pantry
+          </Button>
+        </View>
       </View>
 
       <BottomSheet
@@ -348,9 +364,7 @@ export const HomeScreen: React.FC = () => {
           />
         )}
       >
-        <AddToPantrySheet
-          onManualPress={handleManualPress}
-        />
+        <AddToPantrySheet onManualPress={handleManualPress} />
       </BottomSheet>
     </Screen>
   );
@@ -413,13 +427,26 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
+  buttonRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  importButton: {
+    flex: 1,
+    borderRadius: 8,
+    borderColor: colors.primary,
+  },
+  importButtonLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
   addButton: {
-    width: "100%",
+    flex: 1,
     borderRadius: 8,
     paddingVertical: 8,
   },
   addButtonLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     paddingVertical: 4,
   },
