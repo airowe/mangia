@@ -7,6 +7,7 @@ import { AccountScreen } from "./screens/AccountScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider as PaperProvider } from "react-native-paper";
+import { SubscriptionProvider } from "./contexts/SubscriptionContext";
 import TabNavigator from "./navigation/TabNavigator";
 import {
   ActivityIndicator,
@@ -161,6 +162,7 @@ function AppContent() {
 
   // Show auth screen if no session, otherwise show main app
   return (
+    <SubscriptionProvider>
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {!session ? (
@@ -168,19 +170,20 @@ function AppContent() {
           ) : (
             <>
               <Stack.Screen name="MainTabs" component={TabNavigator} />
-              <Stack.Screen 
-                name="Account" 
-                component={AccountScreen} 
-                options={{ 
-                  headerShown: true, 
+              <Stack.Screen
+                name="Account"
+                component={AccountScreen}
+                options={{
+                  headerShown: true,
                   title: 'Account',
                   headerBackTitle: 'Back'
-                }} 
+                }}
               />
             </>
           )}
         </Stack.Navigator>
       </NavigationContainer>
+    </SubscriptionProvider>
   );
 }
 

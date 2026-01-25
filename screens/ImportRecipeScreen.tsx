@@ -7,6 +7,7 @@ import {
   Platform,
   Alert,
   Image,
+  TouchableOpacity,
 } from "react-native";
 import {
   TextInput,
@@ -17,10 +18,12 @@ import {
   Divider,
   Chip,
   List,
+  ProgressBar,
 } from "react-native-paper";
 import * as Clipboard from "expo-clipboard";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { colors } from "../theme/colors";
 import {
@@ -31,11 +34,13 @@ import {
 } from "../lib/recipeParser";
 import { ParsedRecipe, RecipeIngredient } from "../models/Recipe";
 import { supabase } from "../lib/supabase";
+import { useRecipeLimit } from "../hooks/useRecipeLimit";
 
 type RootStackParamList = {
   HomeScreen: undefined;
   ImportRecipeScreen: undefined;
   ManualEntryScreen: undefined;
+  SubscriptionScreen: undefined;
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -52,6 +57,15 @@ const PLATFORM_ICONS: Record<
 
 export const ImportRecipeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const {
+    importsUsed,
+    importsRemaining,
+    monthlyLimit,
+    isLimitReached,
+    isPremium,
+    canImport,
+    incrementUsage,
+  } = useRecipeLimit();
 
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +98,22 @@ export const ImportRecipeScreen: React.FC = () => {
 
   // Import recipe from URL
   const handleImport = useCallback(async () => {
+    // Check import limit for free users
+    if (!canImport()) {
+      Alert.alert(
+        "Import Limit Reached",
+        `You've used all ${monthlyLimit} free imports this month. Upgrade to Premium for unlimited imports!`,
+        [
+          { text: "Maybe Later", style: "cancel" },
+          {
+            text: "Upgrade",
+            onPress: () => navigation.navigate("SubscriptionScreen"),
+          },
+        ]
+      );
+      return;
+    }
+
     if (!url.trim()) {
       setError("Please enter a URL");
       return;
@@ -114,7 +144,7 @@ export const ImportRecipeScreen: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [url]);
+  }, [url, canImport, monthlyLimit, navigation]);
 
   // Save recipe to database
   const handleSave = useCallback(async () => {
@@ -169,6 +199,9 @@ export const ImportRecipeScreen: React.FC = () => {
         if (ingredientError) throw ingredientError;
       }
 
+      // Increment usage count for free users
+      await incrementUsage();
+
       Alert.alert("Recipe Saved!", 'Added to your "Want to Cook" list', [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);
@@ -185,6 +218,7 @@ export const ImportRecipeScreen: React.FC = () => {
     url,
     detectedPlatform,
     navigation,
+    incrementUsage,
   ]);
 
   // Navigate to manual entry
@@ -227,6 +261,50 @@ export const ImportRecipeScreen: React.FC = () => {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Import Limit Banner (for free users) */}
+        {!isPremium && !parsedRecipe && (
+          <TouchableOpacity
+            style={[
+              styles.limitBanner,
+              isLimitReached && styles.limitBannerWarning,
+            ]}
+            onPress={() => navigation.navigate("SubscriptionScreen")}
+          >
+            <View style={styles.limitInfo}>
+              <MaterialCommunityIcons
+                name={isLimitReached ? "alert-circle" : "information"}
+                size={20}
+                color={isLimitReached ? colors.error : colors.primary}
+              />
+              <View style={styles.limitTextContainer}>
+                <Text
+                  style={[
+                    styles.limitText,
+                    isLimitReached && styles.limitTextWarning,
+                  ]}
+                >
+                  {isLimitReached
+                    ? "Monthly limit reached"
+                    : `${importsRemaining} of ${monthlyLimit} free imports left`}
+                </Text>
+                <ProgressBar
+                  progress={importsUsed / monthlyLimit}
+                  color={isLimitReached ? colors.error : colors.primary}
+                  style={styles.progressBar}
+                />
+              </View>
+            </View>
+            <View style={styles.upgradeLink}>
+              <Text style={styles.upgradeLinkText}>Upgrade</Text>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={16}
+                color={colors.primary}
+              />
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* URL Input Section */}
         {!parsedRecipe && (
           <View style={styles.inputSection}>
@@ -453,6 +531,49 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     paddingBottom: 32,
+  },
+  limitBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: colors.primaryLight,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  limitBannerWarning: {
+    backgroundColor: `${colors.error}15`,
+  },
+  limitInfo: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  limitTextContainer: {
+    flex: 1,
+  },
+  limitText: {
+    fontSize: 14,
+    color: colors.text,
+    marginBottom: 4,
+  },
+  limitTextWarning: {
+    color: colors.error,
+  },
+  progressBar: {
+    height: 4,
+    borderRadius: 2,
+  },
+  upgradeLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  upgradeLinkText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.primary,
   },
   inputSection: {
     marginBottom: 16,
