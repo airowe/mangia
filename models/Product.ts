@@ -1,23 +1,35 @@
+import { IngredientCategory } from './Recipe';
+
+// Legacy Product interface - kept for backward compatibility with existing code
 export interface Product {
-  barcode?: string;
-  category?: string;
   id: string;
   title: string;
   description?: string;
+  category?: string;
   unit?: string;
-  created_at?: string;
+  quantity?: number;
   price?: number;
-  image?: string;
   imageUrl?: string;
-  asin?: string;
+  location?: string;
   brand?: string;
-  EAN13?: string;
-  UPCA?: string;
+  created_at?: string;
 }
 
-export interface PantryItem extends Product {
+// Pantry item for tracking what ingredients user has at home
+export interface PantryItem {
+  id: string;
+  user_id?: string;            // Optional for backward compatibility
+  title: string;               // "Chicken breast", "Eggs"
   quantity?: number;
-  location?: string;
-  expiryDate?: string;
-  user_id?: string;
+  unit?: string;
+  category?: IngredientCategory | string;  // Allow string for backward compatibility
+  expiry_date?: string;        // ISO date string
+  location?: string;           // "fridge", "freezer", "pantry"
+  imageUrl?: string;
+  image?: string;              // Alias for imageUrl (backward compat)
+  price?: number;              // Optional, for backward compatibility
+  description?: string;        // Optional, for backward compatibility
+  brand?: string;              // Optional, for backward compatibility
+  created_at?: string;         // Optional for backward compatibility
+  updated_at?: string;
 }
