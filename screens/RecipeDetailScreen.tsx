@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -30,6 +30,8 @@ import {
   restoreRecipe,
   RecipeWithIngredients,
 } from "../lib/recipeService";
+import { ServingAdjuster } from "../components/ServingAdjuster";
+import { getScaledIngredientDisplay } from "../utils/recipeScaling";
 
 type RecipeDetailScreenRouteProp = RouteProp<
   { params: { recipeId: string } },
@@ -68,6 +70,7 @@ export default function RecipeDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [currentServings, setCurrentServings] = useState<number>(0);
 
   const loadRecipe = useCallback(async () => {
     try {
@@ -86,6 +89,21 @@ export default function RecipeDetailScreen() {
   useEffect(() => {
     loadRecipe();
   }, [loadRecipe]);
+
+  // Set initial servings when recipe loads
+  useEffect(() => {
+    if (recipe?.servings) {
+      setCurrentServings(recipe.servings);
+    }
+  }, [recipe?.servings]);
+
+  // Calculate scale factor for ingredients
+  const scaleFactor = useMemo(() => {
+    if (!recipe?.servings || recipe.servings === 0 || currentServings === 0) {
+      return 1;
+    }
+    return currentServings / recipe.servings;
+  }, [recipe?.servings, currentServings]);
 
   const handleShare = async () => {
     if (!recipe) return;
@@ -359,20 +377,37 @@ export default function RecipeDetailScreen() {
           )}
         </View>
 
+        {/* Serving Adjuster */}
+        {recipe.servings && recipe.servings > 0 && (
+          <View style={styles.section}>
+            <ServingAdjuster
+              originalServings={recipe.servings}
+              currentServings={currentServings || recipe.servings}
+              onServingsChange={setCurrentServings}
+            />
+          </View>
+        )}
+
         {/* Ingredients */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            Ingredients ({recipe.ingredients?.length || 0})
-          </Text>
+          <View style={styles.ingredientsHeader}>
+            <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
+              Ingredients ({recipe.ingredients?.length || 0})
+            </Text>
+            {scaleFactor !== 1 && (
+              <View style={styles.scaledBadge}>
+                <MaterialCommunityIcons name="scale" size={14} color={colors.info} />
+                <Text style={styles.scaledBadgeText}>Scaled</Text>
+              </View>
+            )}
+          </View>
           <View style={styles.ingredientsList}>
             {recipe.ingredients && recipe.ingredients.length > 0 ? (
               recipe.ingredients.map((ing, idx) => (
                 <View key={idx} style={styles.ingredientItem}>
                   <View style={styles.bulletPoint} />
                   <Text style={styles.ingredientText}>
-                    {ing.quantity ? `${ing.quantity} ` : ""}
-                    {ing.unit ? `${ing.unit} ` : ""}
-                    {ing.name}
+                    {getScaledIngredientDisplay(ing, scaleFactor)}
                   </Text>
                 </View>
               ))
@@ -607,6 +642,26 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
     marginBottom: 16,
+  },
+  ingredientsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  scaledBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.info + "15",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  scaledBadgeText: {
+    fontSize: 12,
+    color: colors.info,
+    fontWeight: "500",
   },
   ingredientsList: {
     marginLeft: 4,
