@@ -3,12 +3,14 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { HomeScreen } from "../screens/HomeScreen";
 import { CustomHeader } from "../components/CustomHeader";
 import { ManualEntryScreen } from "../screens/ManualEntryScreen";
+import { ImportRecipeScreen } from "../screens/ImportRecipeScreen";
 import { Animated } from "react-native";
 
 // Define the param list for the root stack
 export type RootStackParamList = {
   HomeScreen: undefined;
   ManualEntryScreen: undefined;
+  ImportRecipeScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -46,6 +48,11 @@ export default function HomeStack() {
         name="ManualEntryScreen"
         component={ManualEntryScreen}
         options={{ title: "Add Item" }}
+      />
+      <Stack.Screen
+        name="ImportRecipeScreen"
+        component={ImportRecipeScreen}
+        options={{ title: "Import Recipe" }}
       />
     </Stack.Navigator>
   );
