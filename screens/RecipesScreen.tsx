@@ -277,6 +277,10 @@ export const RecipesScreen = () => {
     navigation.navigate("RecipeSearch");
   }, [navigation]);
 
+  const handleCollections = useCallback(() => {
+    navigation.navigate("Collections");
+  }, [navigation]);
+
   useEffect(() => {
     const loadData = async () => {
       await loadUserRecipes();
@@ -357,9 +361,21 @@ export const RecipesScreen = () => {
           style={[styles.button, styles.containedButton]}
           labelStyle={[styles.buttonLabel, { color: "white" }]}
           theme={{ colors: { primary: colors.primary } }}
-          icon="book-search"
+          icon="magnify"
+          compact
         >
-          Search Recipes
+          Search
+        </Button>
+        <Button
+          mode="outlined"
+          onPress={handleCollections}
+          style={[styles.button, styles.outlinedButton]}
+          labelStyle={[styles.buttonLabel, { color: colors.primary }]}
+          theme={{ colors: { primary: colors.primary } }}
+          icon="folder-multiple"
+          compact
+        >
+          Collections
         </Button>
         <Button
           mode="outlined"
@@ -368,8 +384,9 @@ export const RecipesScreen = () => {
           labelStyle={[styles.buttonLabel, { color: colors.primary }]}
           theme={{ colors: { primary: colors.primary } }}
           icon="plus"
+          compact
         >
-          Add Recipe
+          Add
         </Button>
       </View>
     </Screen>
