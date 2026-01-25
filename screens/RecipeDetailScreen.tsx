@@ -22,7 +22,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button, Portal, Modal, RadioButton } from "react-native-paper";
 import { Screen } from "../components/Screen";
 import { colors } from "../theme/colors";
-import { Recipe, RecipeSourceType } from "../models/Recipe";
+import { Recipe, RecipeSourceType, RecipeNote } from "../models/Recipe";
+import { RecipeRatingNotes } from "../components/RecipeRatingNotes";
 import {
   fetchRecipeById,
   markAsCooked,
@@ -37,6 +38,7 @@ import {
   addRecipeToCollection,
   getCollectionsForRecipe,
 } from "../lib/collectionService";
+import { shareRecipe, shareIngredients } from "../lib/recipeSharing";
 
 type RecipeDetailScreenRouteProp = RouteProp<
   { params: { recipeId: string } },
@@ -101,14 +103,30 @@ export default function RecipeDetailScreen() {
 
   const handleShare = async () => {
     if (!recipe) return;
-    try {
-      await Share.share({
-        message: `Check out this recipe: ${recipe.title}\n\n${recipe.source_url || ""}`,
-        title: recipe.title,
-      });
-    } catch (error) {
-      console.error("Error sharing recipe:", error);
-    }
+
+    Alert.alert("Share Recipe", "What would you like to share?", [
+      {
+        text: "Full Recipe",
+        onPress: async () => {
+          try {
+            await shareRecipe(recipe);
+          } catch (error) {
+            console.error("Error sharing recipe:", error);
+          }
+        },
+      },
+      {
+        text: "Ingredients Only",
+        onPress: async () => {
+          try {
+            await shareIngredients(recipe);
+          } catch (error) {
+            console.error("Error sharing ingredients:", error);
+          }
+        },
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
   const openSourceLink = () => {
@@ -453,6 +471,15 @@ export default function RecipeDetailScreen() {
             )}
           </View>
         </View>
+
+        {/* Rating & Notes */}
+        <RecipeRatingNotes
+          recipeId={recipeId}
+          currentRating={recipe.rating}
+          onRatingChange={(newRating) => {
+            setRecipe((prev) => (prev ? { ...prev, rating: newRating } : null));
+          }}
+        />
 
         {/* Action Buttons */}
         <View style={styles.actionsSection}>
