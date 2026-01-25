@@ -1,10 +1,7 @@
-import React, { useRef } from "react";
+import React from "react";
 import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
 import { Portal, Dialog, Button, Text } from "react-native-paper";
-import { RootStackParamList } from "../navigation/HomeStack";
 import { PantryItem } from "../models/Product";
 import { colors } from "../theme/colors";
 import { ProductPlaceholder } from "./ProductPlaceholder";
@@ -24,13 +21,7 @@ const PantryItemComponent: React.FC<PantryItemProps> = ({
   onRemoveFromPantry,
   onQuantityChange,
 }) => {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-
   const [showRemoveDialog, setShowRemoveDialog] = React.useState(false);
-
-  const handlePress = () => {
-    navigation.navigate("ProductDetail", { product });
-  };
 
   const handleDecrement = () => {
     if ((product.quantity || 1) <= 1) {
@@ -50,11 +41,7 @@ const PantryItemComponent: React.FC<PantryItemProps> = ({
   };
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={handlePress}
-      activeOpacity={0.8}
-    >
+    <View style={styles.container}>
       <View style={styles.imageContainer}>
         {product.imageUrl ? (
           <View style={[styles.imageContainer, styles.imageFallback]}>
@@ -154,7 +141,7 @@ const PantryItemComponent: React.FC<PantryItemProps> = ({
           </Dialog.Actions>
         </Dialog>
       </Portal>
-    </TouchableOpacity>
+    </View>
   );
 };
 

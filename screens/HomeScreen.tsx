@@ -32,14 +32,12 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { fetchAllProducts } from "../lib/products";
 
 type RootStackParamList = {
-  BarcodeScreen: undefined;
   ManualEntryScreen: undefined;
-  ReceiptScanScreen: undefined;
 };
 
 type HomeScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "BarcodeScreen"
+  "ManualEntryScreen"
 >;
 
 interface PaginationState {
@@ -71,19 +69,9 @@ export const HomeScreen: React.FC = () => {
     }
   }, []);
 
-  const handleBarcodePress = useCallback(() => {
-    bottomSheetRef.current?.close();
-    navigation.navigate("BarcodeScreen");
-  }, [navigation]);
-
   const handleManualPress = useCallback(() => {
     bottomSheetRef.current?.close();
     navigation.navigate("ManualEntryScreen");
-  }, [navigation]);
-
-  const handleReceiptPress = useCallback(() => {
-    bottomSheetRef.current?.close();
-    navigation.navigate("ReceiptScanScreen");
   }, [navigation]);
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -264,12 +252,6 @@ export const HomeScreen: React.FC = () => {
     loadPantryItems();
   }, [loadProducts, loadPantryItems]);
 
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, -100],
-    extrapolate: "clamp",
-  });
-
   // Show loading indicator while pantry is loading
   if (isLoadingPantry) {
     return isLoadingProducts ? (
@@ -367,9 +349,7 @@ export const HomeScreen: React.FC = () => {
         )}
       >
         <AddToPantrySheet
-          onBarcodePress={handleBarcodePress}
           onManualPress={handleManualPress}
-          onReceiptPress={handleReceiptPress}
         />
       </BottomSheet>
     </Screen>
@@ -442,39 +422,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     paddingVertical: 4,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  button: {
-    flex: 1,
-    minWidth: 0, // Allows buttons to shrink below their content width
-    height: 42,
-    justifyContent: "center",
-    borderRadius: 8,
-  },
-  buttonLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginVertical: 0,
-    paddingVertical: 0,
-    height: 20,
-    lineHeight: 20,
-  },
-  containedButton: {
-    backgroundColor: colors.primary,
-    elevation: 0,
-  },
-  outlinedButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  receiptButton: {
-    width: "100%",
-    backgroundColor: colors.secondary,
   },
 });
 
