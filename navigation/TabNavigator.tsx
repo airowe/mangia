@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import HomeStack from "./HomeStack";
 import MealPlanningStack from "./MealPlanningStack";
 import RecipeLibraryStack from "./RecipeLibraryStack";
+import PantryScreen from "../screens/PantryScreen";
 import { colors } from "../theme/colors";
 
 const Tab = createBottomTabNavigator();
@@ -16,6 +17,7 @@ export default function TabNavigator() {
           let iconName: keyof typeof Ionicons.glyphMap = "home";
 
           if (route.name === "Home") iconName = "home";
+          else if (route.name === "Pantry") iconName = "basket";
           else if (route.name === "MealPlanner") iconName = "restaurant";
           else if (route.name === "Recipes") iconName = "book";
 
@@ -39,6 +41,11 @@ export default function TabNavigator() {
         name="Home"
         component={HomeStack}
         options={{ title: "Home" }}
+      />
+      <Tab.Screen
+        name="Pantry"
+        component={PantryScreen}
+        options={{ title: "Pantry" }}
       />
       <Tab.Screen
         name="MealPlanner"
