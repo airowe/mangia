@@ -1,28 +1,33 @@
-import { supabase } from './supabase';
+// lib/auth.ts
+// Authentication utilities using Clerk
+// Note: Most auth operations are now handled via Clerk hooks in components
+// This file provides utility functions for non-component contexts
 
-export const signUp = (email: string, password: string) =>
-  supabase.auth.signUp({ email, password });
+import { useAuth, useUser } from '@clerk/clerk-expo';
 
-export const signInAnonymously = () => 
-  supabase.auth.signInAnonymously();
+// Re-export Clerk hooks for convenience
+export { useAuth, useUser };
 
-export const signIn = (email: string, password: string) =>
-  supabase.auth.signInWithPassword({ email, password });
+// Helper type for auth user
+export interface AuthUser {
+  id: string;
+  clerkId: string;
+  email: string;
+  name?: string;
+}
 
-export const getCurrentUser = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: { session } } = await supabase.auth.getSession();
-  return { data: { user, session } };
-};
+// Get current user from Clerk hook (use in components)
+export function useCurrentUser(): AuthUser | null {
+  const { user, isSignedIn } = useUser();
 
-export const signOut = () => 
-  supabase.auth.signOut();
+  if (!isSignedIn || !user) {
+    return null;
+  }
 
-export const resetPassword = (email: string) =>
-  supabase.auth.resetPasswordForEmail(email);
-
-// Helper to get the current session
-export const getSession = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session;
-};
+  return {
+    id: user.id, // This is the Clerk ID, backend will resolve to DB ID
+    clerkId: user.id,
+    email: user.emailAddresses[0]?.emailAddress || '',
+    name: user.fullName || undefined,
+  };
+}

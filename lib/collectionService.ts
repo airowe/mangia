@@ -1,6 +1,6 @@
 // Collection service for CRUD operations on recipe collections
 
-import { supabase } from './supabase';
+import { apiClient } from './api/client';
 import {
   RecipeCollection,
   RecipeCollectionItem,
@@ -12,72 +12,26 @@ import {
  * Fetch all collections for the current user with recipe counts
  */
 export async function fetchCollections(): Promise<CollectionWithCount[]> {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) {
-    throw new Error('User not authenticated');
-  }
-
-  const { data, error } = await supabase
-    .from('recipe_collections')
-    .select(`
-      *,
-      recipe_collection_items(count)
-    `)
-    .eq('user_id', user.user.id)
-    .order('display_order', { ascending: true });
-
-  if (error) {
+  try {
+    const data = await apiClient.get<CollectionWithCount[]>('/api/collections');
+    return data || [];
+  } catch (error) {
     console.error('Error fetching collections:', error);
     throw error;
   }
-
-  // Transform the data to include recipe_count
-  return (data || []).map((collection) => ({
-    ...collection,
-    recipe_count: collection.recipe_collection_items?.[0]?.count || 0,
-  }));
 }
 
 /**
  * Fetch a single collection by ID with full recipe details
  */
 export async function fetchCollectionById(id: string): Promise<CollectionWithRecipes | null> {
-  const { data, error } = await supabase
-    .from('recipe_collections')
-    .select(`
-      *,
-      recipe_collection_items(
-        recipe_id,
-        display_order,
-        recipes(
-          id,
-          title,
-          image_url,
-          cook_time,
-          prep_time
-        )
-      )
-    `)
-    .eq('id', id)
-    .single();
-
-  if (error) {
+  try {
+    const data = await apiClient.get<CollectionWithRecipes>(`/api/collections/${id}`);
+    return data || null;
+  } catch (error) {
     console.error('Error fetching collection:', error);
     return null;
   }
-
-  if (!data) return null;
-
-  // Transform the nested data
-  const recipes = (data.recipe_collection_items || [])
-    .map((item: any) => item.recipes)
-    .filter(Boolean)
-    .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0));
-
-  return {
-    ...data,
-    recipes,
-  };
 }
 
 /**
@@ -86,29 +40,18 @@ export async function fetchCollectionById(id: string): Promise<CollectionWithRec
 export async function createCollection(
   collection: Pick<RecipeCollection, 'name' | 'description' | 'icon' | 'color'>
 ): Promise<RecipeCollection> {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) {
-    throw new Error('User not authenticated');
-  }
-
-  const { data, error } = await supabase
-    .from('recipe_collections')
-    .insert({
-      user_id: user.user.id,
+  try {
+    const data = await apiClient.post<RecipeCollection>('/api/collections', {
       name: collection.name,
       description: collection.description,
       icon: collection.icon || 'folder',
       color: collection.color || '#CC5500',
-    })
-    .select()
-    .single();
-
-  if (error) {
+    });
+    return data;
+  } catch (error) {
     console.error('Error creating collection:', error);
     throw error;
   }
-
-  return data;
 }
 
 /**
@@ -118,31 +61,22 @@ export async function updateCollection(
   id: string,
   updates: Partial<Pick<RecipeCollection, 'name' | 'description' | 'icon' | 'color' | 'display_order'>>
 ): Promise<RecipeCollection> {
-  const { data, error } = await supabase
-    .from('recipe_collections')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) {
+  try {
+    const data = await apiClient.patch<RecipeCollection>(`/api/collections/${id}`, updates);
+    return data;
+  } catch (error) {
     console.error('Error updating collection:', error);
     throw error;
   }
-
-  return data;
 }
 
 /**
  * Delete a collection
  */
 export async function deleteCollection(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('recipe_collections')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
+  try {
+    await apiClient.delete(`/api/collections/${id}`);
+  } catch (error) {
     console.error('Error deleting collection:', error);
     throw error;
   }
@@ -155,25 +89,20 @@ export async function addRecipeToCollection(
   collectionId: string,
   recipeId: string
 ): Promise<RecipeCollectionItem> {
-  const { data, error } = await supabase
-    .from('recipe_collection_items')
-    .insert({
-      collection_id: collectionId,
-      recipe_id: recipeId,
-    })
-    .select()
-    .single();
-
-  if (error) {
+  try {
+    const data = await apiClient.post<RecipeCollectionItem>(
+      `/api/collections/${collectionId}/recipes`,
+      { recipeId }
+    );
+    return data;
+  } catch (error: any) {
     // Handle duplicate gracefully
-    if (error.code === '23505') {
+    if (error.status === 409 || error.code === 'DUPLICATE') {
       throw new Error('Recipe is already in this collection');
     }
     console.error('Error adding recipe to collection:', error);
     throw error;
   }
-
-  return data;
 }
 
 /**
@@ -183,13 +112,9 @@ export async function removeRecipeFromCollection(
   collectionId: string,
   recipeId: string
 ): Promise<void> {
-  const { error } = await supabase
-    .from('recipe_collection_items')
-    .delete()
-    .eq('collection_id', collectionId)
-    .eq('recipe_id', recipeId);
-
-  if (error) {
+  try {
+    await apiClient.delete(`/api/collections/${collectionId}/recipes/${recipeId}`);
+  } catch (error) {
     console.error('Error removing recipe from collection:', error);
     throw error;
   }
@@ -199,19 +124,15 @@ export async function removeRecipeFromCollection(
  * Get all collections that contain a specific recipe
  */
 export async function getCollectionsForRecipe(recipeId: string): Promise<RecipeCollection[]> {
-  const { data, error } = await supabase
-    .from('recipe_collection_items')
-    .select(`
-      recipe_collections(*)
-    `)
-    .eq('recipe_id', recipeId);
-
-  if (error) {
+  try {
+    const data = await apiClient.get<RecipeCollection[]>(
+      `/api/recipes/${recipeId}/collections`
+    );
+    return data || [];
+  } catch (error) {
     console.error('Error fetching collections for recipe:', error);
     throw error;
   }
-
-  return (data || []).map((item: any) => item.recipe_collections).filter(Boolean);
 }
 
 /**
@@ -236,16 +157,9 @@ export async function addRecipesToCollection(
   collectionId: string,
   recipeIds: string[]
 ): Promise<void> {
-  const items = recipeIds.map((recipeId) => ({
-    collection_id: collectionId,
-    recipe_id: recipeId,
-  }));
-
-  const { error } = await supabase
-    .from('recipe_collection_items')
-    .upsert(items, { onConflict: 'collection_id,recipe_id' });
-
-  if (error) {
+  try {
+    await apiClient.post(`/api/collections/${collectionId}/recipes/batch`, { recipeIds });
+  } catch (error) {
     console.error('Error batch adding recipes to collection:', error);
     throw error;
   }

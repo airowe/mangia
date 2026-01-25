@@ -1,15 +1,13 @@
-import { PantryItem, Product } from "../models/Product";
+import { PantryItem } from "../models/Product";
 import { apiClient } from "./api/client";
-import { supabase } from "./supabase";
 import { ApiResponse } from "./api/client";
-import { AxiosError } from "axios";
 
 export const addToPantry = async (
   product: PantryItem
 ): Promise<{ data: PantryItem | null; error: Error | null }> => {
   try {
     const response = await apiClient.post<ApiResponse<PantryItem>>(
-      "/pantry/items",
+      "/api/pantry",
       {
         ...product,
         quantity: product.quantity || 1,
@@ -36,47 +34,10 @@ export const addToPantry = async (
 // Fetch user's pantry items
 export const fetchPantryItems = async (): Promise<PantryItem[]> => {
   try {
-    const response = await apiClient.get<ApiResponse<PantryItem[]>>(
-      "/pantry/items"
-    );
-
-    if (response.error) {
-      throw new Error(response.error);
-    }
-
-    if (!response.data) {
-      return [];
-    }
-
-    return response.data;
+    const response = await apiClient.get<PantryItem[]>("/api/pantry");
+    return response || [];
   } catch (error) {
-    const axiosError = error as AxiosError;
-
-    if (axiosError.response?.status === 401) {
-      try {
-        const { data, error: refreshError } =
-          await supabase.auth.refreshSession();
-
-        if (refreshError || !data.session) {
-          throw new Error("Session expired. Please log in again.");
-        }
-
-        const retryResponse = await apiClient.get<ApiResponse<PantryItem[]>>(
-          "/pantry/items"
-        );
-
-        if (retryResponse.error) {
-          throw new Error(retryResponse.error);
-        }
-
-        return retryResponse.data || [];
-      } catch (retryError) {
-        throw new Error(
-          "Failed to load pantry after session refresh. Please try again."
-        );
-      }
-    }
-
+    console.error("Error fetching pantry items:", error);
     throw new Error(
       error instanceof Error
         ? error.message
@@ -91,16 +52,12 @@ export const updatePantryItemQuantity = async (
   quantity: number
 ): Promise<{ data: PantryItem | null; error: Error | null }> => {
   try {
-    const response = await apiClient.put<ApiResponse<PantryItem>>(
-      `/pantry/items/${productId}`,
+    const response = await apiClient.patch<PantryItem>(
+      `/api/pantry/${productId}`,
       { quantity }
     );
 
-    if (response.error) {
-      throw new Error(response.error);
-    }
-
-    return { data: response.data || null, error: null };
+    return { data: response || null, error: null };
   } catch (error) {
     console.error("Error in updatePantryItemQuantity:", error);
     return {
@@ -116,14 +73,7 @@ export const updatePantryItemQuantity = async (
 // Remove item from pantry
 export const removeFromPantry = async (itemId: string): Promise<boolean> => {
   try {
-    const response = await apiClient.delete<ApiResponse<{ success: boolean }>>(
-      `/pantry/items/${itemId}`
-    );
-
-    if (response.error) {
-      throw new Error(response.error);
-    }
-
+    await apiClient.delete(`/api/pantry/${itemId}`);
     return true;
   } catch (error) {
     console.error("Error removing item from pantry:", error);

@@ -10,6 +10,7 @@ import React, {
   ReactNode,
 } from "react";
 import Purchases, { CustomerInfo, PurchasesPackage } from "react-native-purchases";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import {
   initializeRevenueCat,
   loginUser,
@@ -21,7 +22,6 @@ import {
   restorePurchases,
   PREMIUM_ENTITLEMENT,
 } from "../lib/revenuecat";
-import { supabase } from "../lib/supabase";
 
 interface SubscriptionContextValue {
   // State
@@ -46,24 +46,28 @@ interface SubscriptionProviderProps {
 }
 
 export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+
   const [isPremium, setIsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize RevenueCat and check subscription status
   useEffect(() => {
     const initialize = async () => {
       try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
+        // Get user ID from Clerk
+        const userId = user?.id;
 
         // Initialize RevenueCat
-        await initializeRevenueCat(user?.id);
+        await initializeRevenueCat(userId);
 
         // If user is logged in, link their account
-        if (user?.id) {
-          await loginUser(user.id);
+        if (userId) {
+          await loginUser(userId);
         }
 
         // Check subscription status
@@ -78,6 +82,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         if (offering?.availablePackages) {
           setPackages(offering.availablePackages);
         }
+
+        setIsInitialized(true);
       } catch (error) {
         console.error("Failed to initialize subscriptions:", error);
       } finally {
@@ -87,35 +93,39 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
     initialize();
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session?.user) {
-          await loginUser(session.user.id);
-          const info = await getCustomerInfo();
-          if (info) {
-            setCustomerInfo(info);
-            setIsPremium(hasPremiumEntitlement(info));
-          }
-        } else if (event === "SIGNED_OUT") {
-          await logoutUser();
-          setCustomerInfo(null);
-          setIsPremium(false);
-        }
-      }
-    );
-
     // Listen for customer info updates from RevenueCat
     Purchases.addCustomerInfoUpdateListener((info) => {
       setCustomerInfo(info);
       setIsPremium(hasPremiumEntitlement(info));
     });
 
+    // Note: RevenueCat listener persists until app restart
     return () => {
-      subscription.unsubscribe();
-      // Note: RevenueCat listener persists until app restart
+      // No cleanup needed for RevenueCat listener
     };
   }, []);
+
+  // Handle auth state changes from Clerk
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const handleAuthChange = async () => {
+      if (isSignedIn && user?.id) {
+        await loginUser(user.id);
+        const info = await getCustomerInfo();
+        if (info) {
+          setCustomerInfo(info);
+          setIsPremium(hasPremiumEntitlement(info));
+        }
+      } else if (!isSignedIn) {
+        await logoutUser();
+        setCustomerInfo(null);
+        setIsPremium(false);
+      }
+    };
+
+    handleAuthChange();
+  }, [isSignedIn, user?.id, isInitialized]);
 
   // Check subscription status
   const checkSubscription = useCallback(async () => {

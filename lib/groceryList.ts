@@ -3,7 +3,7 @@ import { PantryItem } from '../models/Product';
 import { ConsolidatedIngredient, GroceryList, GroceryItem } from '../models/GroceryList';
 import { fetchPantryItems } from './pantry';
 import { categorizeIngredient, getCategoryOrder } from '../utils/categorizeIngredient';
-import { supabase } from './supabase';
+import { apiClient } from './api/client';
 
 /**
  * Generates a consolidated grocery list from selected recipes
@@ -133,56 +133,41 @@ export async function createGroceryList(
   name: string = 'Shopping List',
   items: ConsolidatedIngredient[]
 ): Promise<GroceryList> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  try {
+    const groceryItems = items
+      .filter(item => item.need_to_buy > 0)
+      .map(item => ({
+        name: item.name,
+        quantity: item.need_to_buy,
+        unit: item.unit,
+        category: item.category,
+        checked: false,
+        recipe_ids: item.from_recipes.map(r => r.recipe_id),
+      }));
 
-  // Create the list
-  const { data: list, error: listError } = await supabase
-    .from('grocery_lists')
-    .insert({
-      user_id: user.id,
+    const data = await apiClient.post<GroceryList>('/api/grocery-lists', {
       name,
-    })
-    .select()
-    .single();
+      items: groceryItems,
+    });
 
-  if (listError) throw listError;
-
-  // Add items to the list
-  const groceryItems = items
-    .filter(item => item.need_to_buy > 0)
-    .map(item => ({
-      list_id: list.id,
-      name: item.name,
-      quantity: item.need_to_buy,
-      unit: item.unit,
-      category: item.category,
-      checked: false,
-      recipe_ids: item.from_recipes.map(r => r.recipe_id),
-    }));
-
-  if (groceryItems.length > 0) {
-    const { error: itemsError } = await supabase
-      .from('grocery_items')
-      .insert(groceryItems);
-
-    if (itemsError) throw itemsError;
+    return data;
+  } catch (error) {
+    console.error('Error creating grocery list:', error);
+    throw error;
   }
-
-  return list;
 }
 
 /**
  * Gets all grocery lists for the current user
  */
 export async function getGroceryLists(): Promise<GroceryList[]> {
-  const { data, error } = await supabase
-    .from('grocery_lists')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+  try {
+    const data = await apiClient.get<GroceryList[]>('/api/grocery-lists');
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching grocery lists:', error);
+    throw error;
+  }
 }
 
 /**
@@ -192,92 +177,66 @@ export async function getGroceryListWithItems(listId: string): Promise<{
   list: GroceryList;
   items: GroceryItem[];
 }> {
-  const { data: list, error: listError } = await supabase
-    .from('grocery_lists')
-    .select('*')
-    .eq('id', listId)
-    .single();
-
-  if (listError) throw listError;
-
-  const { data: items, error: itemsError } = await supabase
-    .from('grocery_items')
-    .select('*')
-    .eq('list_id', listId)
-    .order('category');
-
-  if (itemsError) throw itemsError;
-
-  return { list, items: items || [] };
+  try {
+    const data = await apiClient.get<{ list: GroceryList; items: GroceryItem[] }>(
+      `/api/grocery-lists/${listId}`
+    );
+    return data;
+  } catch (error) {
+    console.error('Error fetching grocery list with items:', error);
+    throw error;
+  }
 }
 
 /**
  * Toggles a grocery item's checked status
  */
 export async function toggleGroceryItem(itemId: string, checked: boolean): Promise<void> {
-  const { error } = await supabase
-    .from('grocery_items')
-    .update({ checked })
-    .eq('id', itemId);
-
-  if (error) throw error;
+  try {
+    await apiClient.patch(`/api/grocery-lists/items/${itemId}`, { checked });
+  } catch (error) {
+    console.error('Error toggling grocery item:', error);
+    throw error;
+  }
 }
 
 /**
  * Marks a grocery list as completed
  */
 export async function completeGroceryList(listId: string): Promise<void> {
-  const { error } = await supabase
-    .from('grocery_lists')
-    .update({ completed_at: new Date().toISOString() })
-    .eq('id', listId);
-
-  if (error) throw error;
+  try {
+    await apiClient.patch(`/api/grocery-lists/${listId}`, {
+      completed_at: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error completing grocery list:', error);
+    throw error;
+  }
 }
 
 /**
  * Deletes a grocery list and all its items
  */
 export async function deleteGroceryList(listId: string): Promise<void> {
-  const { error } = await supabase
-    .from('grocery_lists')
-    .delete()
-    .eq('id', listId);
-
-  if (error) throw error;
+  try {
+    await apiClient.delete(`/api/grocery-lists/${listId}`);
+  } catch (error) {
+    console.error('Error deleting grocery list:', error);
+    throw error;
+  }
 }
 
 /**
  * Adds checked items from a grocery list to the pantry
  */
 export async function addCheckedToPantry(listId: string): Promise<number> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
-  // Get checked items
-  const { data: items, error: itemsError } = await supabase
-    .from('grocery_items')
-    .select('*')
-    .eq('list_id', listId)
-    .eq('checked', true);
-
-  if (itemsError) throw itemsError;
-  if (!items || items.length === 0) return 0;
-
-  // Add each to pantry
-  const pantryItems = items.map(item => ({
-    user_id: user.id,
-    title: item.name,
-    quantity: item.quantity,
-    unit: item.unit,
-    category: item.category,
-  }));
-
-  const { error: insertError } = await supabase
-    .from('pantry_items')
-    .insert(pantryItems);
-
-  if (insertError) throw insertError;
-
-  return items.length;
+  try {
+    const response = await apiClient.post<{ count: number }>(
+      `/api/grocery-lists/${listId}/add-to-pantry`
+    );
+    return response.count || 0;
+  } catch (error) {
+    console.error('Error adding checked items to pantry:', error);
+    throw error;
+  }
 }

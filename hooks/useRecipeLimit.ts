@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSubscription } from "../contexts/SubscriptionContext";
-import { supabase } from "../lib/supabase";
+import { apiClient } from "../lib/api/client";
 
 // Free tier limits
 const FREE_MONTHLY_IMPORTS = 3;
@@ -21,6 +21,10 @@ interface UseRecipeLimitReturn {
   canImport: () => boolean;
   incrementUsage: () => Promise<void>;
   refreshUsage: () => Promise<void>;
+}
+
+interface ImportCountResponse {
+  count: number;
 }
 
 /**
@@ -49,31 +53,20 @@ export function useRecipeLimit(): UseRecipeLimitReturn {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
       // Get start of current month
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      // Count recipes created this month via import (not manual)
-      const { count, error } = await supabase
-        .from("recipes")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .neq("source_type", "manual")
-        .gte("created_at", startOfMonth.toISOString());
+      // Call API to get import count for this month
+      const response = await apiClient.get<ImportCountResponse>(
+        `/api/recipes/import-count?since=${startOfMonth.toISOString()}`
+      );
 
-      if (error) {
-        console.error("Error fetching import count:", error);
-      } else {
-        setImportsUsed(count || 0);
-      }
+      setImportsUsed(response.count || 0);
     } catch (error) {
       console.error("Failed to check import usage:", error);
+      // On error, assume 0 imports to not block the user
+      setImportsUsed(0);
     } finally {
       setIsLoading(false);
     }

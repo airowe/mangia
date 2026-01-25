@@ -1,7 +1,7 @@
 // lib/recipeService.ts
-// Direct Supabase service for recipe CRUD operations
+// API service for recipe CRUD operations
 
-import { supabase } from "./supabase";
+import { apiClient } from "./api/client";
 import { Recipe, RecipeIngredient, RecipeStatus } from "../models/Recipe";
 
 export interface RecipeWithIngredients extends Recipe {
@@ -14,63 +14,28 @@ export interface RecipeWithIngredients extends Recipe {
 export async function fetchRecipesByStatus(
   status: RecipeStatus,
 ): Promise<RecipeWithIngredients[]> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
-
-  const { data, error } = await supabase
-    .from("recipes")
-    .select(
-      `
-      *,
-      ingredients:recipe_ingredients(*)
-    `,
-    )
-    .eq("user_id", user.id)
-    .eq("status", status)
-    .order("created_at", { ascending: false });
-
-  if (error) {
+  try {
+    const data = await apiClient.get<RecipeWithIngredients[]>(
+      `/api/recipes?status=${status}`
+    );
+    return data || [];
+  } catch (error) {
     console.error("Error fetching recipes:", error);
     throw error;
   }
-
-  return (data || []) as RecipeWithIngredients[];
 }
 
 /**
  * Fetch all recipes for the current user
  */
 export async function fetchAllUserRecipes(): Promise<RecipeWithIngredients[]> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
-
-  const { data, error } = await supabase
-    .from("recipes")
-    .select(
-      `
-      *,
-      ingredients:recipe_ingredients(*)
-    `,
-    )
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-  if (error) {
+  try {
+    const data = await apiClient.get<RecipeWithIngredients[]>('/api/recipes');
+    return data || [];
+  } catch (error) {
     console.error("Error fetching recipes:", error);
     throw error;
   }
-
-  return (data || []) as RecipeWithIngredients[];
 }
 
 /**
@@ -79,23 +44,13 @@ export async function fetchAllUserRecipes(): Promise<RecipeWithIngredients[]> {
 export async function fetchRecipeById(
   recipeId: string,
 ): Promise<RecipeWithIngredients | null> {
-  const { data, error } = await supabase
-    .from("recipes")
-    .select(
-      `
-      *,
-      ingredients:recipe_ingredients(*)
-    `,
-    )
-    .eq("id", recipeId)
-    .single();
-
-  if (error) {
+  try {
+    const data = await apiClient.get<RecipeWithIngredients>(`/api/recipes/${recipeId}`);
+    return data || null;
+  } catch (error) {
     console.error("Error fetching recipe:", error);
     throw error;
   }
-
-  return data as RecipeWithIngredients;
 }
 
 /**
@@ -105,12 +60,9 @@ export async function updateRecipeStatus(
   recipeId: string,
   status: RecipeStatus,
 ): Promise<void> {
-  const { error } = await supabase
-    .from("recipes")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", recipeId);
-
-  if (error) {
+  try {
+    await apiClient.patch(`/api/recipes/${recipeId}`, { status });
+  } catch (error) {
     console.error("Error updating recipe status:", error);
     throw error;
   }
@@ -120,12 +72,9 @@ export async function updateRecipeStatus(
  * Delete a recipe
  */
 export async function deleteRecipe(recipeId: string): Promise<void> {
-  // First delete ingredients (cascade should handle this, but be explicit)
-  await supabase.from("recipe_ingredients").delete().eq("recipe_id", recipeId);
-
-  const { error } = await supabase.from("recipes").delete().eq("id", recipeId);
-
-  if (error) {
+  try {
+    await apiClient.delete(`/api/recipes/${recipeId}`);
+  } catch (error) {
     console.error("Error deleting recipe:", error);
     throw error;
   }
@@ -158,30 +107,52 @@ export async function restoreRecipe(recipeId: string): Promise<void> {
 export async function searchRecipes(
   query: string,
 ): Promise<RecipeWithIngredients[]> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
-
-  const { data, error } = await supabase
-    .from("recipes")
-    .select(
-      `
-      *,
-      ingredients:recipe_ingredients(*)
-    `,
-    )
-    .eq("user_id", user.id)
-    .ilike("title", `%${query}%`)
-    .order("created_at", { ascending: false });
-
-  if (error) {
+  try {
+    const data = await apiClient.get<RecipeWithIngredients[]>(
+      `/api/recipes?search=${encodeURIComponent(query)}`
+    );
+    return data || [];
+  } catch (error) {
     console.error("Error searching recipes:", error);
     throw error;
   }
+}
 
-  return (data || []) as RecipeWithIngredients[];
+/**
+ * Create a new recipe
+ */
+export async function createRecipe(
+  recipe: Partial<Recipe>,
+  ingredients?: RecipeIngredient[]
+): Promise<RecipeWithIngredients> {
+  try {
+    const data = await apiClient.post<RecipeWithIngredients>('/api/recipes', {
+      ...recipe,
+      ingredients,
+    });
+    return data;
+  } catch (error) {
+    console.error("Error creating recipe:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update a recipe
+ */
+export async function updateRecipe(
+  recipeId: string,
+  updates: Partial<Recipe>,
+  ingredients?: RecipeIngredient[]
+): Promise<RecipeWithIngredients> {
+  try {
+    const data = await apiClient.patch<RecipeWithIngredients>(
+      `/api/recipes/${recipeId}`,
+      { ...updates, ingredients }
+    );
+    return data;
+  } catch (error) {
+    console.error("Error updating recipe:", error);
+    throw error;
+  }
 }

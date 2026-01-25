@@ -19,7 +19,15 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { Button } from "react-native-paper";
 import { colors } from "../theme/colors";
 import { Recipe } from "../models/Recipe";
-import { supabase } from "../lib/supabase";
+import {
+  MealPlan,
+  MealTypeDB,
+  fetchMealPlans,
+  fetchRecipesForMealPlan,
+  addMealToPlan,
+  updateMealPlan,
+  removeMealFromPlan,
+} from "../lib/mealPlanService";
 
 type RootStackParamList = {
   MealPlannerScreen: undefined;
@@ -31,17 +39,6 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 const getToday = () => new Date().toISOString().split("T")[0];
 
 type MealTypeKey = "breakfast" | "lunch" | "dinner";
-type MealTypeDB = "breakfast" | "lunch" | "dinner" | "snack";
-
-type MealPlan = {
-  id: string;
-  date: string;
-  meal_type: MealTypeDB;
-  recipe_id: string | null;
-  title: string | null;
-  notes: string | null;
-  recipe?: Recipe;
-};
 
 type DayMeals = {
   [key in MealTypeKey]?: MealPlan;
@@ -80,13 +77,8 @@ const MealPlannerScreen: React.FC = () => {
   }, [weekRecipeIds, navigation]);
 
   // Fetch meal plans for the week
-  const fetchMealPlans = useCallback(async () => {
+  const loadMealPlans = useCallback(async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
       // Get meal plans for the current week
       const startOfWeek = new Date(selectedDate);
       startOfWeek.setDate(
@@ -95,19 +87,10 @@ const MealPlannerScreen: React.FC = () => {
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(endOfWeek.getDate() + 6);
 
-      const { data, error } = await supabase
-        .from("meal_plans")
-        .select(
-          `
-          *,
-          recipe:recipes(*)
-        `,
-        )
-        .eq("user_id", user.id)
-        .gte("date", startOfWeek.toISOString().split("T")[0])
-        .lte("date", endOfWeek.toISOString().split("T")[0]);
-
-      if (error) throw error;
+      const data = await fetchMealPlans(
+        startOfWeek.toISOString().split("T")[0],
+        endOfWeek.toISOString().split("T")[0],
+      );
       setMealPlans(data || []);
     } catch (err) {
       console.error("Error fetching meal plans:", err);
@@ -117,20 +100,9 @@ const MealPlannerScreen: React.FC = () => {
   }, [selectedDate]);
 
   // Fetch user's recipes for the picker
-  const fetchRecipes = useCallback(async () => {
+  const loadRecipes = useCallback(async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from("recipes")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
+      const data = await fetchRecipesForMealPlan();
       setRecipes(data || []);
     } catch (err) {
       console.error("Error fetching recipes:", err);
@@ -138,9 +110,9 @@ const MealPlannerScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchMealPlans();
-    fetchRecipes();
-  }, [fetchMealPlans, fetchRecipes]);
+    loadMealPlans();
+    loadRecipes();
+  }, [loadMealPlans, loadRecipes]);
 
   // Get meals for selected date
   const getDayMeals = (): DayMeals => {
@@ -148,7 +120,12 @@ const MealPlannerScreen: React.FC = () => {
     const meals: DayMeals = {};
 
     dayPlans.forEach((plan) => {
-      if (plan.meal_type !== "snack" && (plan.meal_type === "breakfast" || plan.meal_type === "lunch" || plan.meal_type === "dinner")) {
+      if (
+        plan.meal_type !== "snack" &&
+        (plan.meal_type === "breakfast" ||
+          plan.meal_type === "lunch" ||
+          plan.meal_type === "dinner")
+      ) {
         meals[plan.meal_type] = plan;
       }
     });
@@ -179,19 +156,11 @@ const MealPlannerScreen: React.FC = () => {
   };
 
   // Add meal to plan
-  const addMealToPlan = async (recipe: Recipe) => {
+  const handleAddMealToPlan = async (recipe: Recipe) => {
     if (!selectedMealType) return;
 
     setSaving(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        Alert.alert("Error", "Please sign in to plan meals");
-        return;
-      }
-
       // Check if a meal already exists for this slot
       const existingMeal = mealPlans.find(
         (mp) => mp.date === selectedDate && mp.meal_type === selectedMealType,
@@ -199,31 +168,23 @@ const MealPlannerScreen: React.FC = () => {
 
       if (existingMeal) {
         // Update existing meal
-        const { error } = await supabase
-          .from("meal_plans")
-          .update({
-            recipe_id: recipe.id,
-            title: recipe.title,
-          })
-          .eq("id", existingMeal.id);
-
-        if (error) throw error;
-      } else {
-        // Insert new meal plan
-        const { error } = await supabase.from("meal_plans").insert({
-          user_id: user.id,
-          date: selectedDate,
-          meal_type: selectedMealType,
+        await updateMealPlan(existingMeal.id, {
           recipe_id: recipe.id,
           title: recipe.title,
         });
-
-        if (error) throw error;
+      } else {
+        // Insert new meal plan
+        await addMealToPlan(
+          selectedDate,
+          selectedMealType,
+          recipe.id,
+          recipe.title,
+        );
       }
 
       setShowRecipePicker(false);
       setSelectedMealType(null);
-      await fetchMealPlans();
+      await loadMealPlans();
     } catch (err) {
       console.error("Error adding meal:", err);
       Alert.alert("Error", "Failed to add meal to plan");
@@ -241,13 +202,8 @@ const MealPlannerScreen: React.FC = () => {
         style: "destructive",
         onPress: async () => {
           try {
-            const { error } = await supabase
-              .from("meal_plans")
-              .delete()
-              .eq("id", mealPlan.id);
-
-            if (error) throw error;
-            await fetchMealPlans();
+            await removeMealFromPlan(mealPlan.id);
+            await loadMealPlans();
           } catch (err) {
             console.error("Error removing meal:", err);
             Alert.alert("Error", "Failed to remove meal");
@@ -340,7 +296,7 @@ const MealPlannerScreen: React.FC = () => {
   const renderRecipeItem = ({ item }: { item: Recipe }) => (
     <TouchableOpacity
       style={styles.recipeItem}
-      onPress={() => addMealToPlan(item)}
+      onPress={() => handleAddMealToPlan(item)}
       disabled={saving}
     >
       {item.image_url ? (

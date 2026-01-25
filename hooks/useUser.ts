@@ -1,30 +1,22 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { User } from '@supabase/supabase-js';
+import { useUser as useClerkUser, useAuth } from '@clerk/clerk-expo';
 
+// Backward-compatible user hook using Clerk
 export const useUser = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user: clerkUser, isLoaded } = useClerkUser();
+  const { isSignedIn } = useAuth();
 
-  useEffect(() => {
-    // Get initial user
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-    };
+  // Map Clerk user to a compatible format
+  const user = isSignedIn && clerkUser ? {
+    id: clerkUser.id,
+    email: clerkUser.emailAddresses[0]?.emailAddress,
+    user_metadata: {
+      full_name: clerkUser.fullName,
+      avatar_url: clerkUser.imageUrl,
+    },
+  } : null;
 
-    getUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  return { user, loading };
+  return {
+    user,
+    loading: !isLoaded,
+  };
 };
