@@ -10,6 +10,7 @@ import {
   Share,
   Linking,
   Alert,
+  FlatList,
 } from "react-native";
 import {
   useRoute,
@@ -18,10 +19,11 @@ import {
 } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Button } from "react-native-paper";
+import { Button, Portal, Modal, RadioButton } from "react-native-paper";
 import { Screen } from "../components/Screen";
 import { colors } from "../theme/colors";
-import { Recipe, RecipeSourceType } from "../models/Recipe";
+import { Recipe, RecipeSourceType, RecipeNote } from "../models/Recipe";
+import { RecipeRatingNotes } from "../components/RecipeRatingNotes";
 import {
   fetchRecipeById,
   markAsCooked,
@@ -32,6 +34,13 @@ import {
 } from "../lib/recipeService";
 import { ServingAdjuster } from "../components/ServingAdjuster";
 import { getScaledIngredientDisplay } from "../utils/recipeScaling";
+import { CollectionWithCount } from "../models/Collection";
+import {
+  fetchCollections,
+  addRecipeToCollection,
+  getCollectionsForRecipe,
+} from "../lib/collectionService";
+import { shareRecipe, shareIngredients } from "../lib/recipeSharing";
 
 type RecipeDetailScreenRouteProp = RouteProp<
   { params: { recipeId: string } },
@@ -41,6 +50,7 @@ type RecipeDetailScreenRouteProp = RouteProp<
 type RootStackParamList = {
   WantToCookScreen: undefined;
   GroceryListScreen: { recipeIds: string[] };
+  CookingModeScreen: { recipeId: string };
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -107,14 +117,30 @@ export default function RecipeDetailScreen() {
 
   const handleShare = async () => {
     if (!recipe) return;
-    try {
-      await Share.share({
-        message: `Check out this recipe: ${recipe.title}\n\n${recipe.source_url || ""}`,
-        title: recipe.title,
-      });
-    } catch (error) {
-      console.error("Error sharing recipe:", error);
-    }
+
+    Alert.alert("Share Recipe", "What would you like to share?", [
+      {
+        text: "Full Recipe",
+        onPress: async () => {
+          try {
+            await shareRecipe(recipe);
+          } catch (error) {
+            console.error("Error sharing recipe:", error);
+          }
+        },
+      },
+      {
+        text: "Ingredients Only",
+        onPress: async () => {
+          try {
+            await shareIngredients(recipe);
+          } catch (error) {
+            console.error("Error sharing ingredients:", error);
+          }
+        },
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
   const openSourceLink = () => {
@@ -216,6 +242,57 @@ export default function RecipeDetailScreen() {
     if (!recipe) return;
     navigation.navigate("GroceryListScreen", { recipeIds: [recipe.id] });
   }, [recipe, navigation]);
+
+  // Start cooking mode
+  const handleStartCooking = useCallback(() => {
+    if (!recipe) return;
+    if (!recipe.instructions || recipe.instructions.length === 0) {
+      Alert.alert("No Instructions", "This recipe doesn't have any instructions to follow.");
+      return;
+    }
+    navigation.navigate("CookingModeScreen", { recipeId: recipe.id });
+  }, [recipe, navigation]);
+
+  // Open add to collection modal
+  const handleOpenCollectionModal = useCallback(async () => {
+    try {
+      const [allCollections, existingCollections] = await Promise.all([
+        fetchCollections(),
+        recipe ? getCollectionsForRecipe(recipe.id) : [],
+      ]);
+      setCollections(allCollections);
+      setRecipeCollections(existingCollections.map((c) => c.id));
+      setSelectedCollectionId(null);
+      setCollectionModalVisible(true);
+    } catch (error) {
+      console.error("Error loading collections:", error);
+      Alert.alert("Error", "Failed to load collections");
+    }
+  }, [recipe]);
+
+  // Add recipe to selected collection
+  const handleAddToCollection = useCallback(async () => {
+    if (!recipe || !selectedCollectionId) return;
+
+    setIsAddingToCollection(true);
+    try {
+      await addRecipeToCollection(selectedCollectionId, recipe.id);
+      const selectedCollection = collections.find((c) => c.id === selectedCollectionId);
+      Alert.alert(
+        "Added!",
+        `"${recipe.title}" has been added to "${selectedCollection?.name || 'collection'}".`
+      );
+      setCollectionModalVisible(false);
+    } catch (error: any) {
+      if (error.message?.includes("already in this collection")) {
+        Alert.alert("Already Added", "This recipe is already in that collection.");
+      } else {
+        Alert.alert("Error", "Failed to add recipe to collection");
+      }
+    } finally {
+      setIsAddingToCollection(false);
+    }
+  }, [recipe, selectedCollectionId, collections]);
 
   // Get platform config
   const sourceType = recipe?.source_type || "manual";
@@ -436,10 +513,31 @@ export default function RecipeDetailScreen() {
           </View>
         </View>
 
+        {/* Rating & Notes */}
+        <RecipeRatingNotes
+          recipeId={recipeId}
+          currentRating={recipe.rating}
+          onRatingChange={(newRating) => {
+            setRecipe((prev) => (prev ? { ...prev, rating: newRating } : null));
+          }}
+        />
+
         {/* Action Buttons */}
         <View style={styles.actionsSection}>
           {isWantToCook && (
             <>
+              <Button
+                mode="contained"
+                onPress={handleStartCooking}
+                disabled={isUpdating}
+                icon="chef-hat"
+                style={styles.cookingButton}
+                contentStyle={styles.buttonContent}
+                buttonColor={colors.success}
+              >
+                Start Cooking
+              </Button>
+
               <Button
                 mode="contained"
                 onPress={handleMarkCooked}
@@ -461,6 +559,17 @@ export default function RecipeDetailScreen() {
                 contentStyle={styles.buttonContent}
               >
                 Add to Grocery List
+              </Button>
+
+              <Button
+                mode="outlined"
+                onPress={handleOpenCollectionModal}
+                disabled={isUpdating}
+                icon="folder-plus"
+                style={styles.secondaryButton}
+                contentStyle={styles.buttonContent}
+              >
+                Add to Collection
               </Button>
 
               <Button
@@ -504,6 +613,98 @@ export default function RecipeDetailScreen() {
 
         <View style={styles.footer} />
       </ScrollView>
+
+      {/* Add to Collection Modal */}
+      <Portal>
+        <Modal
+          visible={collectionModalVisible}
+          onDismiss={() => setCollectionModalVisible(false)}
+          contentContainerStyle={styles.collectionModal}
+        >
+          <Text style={styles.collectionModalTitle}>Add to Collection</Text>
+
+          {collections.length === 0 ? (
+            <View style={styles.noCollectionsContainer}>
+              <MaterialCommunityIcons
+                name="folder-plus"
+                size={48}
+                color={colors.textTertiary}
+              />
+              <Text style={styles.noCollectionsText}>
+                No collections yet. Create one from the Recipes tab.
+              </Text>
+            </View>
+          ) : (
+            <>
+              <FlatList
+                data={collections}
+                keyExtractor={(item) => item.id}
+                style={styles.collectionList}
+                renderItem={({ item }) => {
+                  const isInCollection = recipeCollections.includes(item.id);
+                  return (
+                    <TouchableOpacity
+                      style={[
+                        styles.collectionOption,
+                        selectedCollectionId === item.id && styles.collectionOptionSelected,
+                        isInCollection && styles.collectionOptionDisabled,
+                      ]}
+                      onPress={() => !isInCollection && setSelectedCollectionId(item.id)}
+                      disabled={isInCollection}
+                    >
+                      <View style={[styles.collectionOptionIcon, { backgroundColor: item.color + '20' }]}>
+                        <MaterialCommunityIcons
+                          name={item.icon as any}
+                          size={20}
+                          color={item.color}
+                        />
+                      </View>
+                      <View style={styles.collectionOptionInfo}>
+                        <Text style={styles.collectionOptionName}>{item.name}</Text>
+                        <Text style={styles.collectionOptionCount}>
+                          {item.recipe_count} recipe{item.recipe_count !== 1 ? 's' : ''}
+                        </Text>
+                      </View>
+                      {isInCollection ? (
+                        <MaterialCommunityIcons
+                          name="check-circle"
+                          size={24}
+                          color={colors.success}
+                        />
+                      ) : (
+                        <RadioButton
+                          value={item.id}
+                          status={selectedCollectionId === item.id ? 'checked' : 'unchecked'}
+                          onPress={() => setSelectedCollectionId(item.id)}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+
+              <View style={styles.collectionModalActions}>
+                <Button
+                  mode="outlined"
+                  onPress={() => setCollectionModalVisible(false)}
+                  style={styles.collectionModalButton}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  mode="contained"
+                  onPress={handleAddToCollection}
+                  loading={isAddingToCollection}
+                  disabled={!selectedCollectionId || isAddingToCollection}
+                  style={styles.collectionModalButton}
+                >
+                  Add
+                </Button>
+              </View>
+            </>
+          )}
+        </Modal>
+      </Portal>
     </Screen>
   );
 }
@@ -721,6 +922,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
     gap: 12,
   },
+  cookingButton: {
+    borderRadius: 8,
+    marginBottom: 8,
+  },
   primaryButton: {
     borderRadius: 8,
   },
@@ -740,5 +945,76 @@ const styles = StyleSheet.create({
   },
   footer: {
     height: 40,
+  },
+  collectionModal: {
+    backgroundColor: colors.card,
+    margin: 20,
+    padding: 20,
+    borderRadius: 12,
+    maxHeight: '70%',
+  },
+  collectionModalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  collectionList: {
+    maxHeight: 300,
+  },
+  collectionOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: colors.background,
+  },
+  collectionOptionSelected: {
+    backgroundColor: colors.primaryLight,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  collectionOptionDisabled: {
+    opacity: 0.6,
+  },
+  collectionOptionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  collectionOptionInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  collectionOptionName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  collectionOptionCount: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  collectionModalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 16,
+  },
+  collectionModalButton: {
+    minWidth: 80,
+  },
+  noCollectionsContainer: {
+    alignItems: 'center',
+    padding: 32,
+  },
+  noCollectionsText: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 12,
   },
 });

@@ -5,12 +5,14 @@ import RecipeSearchScreen from "../screens/RecipeSearchScreen";
 import RecipeDetailScreen from "../screens/RecipeDetailScreen";
 import RecipeCreateScreen from "../screens/RecipeCreateScreen";
 import { SearchResultsScreen } from "../screens/SearchResultsScreen";
+import CollectionsScreen from "../screens/CollectionsScreen";
+import CollectionDetailScreen from "../screens/CollectionDetailScreen";
 import { Animated } from "react-native";
 import { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { CustomHeader } from "../components/CustomHeader";
 import { useRef, useMemo } from "react";
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RecipeLibraryStackParamList>();
 
 export type RecipeLibraryStackParamList = {
   RecipesScreen: undefined;
@@ -18,6 +20,8 @@ export type RecipeLibraryStackParamList = {
   RecipeDetail: { id: string };
   RecipeCreate: undefined;
   SearchResults: { searchQuery: string };
+  Collections: undefined;
+  CollectionDetail: { id: string; name: string };
 };
 
 export default function RecipeLibraryStack() {
@@ -54,6 +58,16 @@ export default function RecipeLibraryStack() {
         name="SearchResults"
         component={SearchResultsScreen}
         options={{ title: "Search Results" }}
+      />
+      <Stack.Screen
+        name="Collections"
+        component={CollectionsScreen}
+        options={{ title: "Collections" }}
+      />
+      <Stack.Screen
+        name="CollectionDetail"
+        component={CollectionDetailScreen}
+        options={({ route }) => ({ title: route.params.name })}
       />
     </Stack.Navigator>
   );

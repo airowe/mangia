@@ -1,11 +1,17 @@
 import React, { useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MealPlannerScreen from '../screens/MealPlannerScreen';
+import GroceryListScreen from '../screens/GroceryListScreen';
 import { Animated } from 'react-native';
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { CustomHeader } from '../components/CustomHeader';
 
-const Stack = createNativeStackNavigator();
+type MealPlanningStackParamList = {
+  MealPlannerScreen: undefined;
+  GroceryListScreen: { recipeIds: string[] };
+};
+
+const Stack = createNativeStackNavigator<MealPlanningStackParamList>();
 
 export default function MealPlanningStack() {
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -30,6 +36,11 @@ export default function MealPlanningStack() {
       screenOptions={screenOptions}
     >
       <Stack.Screen name="MealPlannerScreen" component={MealPlannerScreen} />
+      <Stack.Screen
+        name="GroceryListScreen"
+        component={GroceryListScreen}
+        options={{ title: "Grocery List" }}
+      />
     </Stack.Navigator>
   );
 }
