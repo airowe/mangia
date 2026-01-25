@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,19 @@ import {
 } from "react-native";
 import { WeekCalendar } from "react-native-calendars";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { Button } from "react-native-paper";
 import { colors } from "../theme/colors";
 import { Recipe } from "../models/Recipe";
 import { supabase } from "../lib/supabase";
+
+type RootStackParamList = {
+  MealPlannerScreen: undefined;
+  GroceryListScreen: { recipeIds: string[] };
+};
+
+type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 const getToday = () => new Date().toISOString().split("T")[0];
 
@@ -38,6 +48,7 @@ type DayMeals = {
 };
 
 const MealPlannerScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [selectedDate, setSelectedDate] = useState(getToday());
   const [loading, setLoading] = useState(true);
@@ -47,6 +58,26 @@ const MealPlannerScreen: React.FC = () => {
     null,
   );
   const [saving, setSaving] = useState(false);
+
+  // Get unique recipe IDs from current week's meal plans
+  const weekRecipeIds = useMemo(() => {
+    const ids = mealPlans
+      .filter((mp) => mp.recipe_id !== null)
+      .map((mp) => mp.recipe_id as string);
+    return [...new Set(ids)]; // Remove duplicates
+  }, [mealPlans]);
+
+  // Navigate to grocery list with meal plan recipes
+  const handleGenerateGroceryList = useCallback(() => {
+    if (weekRecipeIds.length === 0) {
+      Alert.alert(
+        "No Recipes Planned",
+        "Add some recipes to your meal plan first to generate a grocery list.",
+      );
+      return;
+    }
+    navigation.navigate("GroceryListScreen", { recipeIds: weekRecipeIds });
+  }, [weekRecipeIds, navigation]);
 
   // Fetch meal plans for the week
   const fetchMealPlans = useCallback(async () => {
@@ -402,6 +433,18 @@ const MealPlannerScreen: React.FC = () => {
             <View key={mealType}>{renderMealBlock(mealType)}</View>
           ))}
         </View>
+
+        {/* Generate Grocery List Button */}
+        {weekRecipeIds.length > 0 && (
+          <Button
+            mode="contained"
+            onPress={handleGenerateGroceryList}
+            style={styles.groceryButton}
+            icon="cart"
+          >
+            Generate Grocery List ({weekRecipeIds.length} recipes)
+          </Button>
+        )}
       </ScrollView>
 
       {/* Recipe Picker Modal */}
@@ -494,6 +537,10 @@ const styles = StyleSheet.create({
   },
   mealBlocksContainer: {
     paddingBottom: 16,
+  },
+  groceryButton: {
+    marginBottom: 24,
+    marginTop: 8,
   },
   mealBlock: {
     backgroundColor: "white",
