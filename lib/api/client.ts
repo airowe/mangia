@@ -1,5 +1,4 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { supabase } from '../supabase';
 
 // Define a custom error type for API errors
 class ApiError extends Error {
@@ -33,17 +32,19 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
+// Token getter function type - will be set by ClerkTokenProvider
+type TokenGetter = () => Promise<string | null>;
+
 class ApiClient {
   private static instance: ApiClient;
   private client: AxiosInstance;
   private baseURL: string;
-  private isRefreshing = false;
-  private refreshSubscribers: ((token: string) => void)[] = [];
+  private getToken: TokenGetter | null = null;
 
   private constructor() {
     // Store the base URL as provided
     this.baseURL = process.env.EXPO_PUBLIC_API_URL || '';
-    
+
     this.client = axios.create({
       baseURL: this.baseURL,
       headers: {
@@ -52,7 +53,7 @@ class ApiClient {
       },
       timeout: 30000, // 30 seconds timeout
     });
-    
+
     // Ensure URLs are properly formed
     this.client.interceptors.request.use(config => {
       // Only modify the URL if it's not an absolute URL and doesn't start with a slash
@@ -72,45 +73,21 @@ class ApiClient {
     return ApiClient.instance;
   }
 
-  private onRefreshed(token: string) {
-    this.refreshSubscribers.forEach(callback => callback(token));
-    this.refreshSubscribers = [];
-  }
-
-  private async refreshToken() {
-    if (this.isRefreshing) {
-      return new Promise((resolve) => {
-        this.refreshSubscribers.push((token) => {
-          resolve(token);
-        });
-      });
-    }
-
-    this.isRefreshing = true;
-    
-    try {
-      const { data, error } = await supabase.auth.refreshSession();
-      
-      if (error || !data.session) {
-        throw new ApiError('Failed to refresh session', 401, 'TOKEN_REFRESH_FAILED');
-      }
-      
-      this.isRefreshing = false;
-      this.onRefreshed(data.session.access_token);
-      return data.session.access_token;
-    } catch (error) {
-      this.isRefreshing = false;
-      this.refreshSubscribers = [];
-      throw error;
-    }
+  // Set the token getter function (called from ClerkTokenProvider)
+  public setTokenGetter(getter: TokenGetter) {
+    this.getToken = getter;
   }
 
   private async getAuthToken(): Promise<string | null> {
+    if (!this.getToken) {
+      console.warn('[API] Token getter not set - user may not be authenticated');
+      return null;
+    }
+
     try {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) return null;
-      return data.session?.access_token || null;
+      return await this.getToken();
     } catch (error) {
+      console.error('[API] Error getting auth token:', error);
       return null;
     }
   }
@@ -119,18 +96,18 @@ class ApiClient {
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
       async (config) => {
-        // Skip adding auth header for auth-related endpoints
-        if (config.url?.includes('/auth/')) {
+        // Skip adding auth header for health check endpoint
+        if (config.url?.includes('/health')) {
           return config;
         }
 
         try {
           const token = await this.getAuthToken();
-          
+
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           }
-          
+
           return config;
         } catch (error) {
           console.error('[API] Error setting up request:', error);
@@ -147,25 +124,12 @@ class ApiClient {
       (response: AxiosResponse) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as any;
-        
-        // Error handling
 
         // Handle 401 Unauthorized errors
-        if (error.response?.status === 401 && !originalRequest?._retry) {
-          if (originalRequest?.url?.includes('/auth/refresh')) {
-            return Promise.reject(new ApiError('Session expired. Please log in again.', 401, 'SESSION_EXPIRED'));
-          }
-
-          // Mark request as retried to prevent infinite loops
-          originalRequest._retry = true;
-
-          try {
-            const newToken = await this.refreshToken();
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            return this.client(originalRequest);
-          } catch (refreshError) {
-            return Promise.reject(new ApiError('Session expired. Please log in again.', 401, 'SESSION_EXPIRED'));
-          }
+        // With Clerk, token refresh is handled automatically by the SDK
+        // If we get 401, the session has likely expired
+        if (error.response?.status === 401) {
+          return Promise.reject(new ApiError('Session expired. Please log in again.', 401, 'SESSION_EXPIRED'));
         }
 
         // Handle other errors
@@ -174,20 +138,20 @@ class ApiClient {
           const errorData = data as Record<string, unknown>;
           let errorMessage = 'An unknown error occurred';
           let errorCode = 'API_ERROR';
-          
+
           if (typeof errorData === 'object' && errorData !== null) {
-            errorMessage = 
+            errorMessage =
               (typeof errorData.message === 'string' ? errorData.message : '') ||
               (typeof errorData.error === 'string' ? errorData.error : '') ||
               'An unknown error occurred';
-              
+
             if (typeof errorData.code === 'string') {
               errorCode = errorData.code;
             }
           } else {
             errorMessage = String(data);
           }
-          
+
           return Promise.reject(new ApiError(
             errorMessage,
             error.response.status,
@@ -226,6 +190,15 @@ class ApiClient {
     config?: AxiosRequestConfig
   ): Promise<T> {
     const response = await this.client.put<T>(url, data, config);
+    return response.data;
+  }
+
+  public async patch<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
+    const response = await this.client.patch<T>(url, data, config);
     return response.data;
   }
 

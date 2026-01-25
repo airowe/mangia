@@ -50,11 +50,16 @@ export function CustomHeader({
       extrapolate: "clamp",
     }) || new Animated.Value(1);
 
-  // Get user initials (first letter of first name + first letter of last name, or 'G.G.' if not available)
+  // Get user initials from full name or 'G.G.' if not available
   const getUserInitials = () => {
     if (!user) return "G.G.";
-    const firstName = user.user_metadata?.first_name || "";
-    const lastName = user.user_metadata?.last_name || "";
+    const fullName = user.user_metadata?.full_name || "";
+
+    if (!fullName) return "G.G.";
+
+    const nameParts = fullName.trim().split(' ');
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts[nameParts.length - 1] || "";
 
     if (!firstName && !lastName) return "G.G.";
     return (

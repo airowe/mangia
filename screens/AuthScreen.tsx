@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   TextInput,
@@ -13,63 +13,187 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { signIn, signInAnonymously, signUp } from '../lib/auth';
+import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { Screen } from '../components/Screen';
 
 export const AuthScreen = ({ navigation }: any) => {
+  const { signIn, setActive: setSignInActive, isLoaded: signInLoaded } = useSignIn();
+  const { signUp, setActive: setSignUpActive, isLoaded: signUpLoaded } = useSignUp();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [error, setError] = useState('');
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [code, setCode] = useState('');
 
-  const handleSignIn = async () => {
+  const handleSignIn = useCallback(async () => {
+    if (!signInLoaded || !signIn) return;
+
     try {
       setIsLoading(true);
       setError('');
-      const { data, error: signInError } = await signIn(email, password);
-      if (signInError) throw signInError;
-      // navigation.replace('HomeStack');
-    } catch (error) {
-      let errorMessage = error instanceof Error ? error.message : 'Failed to sign in';
-      errorMessage = errorMessage + process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const handleSignUp = async () => {
-    try {
-      setIsLoading(true);
-      setError('');
-      let signUpError;
-      
-      if (!email || !password) {
-        const { error: anonError } = await signInAnonymously();
-        signUpError = anonError;
+      const result = await signIn.create({
+        identifier: email,
+        password,
+      });
+
+      if (result.status === 'complete') {
+        await setSignInActive({ session: result.createdSessionId });
       } else {
-        const { error: signUpError } = await signUp(email, password);
-        if (signUpError) throw signUpError;
-        Alert.alert('Success', 'Check your email to confirm your account.');
+        console.log('Sign in result:', result);
+        setError('Sign in incomplete. Please try again.');
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to sign up';
+    } catch (err: any) {
+      console.error('Sign in error:', err);
+      const errorMessage = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Failed to sign in';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [signIn, signInLoaded, setSignInActive, email, password]);
+
+  const handleSignUp = useCallback(async () => {
+    if (!signUpLoaded || !signUp) return;
+
+    try {
+      setIsLoading(true);
+      setError('');
+
+      await signUp.create({
+        emailAddress: email,
+        password,
+      });
+
+      // Send email verification code
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+
+      setPendingVerification(true);
+      Alert.alert('Verification Required', 'Check your email for a verification code.');
+    } catch (err: any) {
+      console.error('Sign up error:', err);
+      const errorMessage = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Failed to sign up';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [signUp, signUpLoaded, email, password]);
+
+  const handleVerification = useCallback(async () => {
+    if (!signUpLoaded || !signUp) return;
+
+    try {
+      setIsLoading(true);
+      setError('');
+
+      const result = await signUp.attemptEmailAddressVerification({
+        code,
+      });
+
+      if (result.status === 'complete') {
+        await setSignUpActive({ session: result.createdSessionId });
+      } else {
+        console.log('Verification result:', result);
+        setError('Verification incomplete. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Verification error:', err);
+      const errorMessage = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Invalid verification code';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [signUp, signUpLoaded, setSignUpActive, code]);
 
   const handleSubmit = () => {
     Keyboard.dismiss();
-    if (isSignUp) {
+    if (pendingVerification) {
+      handleVerification();
+    } else if (isSignUp) {
       handleSignUp();
     } else {
       handleSignIn();
     }
   };
+
+  // Verification code screen
+  if (pendingVerification) {
+    return (
+      <Screen noPadding>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+          >
+            <View style={styles.innerContainer}>
+              <View style={styles.logoContainer}>
+                <Ionicons name="mail" size={60} color="#007AFF" />
+                <Text style={styles.title}>Verify Email</Text>
+                <Text style={styles.subtitle}>
+                  Enter the code sent to {email}
+                </Text>
+              </View>
+
+              {error ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
+
+              <View style={styles.formContainer}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Verification Code</Text>
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter 6-digit code"
+                      placeholderTextColor="#999"
+                      value={code}
+                      onChangeText={setCode}
+                      keyboardType="number-pad"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={!isLoading}
+                      maxLength={6}
+                    />
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.button, isLoading && styles.buttonDisabled]}
+                  onPress={handleSubmit}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Verify</Text>
+                  )}
+                </TouchableOpacity>
+
+                <View style={styles.footer}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setPendingVerification(false);
+                      setCode('');
+                      setError('');
+                    }}
+                    disabled={isLoading}
+                  >
+                    <Text style={styles.footerLink}>Back to Sign Up</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
+      </Screen>
+    );
+  }
 
   return (
     <Screen noPadding>
@@ -81,7 +205,7 @@ export const AuthScreen = ({ navigation }: any) => {
         >
           <View style={styles.innerContainer}>
             <View style={styles.logoContainer}>
-              <Ionicons name="cart" size={60} color="#007AFF" />
+              <Ionicons name="restaurant" size={60} color="#007AFF" />
               <Text style={styles.title}>{isSignUp ? 'Create Account' : 'Welcome Back'}</Text>
               <Text style={styles.subtitle}>
                 {isSignUp ? 'Sign up to get started' : 'Sign in to continue'}
@@ -142,7 +266,7 @@ export const AuthScreen = ({ navigation }: any) => {
               {!isSignUp && (
                 <TouchableOpacity
                   style={styles.forgotPassword}
-                  onPress={() => {/* Add forgot password logic */}}
+                  onPress={() => {/* TODO: Add forgot password with Clerk */}}
                   disabled={isLoading}
                 >
                   <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
@@ -167,7 +291,7 @@ export const AuthScreen = ({ navigation }: any) => {
                 <Text style={styles.footerText}>
                   {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
                 </Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => {
                     setError('');
                     setIsSignUp(!isSignUp);
@@ -210,6 +334,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginTop: 8,
+    textAlign: 'center',
   },
   formContainer: {
     width: '100%',

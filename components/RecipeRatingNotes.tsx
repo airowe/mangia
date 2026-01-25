@@ -16,7 +16,12 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button } from "react-native-paper";
 import { colors } from "../theme/colors";
 import { RecipeNote } from "../models/Recipe";
-import { supabase } from "../lib/supabase";
+import {
+  fetchRecipeNotes,
+  addRecipeNote,
+  deleteRecipeNote,
+  updateRecipeRating,
+} from "../lib/recipeNotesService";
 
 interface RecipeRatingNotesProps {
   recipeId: string;
@@ -37,15 +42,9 @@ export function RecipeRatingNotes({
   const [showNoteInput, setShowNoteInput] = useState(false);
 
   // Fetch notes for this recipe
-  const fetchNotes = useCallback(async () => {
+  const loadNotes = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from("recipe_notes")
-        .select("*")
-        .eq("recipe_id", recipeId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
+      const data = await fetchRecipeNotes(recipeId);
       setNotes(data || []);
     } catch (err) {
       console.error("Error fetching notes:", err);
@@ -55,8 +54,8 @@ export function RecipeRatingNotes({
   }, [recipeId]);
 
   useEffect(() => {
-    fetchNotes();
-  }, [fetchNotes]);
+    loadNotes();
+  }, [loadNotes]);
 
   useEffect(() => {
     setRating(currentRating || 0);
@@ -69,12 +68,7 @@ export function RecipeRatingNotes({
     setRating(finalRating);
 
     try {
-      const { error } = await supabase
-        .from("recipes")
-        .update({ rating: finalRating || null })
-        .eq("id", recipeId);
-
-      if (error) throw error;
+      await updateRecipeRating(recipeId, finalRating || null);
       onRatingChange?.(finalRating);
     } catch (err) {
       console.error("Error updating rating:", err);
@@ -88,39 +82,11 @@ export function RecipeRatingNotes({
 
     setIsSaving(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        Alert.alert("Error", "Please sign in to add notes");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("recipe_notes")
-        .insert({
-          recipe_id: recipeId,
-          user_id: user.id,
-          note: newNote.trim(),
-          cooked_at: new Date().toISOString().split("T")[0],
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await addRecipeNote(recipeId, newNote.trim());
 
       setNotes((prev) => [data, ...prev]);
       setNewNote("");
       setShowNoteInput(false);
-
-      // Update times_cooked and last_cooked_at
-      await supabase
-        .from("recipes")
-        .update({
-          times_cooked: (notes.length || 0) + 1,
-          last_cooked_at: new Date().toISOString().split("T")[0],
-        })
-        .eq("id", recipeId);
     } catch (err) {
       console.error("Error adding note:", err);
       Alert.alert("Error", "Failed to save note");
@@ -138,12 +104,7 @@ export function RecipeRatingNotes({
         style: "destructive",
         onPress: async () => {
           try {
-            const { error } = await supabase
-              .from("recipe_notes")
-              .delete()
-              .eq("id", noteId);
-
-            if (error) throw error;
+            await deleteRecipeNote(recipeId, noteId);
             setNotes((prev) => prev.filter((n) => n.id !== noteId));
           } catch (err) {
             console.error("Error deleting note:", err);

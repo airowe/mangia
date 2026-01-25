@@ -34,7 +34,7 @@ import {
   UrlType,
 } from "../lib/recipeParser";
 import { ParsedRecipe, RecipeIngredient } from "../models/Recipe";
-import { supabase } from "../lib/supabase";
+import { createRecipe } from "../lib/recipeService";
 import { useRecipeLimit } from "../hooks/useRecipeLimit";
 
 type RootStackParamList = {
@@ -127,7 +127,7 @@ export const ImportRecipeScreen: React.FC = () => {
             text: "Upgrade",
             onPress: () => navigation.navigate("SubscriptionScreen"),
           },
-        ]
+        ],
       );
       return;
     }
@@ -159,7 +159,9 @@ export const ImportRecipeScreen: React.FC = () => {
         setEditedIngredients(recipe.ingredients);
       } catch (err) {
         console.error("Import error:", err);
-        setError(err instanceof Error ? err.message : "Failed to import recipe");
+        setError(
+          err instanceof Error ? err.message : "Failed to import recipe",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -202,23 +204,22 @@ export const ImportRecipeScreen: React.FC = () => {
     setIsSaving(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        Alert.alert("Error", "Please sign in to save recipes");
-        return;
-      }
-
       // Determine source type based on input mode
-      const sourceType = inputMode === "text" ? "manual" : (detectedPlatform || "blog");
-      const sourceUrl = inputMode === "text" ? null : url;
+      const sourceType =
+        inputMode === "text" ? "manual" : detectedPlatform || "blog";
+      const sourceUrl = inputMode === "text" ? undefined : url;
 
-      // Create recipe with ingredients
-      const { data: recipe, error: recipeError } = await supabase
-        .from("recipes")
-        .insert({
-          user_id: user.id,
+      // Prepare ingredients for API
+      const ingredientData = editedIngredients.map((ing, index) => ({
+        name: ing.name,
+        quantity: parseFloat(ing.quantity) || 0,
+        unit: ing.unit || "",
+        display_order: index,
+      }));
+
+      // Create recipe with ingredients via API
+      await createRecipe(
+        {
           title: editedTitle || parsedRecipe.title,
           description: parsedRecipe.description,
           instructions: parsedRecipe.instructions,
@@ -229,28 +230,9 @@ export const ImportRecipeScreen: React.FC = () => {
           source_url: sourceUrl,
           source_type: sourceType,
           status: "want_to_cook",
-        })
-        .select()
-        .single();
-
-      if (recipeError) throw recipeError;
-
-      // Add ingredients
-      if (editedIngredients.length > 0) {
-        const ingredientRows = editedIngredients.map((ing, index) => ({
-          recipe_id: recipe.id,
-          name: ing.name,
-          quantity: parseFloat(ing.quantity) || null,
-          unit: ing.unit || null,
-          display_order: index,
-        }));
-
-        const { error: ingredientError } = await supabase
-          .from("recipe_ingredients")
-          .insert(ingredientRows);
-
-        if (ingredientError) throw ingredientError;
-      }
+        },
+        ingredientData,
+      );
 
       // Increment usage count for free users
       await incrementUsage();
@@ -403,7 +385,10 @@ export const ImportRecipeScreen: React.FC = () => {
                     autoCorrect={false}
                     keyboardType="url"
                     right={
-                      <TextInput.Icon icon="content-paste" onPress={handlePaste} />
+                      <TextInput.Icon
+                        icon="content-paste"
+                        onPress={handlePaste}
+                      />
                     }
                   />
                 </View>
@@ -446,14 +431,17 @@ export const ImportRecipeScreen: React.FC = () => {
                     multiline
                     numberOfLines={6}
                     right={
-                      <TextInput.Icon icon="content-paste" onPress={handlePasteText} />
+                      <TextInput.Icon
+                        icon="content-paste"
+                        onPress={handlePasteText}
+                      />
                     }
                   />
                 </View>
 
                 <Text style={styles.hint}>
-                  Paste video captions, descriptions, or any text containing a recipe.
-                  Our AI will extract the ingredients and instructions.
+                  Paste video captions, descriptions, or any text containing a
+                  recipe. Our AI will extract the ingredients and instructions.
                 </Text>
               </>
             )}
@@ -464,7 +452,10 @@ export const ImportRecipeScreen: React.FC = () => {
               mode="contained"
               onPress={handleImport}
               loading={isLoading}
-              disabled={isLoading || (inputMode === "url" ? !url.trim() : !manualText.trim())}
+              disabled={
+                isLoading ||
+                (inputMode === "url" ? !url.trim() : !manualText.trim())
+              }
               style={styles.importButton}
               icon={inputMode === "url" ? "download" : "auto-fix"}
             >
