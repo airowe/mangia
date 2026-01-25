@@ -5,5 +5,7 @@ export interface Cookbook {
   author?: string;
   cover_image_url?: string;
   isbn?: string;
+  notes?: string;
   created_at: string;
+  updated_at?: string;
 }

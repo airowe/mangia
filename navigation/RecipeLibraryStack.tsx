@@ -7,6 +7,7 @@ import RecipeCreateScreen from "../screens/RecipeCreateScreen";
 import { SearchResultsScreen } from "../screens/SearchResultsScreen";
 import CollectionsScreen from "../screens/CollectionsScreen";
 import CollectionDetailScreen from "../screens/CollectionDetailScreen";
+import CookbooksScreen from "../screens/CookbooksScreen";
 import { Animated } from "react-native";
 import { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { CustomHeader } from "../components/CustomHeader";
@@ -22,6 +23,7 @@ export type RecipeLibraryStackParamList = {
   SearchResults: { searchQuery: string };
   Collections: undefined;
   CollectionDetail: { id: string; name: string };
+  Cookbooks: undefined;
 };
 
 export default function RecipeLibraryStack() {
@@ -68,6 +70,11 @@ export default function RecipeLibraryStack() {
         name="CollectionDetail"
         component={CollectionDetailScreen}
         options={({ route }) => ({ title: route.params.name })}
+      />
+      <Stack.Screen
+        name="Cookbooks"
+        component={CookbooksScreen}
+        options={{ title: "My Cookbooks" }}
       />
     </Stack.Navigator>
   );
