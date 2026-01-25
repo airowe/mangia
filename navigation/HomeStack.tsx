@@ -1,14 +1,18 @@
 import React, { useRef } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { HomeScreen } from "../screens/HomeScreen";
+import { WantToCookScreen } from "../screens/WantToCookScreen";
 import { CustomHeader } from "../components/CustomHeader";
 import { ManualEntryScreen } from "../screens/ManualEntryScreen";
+import { ImportRecipeScreen } from "../screens/ImportRecipeScreen";
 import { Animated } from "react-native";
 
 // Define the param list for the root stack
 export type RootStackParamList = {
-  HomeScreen: undefined;
+  WantToCookScreen: undefined;
   ManualEntryScreen: undefined;
+  ImportRecipeScreen: undefined;
+  RecipeDetailScreen: { recipeId: string };
+  GroceryListScreen: { recipeIds: string[] };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -20,12 +24,12 @@ export default function HomeStack() {
 
   const screenOptions: NativeStackNavigationOptions = {
     header: ({ route, options }) => {
-      const showBackButton = route.name !== "HomeScreen";
+      const showBackButton = route.name !== "WantToCookScreen";
       return (
         <CustomHeader
           showBackButton={showBackButton}
           title={options.title as string}
-          scrollY={route.name === "HomeScreen" ? scrollY : undefined}
+          scrollY={route.name === "WantToCookScreen" ? scrollY : undefined}
         />
       );
     },
@@ -34,18 +38,23 @@ export default function HomeStack() {
 
   return (
     <Stack.Navigator
-      initialRouteName="HomeScreen"
+      initialRouteName="WantToCookScreen"
       screenOptions={screenOptions}
     >
       <Stack.Screen
-        name="HomeScreen"
-        component={HomeScreen}
-        options={{ title: "" }}
+        name="WantToCookScreen"
+        component={WantToCookScreen}
+        options={{ title: "Want to Cook" }}
       />
       <Stack.Screen
         name="ManualEntryScreen"
         component={ManualEntryScreen}
         options={{ title: "Add Item" }}
+      />
+      <Stack.Screen
+        name="ImportRecipeScreen"
+        component={ImportRecipeScreen}
+        options={{ title: "Import Recipe" }}
       />
     </Stack.Navigator>
   );
