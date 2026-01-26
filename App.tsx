@@ -2,18 +2,24 @@
  * Mangia App
  *
  * Main application entry point with all providers configured.
+ * Includes onboarding flow for new users.
  */
 
-import React, { useMemo } from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
-import { tokenCache } from "./lib/clerk";
-import { ClerkTokenProvider } from "./contexts/ClerkTokenProvider";
-import { AuthScreen } from "./screens/AuthScreen";
-import { AccountScreen } from "./screens/AccountScreen";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import React, { useState, useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
+import { tokenCache } from './lib/clerk';
+import { ClerkTokenProvider } from './contexts/ClerkTokenProvider';
+import { AuthScreen } from './screens/AuthScreen';
+import { AccountScreen } from './screens/AccountScreen';
+import { OnboardingScreen, hasCompletedOnboarding } from './screens/OnboardingScreen';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
+import { ThemeProvider, useTheme } from './theme';
+import TabNavigator from './navigation/TabNavigator';
 import {
   Provider as PaperProvider,
   MD3LightTheme,
@@ -54,9 +60,28 @@ function LoadingScreen() {
 function RootNavigator() {
   const { isSignedIn, isLoaded } = useAuth();
   const { theme } = useTheme();
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
-  if (!isLoaded) {
+  useEffect(() => {
+    checkOnboarding();
+  }, []);
+
+  const checkOnboarding = async () => {
+    const completed = await hasCompletedOnboarding();
+    setShowOnboarding(!completed);
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+  };
+
+  if (!isLoaded || showOnboarding === null) {
     return <LoadingScreen />;
+  }
+
+  // Show onboarding for new users (before auth)
+  if (showOnboarding && !isSignedIn) {
+    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
   }
 
   return (
