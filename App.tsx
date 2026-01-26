@@ -5,7 +5,8 @@
  * Includes onboarding flow for new users.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ActivityIndicator, StyleSheet, View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
@@ -16,19 +17,14 @@ import { AccountScreen } from './screens/AccountScreen';
 import { OnboardingScreen, hasCompletedOnboarding } from './screens/OnboardingScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Provider as PaperProvider } from 'react-native-paper';
-import { SubscriptionProvider } from './contexts/SubscriptionContext';
-import { ThemeProvider, useTheme } from './theme';
-import TabNavigator from './navigation/TabNavigator';
 import {
   Provider as PaperProvider,
   MD3LightTheme,
   MD3DarkTheme,
-} from "react-native-paper";
-import { SubscriptionProvider } from "./contexts/SubscriptionContext";
-import { ThemeProvider, useTheme } from "./theme";
-import TabNavigator from "./navigation/TabNavigator";
-import { ActivityIndicator, StyleSheet, View, Text } from "react-native";
+} from 'react-native-paper';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
+import { ThemeProvider, useTheme } from './theme';
+import TabNavigator from './navigation/TabNavigator';
 
 const Stack = createNativeStackNavigator();
 

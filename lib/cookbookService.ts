@@ -1,114 +1,95 @@
 // lib/cookbookService.ts
 // Service for managing cookbook collection (premium feature)
-//
-// @deprecated This service uses the legacy Supabase client.
-// The app has been migrated to Clerk + API architecture.
-// This file is kept for reference but cookbook functionality
-// needs to be migrated to use the new API.
+// Migrated to Clerk + API architecture
 
-import { supabase } from "./supabase";
+import { apiClient } from "./api/client";
 import { Cookbook } from "../models/Cookbook";
 
+// API response types (camelCase from Drizzle)
+interface ApiCookbook {
+  id: string;
+  userId: string;
+  title: string;
+  author?: string;
+  coverImageUrl?: string;
+  isbn?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+interface CookbooksResponse {
+  cookbooks: ApiCookbook[];
+}
+
+interface CookbookResponse {
+  cookbook: ApiCookbook;
+}
+
 /**
- * Helper to ensure supabase is available
+ * Transform API response (camelCase) to model format (snake_case)
  */
-function getSupabaseClient() {
-  if (!supabase) {
-    throw new Error(
-      "Supabase is not configured. Cookbook functionality requires migration to the new API.",
-    );
-  }
-  return supabase;
+function transformCookbook(api: ApiCookbook): Cookbook {
+  return {
+    id: api.id,
+    user_id: api.userId,
+    title: api.title,
+    author: api.author,
+    cover_image_url: api.coverImageUrl,
+    isbn: api.isbn,
+    notes: api.notes,
+    created_at: api.createdAt,
+    updated_at: api.updatedAt,
+  };
 }
 
 /**
  * Fetch all cookbooks for the current user
  */
 export async function fetchCookbooks(): Promise<Cookbook[]> {
-  const client = getSupabaseClient();
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
-
-  const { data, error } = await client
-    .from("cookbooks")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("title", { ascending: true });
-
-  if (error) {
+  try {
+    const response = await apiClient.get<CookbooksResponse>("/api/cookbooks");
+    return (response.cookbooks || []).map(transformCookbook);
+  } catch (error) {
     console.error("Error fetching cookbooks:", error);
     throw error;
   }
-
-  return data || [];
 }
 
 /**
  * Search cookbooks by title or author
  */
 export async function searchCookbooks(query: string): Promise<Cookbook[]> {
-  const client = getSupabaseClient();
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
-
-  const { data, error } = await client
-    .from("cookbooks")
-    .select("*")
-    .eq("user_id", user.id)
-    .or(`title.ilike.%${query}%,author.ilike.%${query}%`)
-    .order("title", { ascending: true });
-
-  if (error) {
+  try {
+    const response = await apiClient.get<CookbooksResponse>(
+      `/api/cookbooks?search=${encodeURIComponent(query)}`
+    );
+    return (response.cookbooks || []).map(transformCookbook);
+  } catch (error) {
     console.error("Error searching cookbooks:", error);
     throw error;
   }
-
-  return data || [];
 }
 
 /**
  * Create a new cookbook
  */
 export async function createCookbook(
-  cookbook: Omit<Cookbook, "id" | "user_id" | "created_at">,
+  cookbook: Omit<Cookbook, "id" | "user_id" | "created_at">
 ): Promise<Cookbook> {
-  const client = getSupabaseClient();
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
-
-  const { data, error } = await client
-    .from("cookbooks")
-    .insert({
-      user_id: user.id,
+  try {
+    const response = await apiClient.post<CookbookResponse>("/api/cookbooks", {
       title: cookbook.title,
       author: cookbook.author || null,
-      cover_image_url: cookbook.cover_image_url || null,
+      coverImageUrl: cookbook.cover_image_url || null,
       isbn: cookbook.isbn || null,
-    })
-    .select()
-    .single();
-
-  if (error) {
+      notes: cookbook.notes || null,
+    });
+    return transformCookbook(response.cookbook);
+  } catch (error) {
     console.error("Error creating cookbook:", error);
     throw error;
   }
-
-  return data;
 }
 
 /**
@@ -116,38 +97,33 @@ export async function createCookbook(
  */
 export async function updateCookbook(
   cookbookId: string,
-  updates: Partial<Omit<Cookbook, "id" | "user_id" | "created_at">>,
+  updates: Partial<Omit<Cookbook, "id" | "user_id" | "created_at">>
 ): Promise<Cookbook> {
-  const client = getSupabaseClient();
-  const { data, error } = await client
-    .from("cookbooks")
-    .update({
-      ...updates,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", cookbookId)
-    .select()
-    .single();
-
-  if (error) {
+  try {
+    const response = await apiClient.patch<CookbookResponse>(
+      `/api/cookbooks/${cookbookId}`,
+      {
+        title: updates.title,
+        author: updates.author,
+        coverImageUrl: updates.cover_image_url,
+        isbn: updates.isbn,
+        notes: updates.notes,
+      }
+    );
+    return transformCookbook(response.cookbook);
+  } catch (error) {
     console.error("Error updating cookbook:", error);
     throw error;
   }
-
-  return data;
 }
 
 /**
  * Delete a cookbook
  */
 export async function deleteCookbook(cookbookId: string): Promise<void> {
-  const client = getSupabaseClient();
-  const { error } = await client
-    .from("cookbooks")
-    .delete()
-    .eq("id", cookbookId);
-
-  if (error) {
+  try {
+    await apiClient.delete(`/api/cookbooks/${cookbookId}`);
+  } catch (error) {
     console.error("Error deleting cookbook:", error);
     throw error;
   }
@@ -157,22 +133,19 @@ export async function deleteCookbook(cookbookId: string): Promise<void> {
  * Get cookbook by ID
  */
 export async function getCookbookById(
-  cookbookId: string,
+  cookbookId: string
 ): Promise<Cookbook | null> {
-  const client = getSupabaseClient();
-  const { data, error } = await client
-    .from("cookbooks")
-    .select("*")
-    .eq("id", cookbookId)
-    .single();
-
-  if (error) {
-    if (error.code === "PGRST116") {
-      return null; // Not found
+  try {
+    const response = await apiClient.get<CookbookResponse>(
+      `/api/cookbooks/${cookbookId}`
+    );
+    return response.cookbook ? transformCookbook(response.cookbook) : null;
+  } catch (error: any) {
+    // Handle 404 as null return
+    if (error.status === 404) {
+      return null;
     }
     console.error("Error fetching cookbook:", error);
     throw error;
   }
-
-  return data;
 }
