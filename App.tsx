@@ -1,37 +1,45 @@
-import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
-import { tokenCache } from "./lib/clerk";
-import { ClerkTokenProvider } from "./contexts/ClerkTokenProvider";
-import { AuthScreen } from "./screens/AuthScreen";
-import { AccountScreen } from "./screens/AccountScreen";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Provider as PaperProvider } from "react-native-paper";
-import { SubscriptionProvider } from "./contexts/SubscriptionContext";
-import TabNavigator from "./navigation/TabNavigator";
+/**
+ * Mangia App
+ *
+ * Main application entry point with all providers configured.
+ */
+
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
+import { tokenCache } from './lib/clerk';
+import { ClerkTokenProvider } from './contexts/ClerkTokenProvider';
+import { AuthScreen } from './screens/AuthScreen';
+import { AccountScreen } from './screens/AccountScreen';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
+import { ThemeProvider, useTheme } from './theme';
+import TabNavigator from './navigation/TabNavigator';
 import {
   ActivityIndicator,
   StyleSheet,
   View,
   Text,
-} from "react-native";
-import { colors } from "./theme/colors";
+} from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 if (!CLERK_PUBLISHABLE_KEY) {
-  console.error("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable");
+  console.error('Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable');
 }
 
 // Loading component while Clerk initializes
 function LoadingScreen() {
+  const { theme } = useTheme();
+
   return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={colors.primary} />
+    <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+      <ActivityIndicator size="large" color={theme.colors.primary} />
     </View>
   );
 }
@@ -39,6 +47,7 @@ function LoadingScreen() {
 // Navigation component that uses auth state
 function RootNavigator() {
   const { isSignedIn, isLoaded } = useAuth();
+  const { theme } = useTheme();
 
   if (!isLoaded) {
     return <LoadingScreen />;
@@ -57,7 +66,11 @@ function RootNavigator() {
             options={{
               headerShown: true,
               title: 'Account',
-              headerBackTitle: 'Back'
+              headerBackTitle: 'Back',
+              headerStyle: {
+                backgroundColor: theme.colors.background,
+              },
+              headerTintColor: theme.colors.text,
             }}
           />
         </>
@@ -79,52 +92,65 @@ function AppContent() {
   );
 }
 
+// Error screen for missing Clerk key
+function ErrorScreen() {
+  const { theme } = useTheme();
+
+  return (
+    <View style={[styles.errorContainer, { backgroundColor: theme.colors.background }]}>
+      <Text style={[styles.errorText, { color: theme.colors.error }]}>
+        Missing Clerk publishable key
+      </Text>
+    </View>
+  );
+}
+
 // Main app component with necessary providers
 export default function App() {
   if (!CLERK_PUBLISHABLE_KEY) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Missing Clerk publishable key</Text>
-      </View>
+      <ThemeProvider>
+        <SafeAreaProvider>
+          <ErrorScreen />
+        </SafeAreaProvider>
+      </ThemeProvider>
     );
   }
 
   return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
-      <ClerkLoaded>
-        <PaperProvider>
-          <SafeAreaProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <AppContent />
-            </GestureHandlerRootView>
-          </SafeAreaProvider>
-        </PaperProvider>
-      </ClerkLoaded>
-    </ClerkProvider>
+    <ThemeProvider>
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+        <ClerkLoaded>
+          <PaperProvider>
+            <SafeAreaProvider>
+              <GestureHandlerRootView style={styles.root}>
+                <AppContent />
+              </GestureHandlerRootView>
+            </SafeAreaProvider>
+          </PaperProvider>
+        </ClerkLoaded>
+      </ClerkProvider>
+    </ThemeProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   errorContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
-    backgroundColor: colors.background,
   },
   errorText: {
-    color: colors.error,
     marginBottom: 20,
-    textAlign: "center",
+    textAlign: 'center',
   },
 });

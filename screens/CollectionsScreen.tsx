@@ -1,22 +1,22 @@
 // screens/CollectionsScreen.tsx
 // View and manage recipe collections/folders
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
-  StyleSheet,
   FlatList,
   RefreshControl,
   Alert,
   TouchableOpacity,
 } from 'react-native';
-import { Text, FAB, Portal, Modal, TextInput, Button, IconButton } from 'react-native-paper';
+import { Text, FAB, Portal, Modal, TextInput, Button } from 'react-native-paper';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Screen } from '../components/Screen';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme';
 import {
   CollectionWithCount,
   COLLECTION_ICONS,
@@ -38,6 +38,9 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function CollectionsScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { theme } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
+
   const [collections, setCollections] = useState<CollectionWithCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -128,46 +131,201 @@ export default function CollectionsScreen() {
     [loadCollections]
   );
 
+  const styles = useMemo(
+    () => ({
+      container: {
+        flex: 1,
+        backgroundColor: colors.background,
+      },
+      listContent: {
+        padding: spacing.md,
+        paddingBottom: 100,
+      },
+      emptyListContent: {
+        flex: 1,
+      },
+      collectionCard: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        backgroundColor: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginBottom: spacing.md,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+      },
+      collectionIcon: {
+        width: 56,
+        height: 56,
+        borderRadius: borderRadius.md,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+      },
+      collectionInfo: {
+        flex: 1,
+        marginLeft: spacing.md,
+      },
+      collectionName: {
+        ...typography.styles.headline,
+        color: colors.text,
+      },
+      collectionDescription: {
+        ...typography.styles.caption1,
+        color: colors.textSecondary,
+        marginTop: spacing.xs,
+      },
+      recipeCount: {
+        ...typography.styles.caption1,
+        color: colors.textTertiary,
+        marginTop: spacing.xs,
+      },
+      emptyContainer: {
+        flex: 1,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        padding: spacing.xxl,
+      },
+      emptyTitle: {
+        ...typography.styles.title2,
+        color: colors.text,
+        marginTop: spacing.md,
+        marginBottom: spacing.sm,
+      },
+      emptySubtitle: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+        textAlign: 'center' as const,
+        marginBottom: spacing.xl,
+      },
+      emptyButton: {
+        paddingHorizontal: spacing.md,
+      },
+      fab: {
+        position: 'absolute' as const,
+        right: spacing.md,
+        bottom: spacing.md,
+        backgroundColor: colors.primary,
+      },
+      modalContent: {
+        backgroundColor: colors.card,
+        margin: spacing.lg,
+        padding: spacing.lg,
+        borderRadius: borderRadius.md,
+      },
+      modalTitle: {
+        ...typography.styles.title3,
+        color: colors.text,
+        marginBottom: spacing.md,
+      },
+      input: {
+        marginBottom: spacing.md,
+        backgroundColor: colors.background,
+      },
+      pickerLabel: {
+        ...typography.styles.subheadline,
+        fontWeight: '500' as const,
+        color: colors.text,
+        marginTop: spacing.sm,
+        marginBottom: spacing.sm,
+      },
+      iconPicker: {
+        flexDirection: 'row' as const,
+        flexWrap: 'wrap' as const,
+        gap: spacing.sm,
+        marginBottom: spacing.md,
+      },
+      iconOption: {
+        width: 44,
+        height: 44,
+        borderRadius: borderRadius.sm,
+        borderWidth: 2,
+        borderColor: colors.border,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+      },
+      iconOptionSelected: {
+        borderWidth: 2,
+      },
+      colorPicker: {
+        flexDirection: 'row' as const,
+        flexWrap: 'wrap' as const,
+        gap: spacing.sm,
+        marginBottom: spacing.md,
+      },
+      colorOption: {
+        width: 36,
+        height: 36,
+        borderRadius: borderRadius.full,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+      },
+      colorOptionSelected: {
+        borderWidth: 3,
+        borderColor: colors.textOnPrimary,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+        elevation: 4,
+      },
+      modalActions: {
+        flexDirection: 'row' as const,
+        justifyContent: 'flex-end' as const,
+        gap: spacing.md,
+        marginTop: spacing.sm,
+      },
+      modalButton: {
+        minWidth: 100,
+      },
+    }),
+    [colors, spacing, borderRadius, typography]
+  );
+
   const renderCollection = useCallback(
-    ({ item }: { item: CollectionWithCount }) => (
-      <TouchableOpacity
-        style={styles.collectionCard}
-        onPress={() =>
-          navigation.navigate('CollectionDetail', { id: item.id, name: item.name })
-        }
-        onLongPress={() => handleDeleteCollection(item)}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.collectionIcon, { backgroundColor: item.color + '20' }]}>
-          <MaterialCommunityIcons
-            name={item.icon as any}
-            size={28}
-            color={item.color}
-          />
-        </View>
-        <View style={styles.collectionInfo}>
-          <Text style={styles.collectionName}>{item.name}</Text>
-          {item.description && (
-            <Text style={styles.collectionDescription} numberOfLines={1}>
-              {item.description}
+    ({ item, index }: { item: CollectionWithCount; index: number }) => (
+      <Animated.View entering={FadeInDown.delay(index * 50).duration(300)}>
+        <TouchableOpacity
+          style={styles.collectionCard}
+          onPress={() =>
+            navigation.navigate('CollectionDetail', { id: item.id, name: item.name })
+          }
+          onLongPress={() => handleDeleteCollection(item)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.collectionIcon, { backgroundColor: item.color + '20' }]}>
+            <MaterialCommunityIcons
+              name={item.icon as any}
+              size={28}
+              color={item.color}
+            />
+          </View>
+          <View style={styles.collectionInfo}>
+            <Text style={styles.collectionName}>{item.name}</Text>
+            {item.description && (
+              <Text style={styles.collectionDescription} numberOfLines={1}>
+                {item.description}
+              </Text>
+            )}
+            <Text style={styles.recipeCount}>
+              {item.recipe_count} recipe{item.recipe_count !== 1 ? 's' : ''}
             </Text>
-          )}
-          <Text style={styles.recipeCount}>
-            {item.recipe_count} recipe{item.recipe_count !== 1 ? 's' : ''}
-          </Text>
-        </View>
-        <MaterialCommunityIcons
-          name="chevron-right"
-          size={24}
-          color={colors.textTertiary}
-        />
-      </TouchableOpacity>
+          </View>
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={24}
+            color={colors.textTertiary}
+          />
+        </TouchableOpacity>
+      </Animated.View>
     ),
-    [navigation, handleDeleteCollection]
+    [navigation, handleDeleteCollection, styles, colors]
   );
 
   const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
+    <Animated.View entering={FadeIn.duration(400)} style={styles.emptyContainer}>
       <MaterialCommunityIcons
         name="folder-multiple"
         size={80}
@@ -185,7 +343,7 @@ export default function CollectionsScreen() {
       >
         Create Collection
       </Button>
-    </View>
+    </Animated.View>
   );
 
   return (
@@ -213,7 +371,7 @@ export default function CollectionsScreen() {
         icon="plus"
         style={styles.fab}
         onPress={() => setModalVisible(true)}
-        color={colors.white}
+        color={colors.textOnPrimary}
       />
 
       {/* Create Collection Modal */}
@@ -279,7 +437,7 @@ export default function CollectionsScreen() {
                 onPress={() => setSelectedColor(color)}
               >
                 {selectedColor === color && (
-                  <MaterialCommunityIcons name="check" size={18} color={colors.white} />
+                  <MaterialCommunityIcons name="check" size={18} color={colors.textOnPrimary} />
                 )}
               </TouchableOpacity>
             ))}
@@ -308,156 +466,3 @@ export default function CollectionsScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  emptyListContent: {
-    flex: 1,
-  },
-  collectionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  collectionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  collectionInfo: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  collectionName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  collectionDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  recipeCount: {
-    fontSize: 13,
-    color: colors.textTertiary,
-    marginTop: 4,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: colors.text,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  emptyButton: {
-    paddingHorizontal: 16,
-  },
-  fab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 16,
-    backgroundColor: colors.primary,
-  },
-  modalContent: {
-    backgroundColor: colors.card,
-    margin: 20,
-    padding: 20,
-    borderRadius: 12,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 16,
-  },
-  input: {
-    marginBottom: 12,
-    backgroundColor: colors.background,
-  },
-  pickerLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.text,
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  iconPicker: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
-  iconOption: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconOptionSelected: {
-    borderWidth: 2,
-  },
-  colorPicker: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
-  },
-  colorOption: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  colorOptionSelected: {
-    borderWidth: 3,
-    borderColor: colors.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 4,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-    marginTop: 8,
-  },
-  modalButton: {
-    minWidth: 100,
-  },
-});

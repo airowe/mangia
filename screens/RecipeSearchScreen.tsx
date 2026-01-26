@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ActivityIndicator,
   Alert,
   Keyboard,
@@ -14,10 +13,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RecipeLibraryStackParamList } from '../navigation/RecipeLibraryStack';
 import { Recipe, RecipeSourceType } from '../models/Recipe';
 import { Screen } from '../components/Screen';
-import { RecipeList } from '../components/RecipeList';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme';
 import { TextInput as PaperTextInput, Button, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { RecipeList } from '../components/RecipeList';
 
 // Filter option types
 type CookTimeFilter = 'any' | 'quick' | 'medium' | 'long';
@@ -66,26 +66,29 @@ export default function RecipeSearchScreen() {
     sourceType: 'any',
   });
 
+  const { theme } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
+
   const loadRecipes = useCallback(async (searchText: string = search, showLoading: boolean = true) => {
     try {
       if (showLoading) setLoading(true);
       let data: Recipe[] = [];
-      
+
       if (searchText && searchText.trim()) {
         // Only search if there's a search query
-        const response = await searchRecipes({ 
+        const response = await searchRecipes({
           query: searchText,
-          meal_type: mealFilter 
+          meal_type: mealFilter
         });
         data = response.data;
       } else {
         // Otherwise, fetch all recipes (optionally filtered by meal type)
-        const response = await fetchRecipes({ 
-          meal_type: mealFilter 
+        const response = await fetchRecipes({
+          meal_type: mealFilter
         });
         data = response.data;
       }
-      
+
       setRecipes(data);
       return data;
     } catch (error) {
@@ -100,7 +103,7 @@ export default function RecipeSearchScreen() {
   const handleSearch = useCallback(() => {
     const trimmedQuery = searchQuery.trim();
     Keyboard.dismiss(); // Dismiss the keyboard
-    
+
     if (trimmedQuery) {
       setSearch(trimmedQuery);
       setIsSearching(true);
@@ -132,26 +135,26 @@ export default function RecipeSearchScreen() {
 
   const handleAddSelectedRecipes = useCallback(async () => {
     if (selectedRecipes.size === 0) return;
-    
+
     try {
       setLoading(true);
       const selectedRecipesArray = Array.from(selectedRecipes);
-      const recipesToAdd = recipes.filter(recipe => 
+      const recipesToAdd = recipes.filter(recipe =>
         recipe.id && selectedRecipes.has(recipe.id)
       );
-      
+
       // Add each selected recipe to the user's collection
       const addPromises = recipesToAdd.map(recipe => {
         // Create a copy of the recipe without the id since we want to create a new one
         const { id, ...recipeData } = recipe;
         return addRecipe(recipeData);
       });
-      
+
       await Promise.all(addPromises);
-      
+
       Alert.alert('Success', `Added ${selectedRecipes.size} recipes to your collection`);
       setSelectedRecipes(new Set());
-      
+
       // Refresh the recipes list to show the newly added recipes
       loadRecipes(search);
     } catch (error) {
@@ -165,7 +168,7 @@ export default function RecipeSearchScreen() {
   useEffect(() => {
     loadRecipes();
   }, [loadRecipes]);
-  
+
   // Reset search when component mounts
   useEffect(() => {
     setSearch('');
@@ -236,6 +239,229 @@ export default function RecipeSearchScreen() {
     }, {});
   }, [filteredRecipes, search]);
 
+  const styles = useMemo(
+    () => ({
+      searchResultsContainer: {
+        flex: 1,
+        padding: spacing.md,
+      },
+      searchResultsHeader: {
+        flexDirection: 'row' as const,
+        justifyContent: 'space-between' as const,
+        alignItems: 'center' as const,
+        marginBottom: spacing.md,
+      },
+      searchResultsTitle: {
+        ...typography.styles.headline,
+        color: colors.text,
+        flex: 1,
+      },
+      searchResultsCount: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+      },
+      searchRow: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+      },
+      filterToggleButton: {
+        marginLeft: spacing.sm,
+      },
+      filterPanel: {
+        backgroundColor: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginTop: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.border,
+      },
+      filterSection: {
+        marginBottom: spacing.md,
+      },
+      filterLabel: {
+        ...typography.styles.subheadline,
+        fontWeight: '600' as const,
+        color: colors.text,
+        marginBottom: spacing.sm,
+      },
+      chipRow: {
+        flexDirection: 'row' as const,
+      },
+      filterChip: {
+        marginRight: spacing.sm,
+        backgroundColor: colors.background,
+      },
+      filterChipSelected: {
+        backgroundColor: colors.primary,
+      },
+      filterChipTextSelected: {
+        color: colors.textOnPrimary,
+      },
+      clearFiltersButton: {
+        marginTop: spacing.sm,
+        alignSelf: 'flex-start' as const,
+      },
+      addButtonContainer: {
+        marginTop: spacing.sm,
+        marginBottom: spacing.md,
+        paddingHorizontal: spacing.sm,
+      },
+      addButton: {
+        alignSelf: 'flex-start' as const,
+      },
+      clearButton: {
+        marginTop: spacing.sm,
+        alignSelf: 'flex-start' as const,
+      },
+      emptyButton: {
+        marginTop: spacing.md,
+      },
+      recipeList: {
+        flex: 1,
+      },
+      container: {
+        flex: 1,
+        position: 'relative' as const,
+      },
+      fab: {
+        position: 'absolute' as const,
+        right: 20,
+        bottom: 20,
+        backgroundColor: colors.primary,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      searchContainer: {
+        flexDirection: 'row' as const,
+        padding: spacing.md,
+        gap: 10,
+        backgroundColor: colors.background,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        flexWrap: 'wrap' as const,
+      },
+      searchInputContainer: {
+        width: '100%' as const,
+      },
+      input: {
+        backgroundColor: colors.card,
+        fontSize: 16,
+        borderRadius: borderRadius.sm,
+        color: colors.text,
+        flex: 1,
+      },
+      dropdown: {
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: borderRadius.sm,
+        padding: spacing.sm,
+        color: colors.text,
+        minWidth: 160,
+        backgroundColor: colors.card,
+      },
+      dropdownContainer: {
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: borderRadius.sm,
+        padding: spacing.sm,
+        color: colors.text,
+        flex: 1,
+        backgroundColor: 'transparent',
+      },
+      dropdownText: {
+        color: colors.text,
+        fontSize: 16,
+      },
+      dropdownPlaceholder: {
+        color: colors.textSecondary,
+      },
+      selectedItemLabel: {
+        color: colors.primary,
+        fontWeight: '600' as const,
+      },
+      loadingContainer: {
+        flex: 1,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+      },
+      categoryContainer: {
+        paddingHorizontal: spacing.md,
+        marginTop: spacing.md,
+      },
+      categoryHeader: {
+        ...typography.styles.title3,
+        color: colors.text,
+        marginBottom: spacing.sm,
+      },
+      recipeCard: {
+        flexDirection: 'row' as const,
+        backgroundColor: colors.card,
+        borderRadius: borderRadius.md,
+        marginBottom: spacing.sm,
+        overflow: 'hidden' as const,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      recipeImage: {
+        width: 100,
+        height: 100,
+      },
+      recipeInfo: {
+        flex: 1,
+        padding: spacing.sm,
+      },
+      recipeTitle: {
+        ...typography.styles.body,
+        fontWeight: '600' as const,
+        color: colors.text,
+        marginBottom: spacing.xs,
+      },
+      recipeDescription: {
+        ...typography.styles.caption1,
+        color: colors.textSecondary,
+        marginBottom: spacing.xs,
+        lineHeight: 18,
+      },
+      recipeMeta: {
+        ...typography.styles.caption2,
+        color: colors.textTertiary,
+        marginTop: spacing.xs,
+      },
+      listContent: {
+        paddingBottom: spacing.xl,
+      },
+      emptyContainer: {
+        flex: 1,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        padding: spacing.xxxl,
+      },
+      emptyText: {
+        ...typography.styles.headline,
+        color: colors.text,
+        marginBottom: spacing.sm,
+        textAlign: 'center' as const,
+      },
+      emptySubtext: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+        textAlign: 'center' as const,
+      },
+    }),
+    [colors, spacing, borderRadius, typography]
+  );
+
   return (
     <Screen>
       <View style={styles.container}>
@@ -298,7 +524,7 @@ export default function RecipeSearchScreen() {
 
           {/* Filter Panel */}
           {showFilters && (
-            <View style={styles.filterPanel}>
+            <Animated.View entering={FadeInDown.duration(300)} style={styles.filterPanel}>
               {/* Cook Time Filters */}
               <View style={styles.filterSection}>
                 <Text style={styles.filterLabel}>Cook Time</Text>
@@ -349,7 +575,7 @@ export default function RecipeSearchScreen() {
                         <MaterialCommunityIcons
                           name="star"
                           size={14}
-                          color={filters.minRating === rating ? colors.white : colors.warning}
+                          color={filters.minRating === rating ? colors.textOnPrimary : colors.warning}
                         />
                       )}
                     >
@@ -377,7 +603,7 @@ export default function RecipeSearchScreen() {
                         <MaterialCommunityIcons
                           name={option.icon as any}
                           size={14}
-                          color={filters.sourceType === option.value ? colors.white : colors.textSecondary}
+                          color={filters.sourceType === option.value ? colors.textOnPrimary : colors.textSecondary}
                         />
                       ) : undefined}
                     >
@@ -398,7 +624,7 @@ export default function RecipeSearchScreen() {
                   Clear All Filters
                 </Button>
               )}
-            </View>
+            </Animated.View>
           )}
 
           {isSearching && selectedRecipes.size > 0 && (
@@ -413,29 +639,6 @@ export default function RecipeSearchScreen() {
               </Button>
             </View>
           )}
-          {/* <DropDownPicker
-            items={[
-              { label: 'All Meals', value: '' },
-              { label: 'Breakfast', value: 'breakfast' },
-              { label: 'Lunch', value: 'lunch' },
-              { label: 'Dinner', value: 'dinner' },
-              { label: 'Snack', value: 'snack' },
-              { label: 'Dessert', value: 'dessert' },
-            ]}
-            open={open}
-            value={mealFilter}
-            setOpen={setOpen}
-            setValue={setMealFilter}
-            placeholder="Filter by meal type"
-            style={styles.dropdown}
-            dropDownContainerStyle={styles.dropdownContainer}
-            textStyle={styles.dropdownText}
-            placeholderStyle={styles.dropdownPlaceholder}
-            selectedItemLabelStyle={styles.selectedItemLabel}
-            listMode="SCROLLVIEW"
-            zIndex={1000}
-            zIndexInverse={1000}
-          /> */}
         </View>
 
         {loading ? (
@@ -477,7 +680,7 @@ export default function RecipeSearchScreen() {
             }}
             showMealType={false}
             ListEmptyComponent={
-              <View style={styles.emptyContainer}>
+              <Animated.View entering={FadeIn.duration(400)} style={styles.emptyContainer}>
                 <MaterialCommunityIcons
                   name={activeFilterCount > 0 ? 'filter-off' : 'food-off'}
                   size={48}
@@ -501,7 +704,7 @@ export default function RecipeSearchScreen() {
                     Clear Filters
                   </Button>
                 )}
-              </View>
+              </Animated.View>
             }
           />
         )}
@@ -510,226 +713,3 @@ export default function RecipeSearchScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  searchResultsContainer: {
-    flex: 1,
-    padding: 16,
-  },
-  searchResultsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  searchResultsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text,
-    flex: 1,
-  },
-  searchResultsCount: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  filterToggleButton: {
-    marginLeft: 8,
-  },
-  filterPanel: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  filterSection: {
-    marginBottom: 16,
-  },
-  filterLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  chipRow: {
-    flexDirection: 'row',
-  },
-  filterChip: {
-    marginRight: 8,
-    backgroundColor: colors.background,
-  },
-  filterChipSelected: {
-    backgroundColor: colors.primary,
-  },
-  filterChipTextSelected: {
-    color: colors.white,
-  },
-  clearFiltersButton: {
-    marginTop: 8,
-    alignSelf: 'flex-start',
-  },
-  addButtonContainer: {
-    marginTop: 8,
-    marginBottom: 16,
-    paddingHorizontal: 8,
-  },
-  addButton: {
-    alignSelf: 'flex-start',
-  },
-  clearButton: {
-    marginTop: 8,
-    alignSelf: 'flex-start',
-  },
-  emptyButton: {
-    marginTop: 16,
-  },
-  recipeList: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    position: 'relative',
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    backgroundColor: colors.primary,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    padding: 16,
-    gap: 10,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    flexWrap: 'wrap',
-  },
-  searchInputContainer: {
-    width: '100%',
-  },
-  input: {
-    backgroundColor: colors.card,
-    fontSize: 16,
-    borderRadius: 8,
-    color: colors.text,
-    flex: 1,
-  },
-  dropdown: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: 8,
-    color: colors.text,
-    minWidth: 160,
-    backgroundColor: colors.card,
-  },
-  dropdownContainer: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: 12,
-    color: colors.text,
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  dropdownText: {
-    color: colors.text,
-    fontSize: 16,
-  },
-  dropdownPlaceholder: {
-    color: colors.textSecondary,
-  },
-  selectedItemLabel: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  categoryContainer: {
-    paddingHorizontal: 16,
-    marginTop: 16,
-  },
-  categoryHeader: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  recipeCard: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    marginBottom: 12,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  recipeImage: {
-    width: 100,
-    height: 100,
-  },
-  recipeInfo: {
-    flex: 1,
-    padding: 12,
-  },
-  recipeTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  recipeDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 4,
-    lineHeight: 18,
-  },
-  recipeMeta: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    marginTop: 4,
-  },
-  listContent: {
-    paddingBottom: 24,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-});

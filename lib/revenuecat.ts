@@ -16,6 +16,16 @@ const REVENUECAT_API_KEY_ANDROID = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_AN
 // Entitlement identifier from RevenueCat dashboard
 export const PREMIUM_ENTITLEMENT = "premium";
 
+// Track if RevenueCat is configured
+let isConfigured = false;
+
+/**
+ * Check if RevenueCat is configured
+ */
+export function isRevenueCatConfigured(): boolean {
+  return isConfigured;
+}
+
 // Product identifiers
 export const PRODUCT_IDS = {
   MONTHLY: "mangia_premium_monthly",
@@ -39,7 +49,8 @@ export async function initializeRevenueCat(userId?: string): Promise<void> {
       : REVENUECAT_API_KEY_ANDROID;
 
     if (!apiKey) {
-      console.warn("RevenueCat API key not configured");
+      console.warn("RevenueCat API key not configured - subscription features disabled");
+      isConfigured = false;
       return;
     }
 
@@ -48,6 +59,7 @@ export async function initializeRevenueCat(userId?: string): Promise<void> {
       appUserID: userId,
     });
 
+    isConfigured = true;
     console.log("RevenueCat initialized successfully");
   } catch (error) {
     console.error("Failed to initialize RevenueCat:", error);
@@ -59,6 +71,7 @@ export async function initializeRevenueCat(userId?: string): Promise<void> {
  * Links subscription status to user account
  */
 export async function loginUser(userId: string): Promise<CustomerInfo | null> {
+  if (!isConfigured) return null;
   try {
     const { customerInfo } = await Purchases.logIn(userId);
     return customerInfo;
@@ -72,6 +85,7 @@ export async function loginUser(userId: string): Promise<CustomerInfo | null> {
  * Logout user from RevenueCat
  */
 export async function logoutUser(): Promise<void> {
+  if (!isConfigured) return;
   try {
     await Purchases.logOut();
   } catch (error) {
@@ -83,6 +97,7 @@ export async function logoutUser(): Promise<void> {
  * Get current customer info including entitlements
  */
 export async function getCustomerInfo(): Promise<CustomerInfo | null> {
+  if (!isConfigured) return null;
   try {
     return await Purchases.getCustomerInfo();
   } catch (error) {
@@ -95,6 +110,7 @@ export async function getCustomerInfo(): Promise<CustomerInfo | null> {
  * Check if user has active premium subscription
  */
 export async function isPremiumUser(): Promise<boolean> {
+  if (!isConfigured) return false;
   try {
     const customerInfo = await Purchases.getCustomerInfo();
     return customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined;
@@ -115,6 +131,7 @@ export function hasPremiumEntitlement(customerInfo: CustomerInfo): boolean {
  * Get available offerings (products for purchase)
  */
 export async function getOfferings(): Promise<PurchasesOffering | null> {
+  if (!isConfigured) return null;
   try {
     const offerings = await Purchases.getOfferings();
     return offerings.current;
@@ -130,6 +147,7 @@ export async function getOfferings(): Promise<PurchasesOffering | null> {
 export async function purchasePackage(
   pkg: PurchasesPackage
 ): Promise<{ success: boolean; customerInfo: CustomerInfo | null }> {
+  if (!isConfigured) return { success: false, customerInfo: null };
   try {
     const { customerInfo } = await Purchases.purchasePackage(pkg);
     return { success: true, customerInfo };
@@ -148,6 +166,7 @@ export async function purchasePackage(
  * Restore previous purchases
  */
 export async function restorePurchases(): Promise<CustomerInfo | null> {
+  if (!isConfigured) return null;
   try {
     return await Purchases.restorePurchases();
   } catch (error) {

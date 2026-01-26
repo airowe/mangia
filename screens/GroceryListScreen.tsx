@@ -4,7 +4,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
-  StyleSheet,
   SectionList,
   RefreshControl,
   Alert,
@@ -16,9 +15,10 @@ import { Text, Checkbox, Button, IconButton, Chip } from "react-native-paper";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { Screen } from "../components/Screen";
-import { colors } from "../theme/colors";
+import { useTheme } from "../theme";
 import { IngredientCategory } from "../models/Recipe";
 import { ConsolidatedIngredient } from "../models/GroceryList";
 import { RecipeWithIngredients, fetchRecipeById } from "../lib/recipeService";
@@ -54,6 +54,8 @@ export default function GroceryListScreen() {
   const route = useRoute<GroceryListScreenRouteProp>();
   const navigation = useNavigation<NavigationProp>();
   const { recipeIds } = route.params;
+  const { theme } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
 
   const [items, setItems] = useState<GroceryItemWithChecked[]>([]);
   const [recipes, setRecipes] = useState<RecipeWithIngredients[]>([]);
@@ -202,43 +204,251 @@ export default function GroceryListScreen() {
     }
   }, [recipes, sections]);
 
+  const styles = useMemo(
+    () => ({
+      container: {
+        flex: 1,
+        backgroundColor: colors.background,
+      },
+      loadingContainer: {
+        flex: 1,
+        justifyContent: "center" as const,
+        alignItems: "center" as const,
+      },
+      loadingText: {
+        marginTop: spacing.md,
+        color: colors.textSecondary,
+        ...typography.styles.body,
+      },
+      emptyContainer: {
+        flex: 1,
+        justifyContent: "center" as const,
+        alignItems: "center" as const,
+        padding: spacing.xxl,
+      },
+      emptyTitle: {
+        ...typography.styles.title2,
+        color: colors.text,
+        marginTop: spacing.md,
+        marginBottom: spacing.sm,
+      },
+      emptySubtitle: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+        textAlign: "center" as const,
+        marginBottom: spacing.xl,
+      },
+      emptyButton: {
+        paddingHorizontal: spacing.md,
+      },
+      header: {
+        flexDirection: "row" as const,
+        justifyContent: "space-between" as const,
+        alignItems: "center" as const,
+        padding: spacing.md,
+        backgroundColor: colors.card,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      },
+      headerInfo: {},
+      headerActions: {
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+      },
+      headerTitle: {
+        ...typography.styles.title2,
+        color: colors.text,
+      },
+      headerSubtitle: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+        marginTop: 2,
+      },
+      progressBadge: {
+        backgroundColor: colors.primary,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderRadius: borderRadius.full,
+      },
+      progressText: {
+        ...typography.styles.body,
+        color: colors.textOnPrimary,
+        fontWeight: "600" as const,
+      },
+      recipeChips: {
+        flexDirection: "row" as const,
+        flexWrap: "wrap" as const,
+        padding: spacing.sm,
+        gap: spacing.sm,
+        backgroundColor: colors.card,
+      },
+      recipeChip: {
+        backgroundColor: colors.primaryLight,
+      },
+      recipeChipText: {
+        ...typography.styles.caption2,
+      },
+      listContent: {
+        paddingBottom: 100,
+      },
+      sectionHeader: {
+        flexDirection: "row" as const,
+        justifyContent: "space-between" as const,
+        alignItems: "center" as const,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        backgroundColor: colors.surfaceElevated,
+        marginTop: spacing.sm,
+      },
+      sectionTitle: {
+        ...typography.styles.body,
+        fontWeight: "600" as const,
+        color: colors.text,
+      },
+      sectionCount: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+      },
+      itemRow: {
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.sm,
+        backgroundColor: colors.card,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      },
+      itemRowChecked: {
+        backgroundColor: colors.surfaceElevated,
+      },
+      itemContent: {
+        flex: 1,
+        marginLeft: spacing.xs,
+      },
+      itemName: {
+        ...typography.styles.body,
+        color: colors.text,
+      },
+      itemNameChecked: {
+        textDecorationLine: "line-through" as const,
+        color: colors.textSecondary,
+      },
+      itemQuantity: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+        marginTop: 2,
+      },
+      recipeIndicator: {
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+        gap: spacing.xs,
+        marginRight: spacing.sm,
+      },
+      recipeCount: {
+        ...typography.styles.caption2,
+        color: colors.textTertiary,
+      },
+      alreadyHaveSection: {
+        marginTop: spacing.md,
+        backgroundColor: colors.card,
+        borderRadius: borderRadius.sm,
+        marginHorizontal: spacing.md,
+        overflow: "hidden" as const,
+      },
+      alreadyHaveHeader: {
+        flexDirection: "row" as const,
+        justifyContent: "space-between" as const,
+        alignItems: "center" as const,
+        padding: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      },
+      alreadyHaveTitle: {
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+        gap: spacing.sm,
+      },
+      alreadyHaveText: {
+        ...typography.styles.body,
+        fontWeight: "500" as const,
+        color: colors.success,
+      },
+      alreadyHaveList: {
+        padding: spacing.sm,
+      },
+      alreadyHaveItem: {
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+        gap: spacing.sm,
+        paddingVertical: spacing.sm,
+      },
+      alreadyHaveItemText: {
+        ...typography.styles.body,
+        color: colors.text,
+      },
+      pantryQuantity: {
+        color: colors.textSecondary,
+      },
+      bottomActions: {
+        position: "absolute" as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: spacing.md,
+        backgroundColor: colors.card,
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+      },
+      completeButton: {
+        borderRadius: borderRadius.sm,
+        backgroundColor: colors.success,
+      },
+      completeButtonContent: {
+        paddingVertical: spacing.sm,
+      },
+    }),
+    [colors, spacing, borderRadius, typography]
+  );
+
   // Render a single grocery item
   const renderItem = useCallback(
-    ({ item }: { item: GroceryItemWithChecked }) => (
-      <TouchableOpacity
-        style={[styles.itemRow, item.checked && styles.itemRowChecked]}
-        onPress={() => toggleItem(item.name)}
-        activeOpacity={0.7}
-      >
-        <Checkbox
-          status={item.checked ? "checked" : "unchecked"}
+    ({ item, index }: { item: GroceryItemWithChecked; index: number }) => (
+      <Animated.View entering={FadeInDown.delay(index * 30).duration(300)}>
+        <TouchableOpacity
+          style={[styles.itemRow, item.checked && styles.itemRowChecked]}
           onPress={() => toggleItem(item.name)}
-          color={colors.primary}
-        />
-        <View style={styles.itemContent}>
-          <Text
-            style={[styles.itemName, item.checked && styles.itemNameChecked]}
-          >
-            {item.name}
-          </Text>
-          <Text style={styles.itemQuantity}>
-            {item.need_to_buy > 0 ? item.need_to_buy : item.total_quantity}
-            {item.unit ? ` ${item.unit}` : ""}
-          </Text>
-        </View>
-        {item.from_recipes.length > 0 && (
-          <View style={styles.recipeIndicator}>
-            <MaterialCommunityIcons
-              name="food"
-              size={14}
-              color={colors.textTertiary}
-            />
-            <Text style={styles.recipeCount}>{item.from_recipes.length}</Text>
+          activeOpacity={0.7}
+        >
+          <Checkbox
+            status={item.checked ? "checked" : "unchecked"}
+            onPress={() => toggleItem(item.name)}
+            color={colors.primary}
+          />
+          <View style={styles.itemContent}>
+            <Text
+              style={[styles.itemName, item.checked && styles.itemNameChecked]}
+            >
+              {item.name}
+            </Text>
+            <Text style={styles.itemQuantity}>
+              {item.need_to_buy > 0 ? item.need_to_buy : item.total_quantity}
+              {item.unit ? ` ${item.unit}` : ""}
+            </Text>
           </View>
-        )}
-      </TouchableOpacity>
+          {item.from_recipes.length > 0 && (
+            <View style={styles.recipeIndicator}>
+              <MaterialCommunityIcons
+                name="food"
+                size={14}
+                color={colors.textTertiary}
+              />
+              <Text style={styles.recipeCount}>{item.from_recipes.length}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </Animated.View>
     ),
-    [toggleItem]
+    [toggleItem, styles, colors]
   );
 
   // Render section header
@@ -249,7 +459,7 @@ export default function GroceryListScreen() {
         <Text style={styles.sectionCount}>{section.data.length} items</Text>
       </View>
     ),
-    []
+    [styles]
   );
 
   // Render already have section
@@ -257,7 +467,7 @@ export default function GroceryListScreen() {
     if (itemsInPantry.length === 0) return null;
 
     return (
-      <View style={styles.alreadyHaveSection}>
+      <Animated.View entering={FadeIn.duration(400)} style={styles.alreadyHaveSection}>
         <TouchableOpacity
           style={styles.alreadyHaveHeader}
           onPress={() => setShowAlreadyHave(!showAlreadyHave)}
@@ -281,8 +491,12 @@ export default function GroceryListScreen() {
 
         {showAlreadyHave && (
           <View style={styles.alreadyHaveList}>
-            {itemsInPantry.map((item) => (
-              <View key={item.name} style={styles.alreadyHaveItem}>
+            {itemsInPantry.map((item, index) => (
+              <Animated.View
+                key={item.name}
+                entering={FadeInDown.delay(index * 30).duration(300)}
+                style={styles.alreadyHaveItem}
+              >
                 <MaterialCommunityIcons
                   name="checkbox-marked-circle-outline"
                   size={18}
@@ -297,11 +511,11 @@ export default function GroceryListScreen() {
                     </Text>
                   )}
                 </Text>
-              </View>
+              </Animated.View>
             ))}
           </View>
         )}
-      </View>
+      </Animated.View>
     );
   };
 
@@ -321,7 +535,7 @@ export default function GroceryListScreen() {
   if (items.length === 0) {
     return (
       <Screen style={styles.container}>
-        <View style={styles.emptyContainer}>
+        <Animated.View entering={FadeIn.duration(400)} style={styles.emptyContainer}>
           <MaterialCommunityIcons
             name="cart-outline"
             size={80}
@@ -338,7 +552,7 @@ export default function GroceryListScreen() {
           >
             Go Back
           </Button>
-        </View>
+        </Animated.View>
       </Screen>
     );
   }
@@ -346,7 +560,7 @@ export default function GroceryListScreen() {
   return (
     <Screen style={styles.container}>
       {/* Header with progress */}
-      <View style={styles.header}>
+      <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
         <View style={styles.headerInfo}>
           <Text style={styles.headerTitle}>Shopping List</Text>
           <Text style={styles.headerSubtitle}>
@@ -367,7 +581,7 @@ export default function GroceryListScreen() {
             </Text>
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Recipe chips */}
       <View style={styles.recipeChips}>
@@ -403,7 +617,7 @@ export default function GroceryListScreen() {
 
       {/* Bottom actions */}
       {checkedCount === totalToBuy && totalToBuy > 0 && (
-        <View style={styles.bottomActions}>
+        <Animated.View entering={FadeIn.duration(400)} style={styles.bottomActions}>
           <Button
             mode="contained"
             onPress={() => {
@@ -428,213 +642,8 @@ export default function GroceryListScreen() {
           >
             Complete Shopping
           </Button>
-        </View>
+        </Animated.View>
       )}
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: colors.text,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  emptyButton: {
-    paddingHorizontal: 16,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerInfo: {},
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  progressBadge: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  progressText: {
-    color: colors.white,
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  recipeChips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    padding: 12,
-    gap: 8,
-    backgroundColor: colors.card,
-  },
-  recipeChip: {
-    backgroundColor: colors.primaryLight,
-  },
-  recipeChipText: {
-    fontSize: 12,
-  },
-  listContent: {
-    paddingBottom: 100,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: colors.lightGray,
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  sectionCount: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  itemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  itemRowChecked: {
-    backgroundColor: colors.lightGray,
-  },
-  itemContent: {
-    flex: 1,
-    marginLeft: 4,
-  },
-  itemName: {
-    fontSize: 16,
-    color: colors.text,
-  },
-  itemNameChecked: {
-    textDecorationLine: "line-through",
-    color: colors.textSecondary,
-  },
-  itemQuantity: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  recipeIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginRight: 8,
-  },
-  recipeCount: {
-    fontSize: 12,
-    color: colors.textTertiary,
-  },
-  alreadyHaveSection: {
-    marginTop: 16,
-    backgroundColor: colors.card,
-    borderRadius: 8,
-    marginHorizontal: 16,
-    overflow: "hidden",
-  },
-  alreadyHaveHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  alreadyHaveTitle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  alreadyHaveText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: colors.success,
-  },
-  alreadyHaveList: {
-    padding: 12,
-  },
-  alreadyHaveItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 8,
-  },
-  alreadyHaveItemText: {
-    fontSize: 14,
-    color: colors.text,
-  },
-  pantryQuantity: {
-    color: colors.textSecondary,
-  },
-  bottomActions: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: colors.card,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  completeButton: {
-    borderRadius: 8,
-    backgroundColor: colors.success,
-  },
-  completeButtonContent: {
-    paddingVertical: 8,
-  },
-});

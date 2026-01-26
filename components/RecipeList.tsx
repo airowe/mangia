@@ -1,8 +1,7 @@
-import React, { useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import React, { useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
   ScrollView,
   ActivityIndicator,
   RefreshControl,
@@ -12,7 +11,7 @@ import {
 } from 'react-native';
 import { Recipe } from '../models/Recipe';
 import { RecipeItem } from './RecipeItem';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme';
 import { Button } from 'react-native-paper';
 
 export interface RecipeListProps {
@@ -80,6 +79,128 @@ export const RecipeList: React.FC<RecipeListProps> = ({
   error,
   scrollViewProps,
 }) => {
+  const { theme, isDark } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
+
+  // Dynamic styles based on theme
+  const styles = useMemo(() => ({
+    // Section styles
+    section: {
+      marginBottom: spacing.xl,
+    },
+    sectionHeader: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+      alignItems: 'center' as const,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    sectionTitle: {
+      ...typography.styles.title3,
+      color: colors.text,
+    },
+    endOfList: {
+      ...typography.styles.caption2,
+      color: colors.textTertiary,
+      fontStyle: 'italic' as const,
+    },
+
+    // Layout styles
+    horizontalContainer: {
+      paddingHorizontal: spacing.sm,
+    },
+    recipesContainer: {
+      paddingVertical: spacing.sm,
+    },
+    gridContainer: {
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      padding: spacing.sm,
+    },
+
+    // Card styles
+    recipeCard: {
+      margin: spacing.sm,
+      width: 200,
+      borderRadius: borderRadius.md,
+      backgroundColor: colors.card,
+      overflow: 'hidden' as const,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 4,
+    },
+    horizontalItem: {
+      marginRight: spacing.lg,
+      width: 200,
+      borderRadius: borderRadius.md,
+      backgroundColor: colors.card,
+      overflow: 'hidden' as const,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 4,
+    },
+
+    // Loading states
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+      padding: spacing.xl,
+    },
+    loadingText: {
+      marginTop: spacing.sm,
+      color: colors.textSecondary,
+      ...typography.styles.body,
+    },
+    loadingMore: {
+      width: 100,
+      padding: spacing.lg,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+    },
+
+    // Empty state
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+      padding: spacing.xxxl,
+    },
+    emptyText: {
+      ...typography.styles.headline,
+      color: colors.text,
+      marginBottom: spacing.sm,
+      textAlign: 'center' as const,
+    },
+    emptySubtext: {
+      ...typography.styles.body,
+      color: colors.textTertiary,
+      textAlign: 'center' as const,
+    },
+
+    // Error state
+    errorContainer: {
+      padding: spacing.lg,
+      backgroundColor: colors.errorBackground,
+      borderRadius: borderRadius.md,
+      margin: spacing.lg,
+      alignItems: 'center' as const,
+    },
+    errorText: {
+      color: colors.error,
+      marginBottom: spacing.md,
+      textAlign: 'center' as const,
+      ...typography.styles.body,
+    },
+    retryButton: {
+      backgroundColor: colors.error,
+    },
+  }), [colors, spacing, borderRadius, typography, isDark]);
+
   // Check if a recipe is selected
   const isSelected = useCallback((recipeId: string): boolean => {
     if (!selectedRecipeIds) return false;
@@ -132,9 +253,11 @@ export const RecipeList: React.FC<RecipeListProps> = ({
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
           {onRetry && (
-            <Button 
-              mode="contained" 
-              onPress={onRetry} 
+            <Button
+              mode="contained"
+              onPress={onRetry}
+              buttonColor={colors.error}
+              textColor={colors.textOnPrimary}
               style={styles.retryButton}
             >
               Retry
@@ -206,120 +329,3 @@ export const RecipeList: React.FC<RecipeListProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  // Section styles
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  endOfList: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    fontStyle: 'italic',
-  },
-  
-  // Layout styles
-  horizontalContainer: {
-    paddingHorizontal: 8,
-  },
-  recipesContainer: {
-    paddingVertical: 8,
-  },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 8,
-  },
-  
-  // Card styles
-  recipeCard: {
-    margin: 8,
-    width: 200,
-    borderRadius: 8,
-    backgroundColor: colors.card,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  horizontalItem: {
-    marginRight: 16,
-    width: 200,
-    borderRadius: 8,
-    backgroundColor: colors.card,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  
-  // Loading states
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  loadingText: {
-    marginTop: 8,
-    color: colors.textSecondary,
-  },
-  loadingMore: {
-    width: 100,
-    padding: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  
-  // Empty state
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: colors.textTertiary,
-    textAlign: 'center',
-  },
-  
-  // Error state
-  errorContainer: {
-    padding: 16,
-    backgroundColor: colors.error + '20',
-    borderRadius: 8,
-    margin: 16,
-    alignItems: 'center',
-  },
-  errorText: {
-    color: colors.error,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: colors.error,
-  },
-});

@@ -1,14 +1,14 @@
 // components/UpgradePrompt.tsx
 // Reusable upgrade prompt for premium features
 
-import React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useMemo } from "react";
+import { View, TouchableOpacity } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 
-import { colors } from "../theme/colors";
+import { useTheme } from "../theme";
 import {
   PremiumFeature,
   PREMIUM_FEATURES,
@@ -40,6 +40,8 @@ export function UpgradePrompt({
   onClose,
 }: UpgradePromptProps) {
   const navigation = useNavigation<NavigationProp>();
+  const { theme } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
 
   // Get feature info if provided
   const featureInfo = feature ? PREMIUM_FEATURES[feature] : null;
@@ -54,6 +56,82 @@ export function UpgradePrompt({
     navigation.navigate("SubscriptionScreen");
     onClose?.();
   };
+
+  const styles = useMemo(() => ({
+    container: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+      padding: spacing.xl,
+      alignItems: "center" as const,
+      margin: spacing.lg,
+    },
+    closeButton: {
+      position: "absolute" as const,
+      top: spacing.md,
+      right: spacing.md,
+      padding: spacing.xs,
+    },
+    iconContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.primaryLight,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+      marginBottom: spacing.lg,
+    },
+    title: {
+      ...typography.styles.title2,
+      color: colors.text,
+      textAlign: "center" as const,
+      marginBottom: spacing.sm,
+    },
+    description: {
+      ...typography.styles.body,
+      color: colors.textSecondary,
+      textAlign: "center" as const,
+      marginBottom: spacing.lg,
+      lineHeight: 22,
+    },
+    premiumBadge: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: spacing.xs,
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      marginBottom: spacing.xl,
+    },
+    premiumText: {
+      ...typography.styles.caption1,
+      fontWeight: "600" as const,
+      color: colors.primary,
+    },
+    upgradeButton: {
+      width: "100%" as const,
+      marginBottom: spacing.sm,
+    },
+    laterButton: {
+      marginTop: spacing.xs,
+    },
+    // Compact style
+    compactContainer: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: spacing.xs,
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.md,
+    },
+    compactText: {
+      ...typography.styles.body,
+      fontWeight: "500" as const,
+      color: colors.primary,
+      flex: 1,
+    },
+  }), [colors, spacing, borderRadius, typography]);
 
   if (compact) {
     return (
@@ -104,6 +182,8 @@ export function UpgradePrompt({
       <Button
         mode="contained"
         onPress={handleUpgrade}
+        buttonColor={colors.primary}
+        textColor={colors.textOnPrimary}
         style={styles.upgradeButton}
         icon="crown"
       >
@@ -113,6 +193,7 @@ export function UpgradePrompt({
       <Button
         mode="text"
         onPress={onClose || (() => navigation.goBack())}
+        textColor={colors.primary}
         style={styles.laterButton}
       >
         Maybe Later
@@ -132,18 +213,46 @@ export function UpgradeBanner({
   message?: string;
 }) {
   const navigation = useNavigation<NavigationProp>();
+  const { theme } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
+
   const featureInfo = feature ? PREMIUM_FEATURES[feature] : null;
   const displayMessage =
     message || `Unlock ${featureInfo?.title || "this feature"} with Premium`;
 
+  const bannerStyles = useMemo(() => ({
+    bannerContainer: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "space-between" as const,
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.md,
+      marginHorizontal: spacing.lg,
+      marginVertical: spacing.sm,
+    },
+    bannerContent: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: spacing.sm,
+      flex: 1,
+    },
+    bannerText: {
+      ...typography.styles.body,
+      color: colors.text,
+      flex: 1,
+    },
+  }), [colors, spacing, borderRadius, typography]);
+
   return (
     <TouchableOpacity
-      style={styles.bannerContainer}
+      style={bannerStyles.bannerContainer}
       onPress={() => navigation.navigate("SubscriptionScreen")}
     >
-      <View style={styles.bannerContent}>
+      <View style={bannerStyles.bannerContent}>
         <MaterialCommunityIcons name="crown" size={20} color={colors.primary} />
-        <Text style={styles.bannerText}>{displayMessage}</Text>
+        <Text style={bannerStyles.bannerText}>{displayMessage}</Text>
       </View>
       <MaterialCommunityIcons
         name="chevron-right"
@@ -153,103 +262,3 @@ export function UpgradeBanner({
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 24,
-    alignItems: "center",
-    margin: 16,
-  },
-  closeButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    padding: 4,
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: colors.text,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  description: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginBottom: 16,
-    lineHeight: 22,
-  },
-  premiumBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginBottom: 20,
-  },
-  premiumText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.primary,
-  },
-  upgradeButton: {
-    width: "100%",
-    marginBottom: 8,
-  },
-  laterButton: {
-    marginTop: 4,
-  },
-  // Compact style
-  compactContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  compactText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: colors.primary,
-    flex: 1,
-  },
-  // Banner style
-  bannerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginHorizontal: 16,
-    marginVertical: 8,
-  },
-  bannerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flex: 1,
-  },
-  bannerText: {
-    fontSize: 14,
-    color: colors.text,
-    flex: 1,
-  },
-});
