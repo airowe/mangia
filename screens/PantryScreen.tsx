@@ -1,7 +1,7 @@
 // screens/PantryScreen.tsx
 // Pantry management - track ingredients you have at home
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -27,11 +27,12 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import ReanimatedAnimated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { Screen } from "../components/Screen";
-import { colors } from "../theme/colors";
+import { GlassCard } from "../components/glass";
+import { useTheme } from "../theme";
 import { PantryItem } from "../models/Product";
-import { IngredientCategory } from "../models/Recipe";
 import { usePremiumFeature } from "../hooks/usePremiumFeature";
 
 type PantryStackParamList = {
@@ -47,18 +48,16 @@ import {
   updatePantryItemQuantity,
   removeFromPantry,
 } from "../lib/pantry";
-import { getCategoryDisplayName } from "../utils/categorizeIngredient";
 
 // Storage locations
 const LOCATIONS = ["fridge", "freezer", "pantry"] as const;
 type StorageLocation = (typeof LOCATIONS)[number];
 
-// Common units
-const UNITS = ["", "oz", "lb", "g", "kg", "cups", "tbsp", "tsp", "pieces"];
-
 export default function PantryScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { isPremium } = usePremiumFeature();
+  const { theme, isDark } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
 
   const [items, setItems] = useState<PantryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,6 +72,218 @@ export default function PantryScreen() {
     unit: "",
     location: "pantry" as StorageLocation,
   });
+
+  // Dynamic styles based on theme
+  const dynamicStyles = useMemo(() => ({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+    },
+    loadingText: {
+      marginTop: spacing.lg,
+      color: colors.textSecondary,
+      ...typography.styles.body,
+    },
+    whatCanIMakeButton: {
+      margin: spacing.lg,
+      marginBottom: spacing.sm,
+      borderRadius: borderRadius.lg,
+      backgroundColor: colors.surface,
+      padding: spacing.lg,
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "space-between" as const,
+    },
+    whatCanIMakeContent: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      flex: 1,
+    },
+    whatCanIMakeText: {
+      marginLeft: spacing.md,
+      flex: 1,
+    },
+    whatCanIMakeTitle: {
+      ...typography.styles.headline,
+      color: colors.text,
+    },
+    whatCanIMakeSubtitle: {
+      ...typography.styles.caption1,
+      color: colors.textSecondary,
+      marginTop: spacing.xs,
+    },
+    whatCanIMakeRight: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: spacing.sm,
+    },
+    premiumChip: {
+      backgroundColor: colors.primaryLight,
+      height: 24,
+    },
+    premiumChipText: {
+      fontSize: 11,
+      color: colors.primary,
+    },
+    header: {
+      padding: spacing.lg,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerTitle: {
+      ...typography.styles.title1,
+      color: colors.text,
+    },
+    headerSubtitle: {
+      ...typography.styles.subheadline,
+      color: colors.textSecondary,
+      marginTop: spacing.xs,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+      padding: spacing.xxxl,
+    },
+    emptyTitle: {
+      ...typography.styles.title2,
+      color: colors.text,
+      marginTop: spacing.lg,
+      marginBottom: spacing.sm,
+    },
+    emptySubtitle: {
+      ...typography.styles.body,
+      color: colors.textSecondary,
+      textAlign: "center" as const,
+      marginBottom: spacing.xl,
+    },
+    emptyButton: {
+      paddingHorizontal: spacing.lg,
+    },
+    listContent: {
+      paddingBottom: 100,
+    },
+    itemCard: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "space-between" as const,
+      padding: spacing.lg,
+      backgroundColor: colors.card,
+    },
+    itemInfo: {
+      flex: 1,
+    },
+    itemTitle: {
+      ...typography.styles.body,
+      fontWeight: "500" as const,
+      color: colors.text,
+      marginBottom: spacing.xs,
+    },
+    itemMeta: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: spacing.sm,
+    },
+    chip: {
+      height: 28,
+      backgroundColor: colors.surfaceElevated,
+    },
+    itemUnit: {
+      ...typography.styles.subheadline,
+      color: colors.textSecondary,
+    },
+    quantityControls: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+    },
+    qtyButton: {
+      margin: 0,
+    },
+    quantityText: {
+      ...typography.styles.headline,
+      color: colors.text,
+      minWidth: 30,
+      textAlign: "center" as const,
+    },
+    separator: {
+      height: 1,
+      backgroundColor: colors.border,
+    },
+    deleteAction: {
+      width: 80,
+      backgroundColor: colors.error,
+    },
+    deleteButton: {
+      flex: 1,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+    },
+    deleteText: {
+      color: colors.textOnPrimary,
+      ...typography.styles.caption2,
+      marginTop: spacing.xs,
+    },
+    fab: {
+      position: "absolute" as const,
+      right: spacing.lg,
+      bottom: spacing.lg,
+      backgroundColor: colors.primary,
+    },
+    modal: {
+      backgroundColor: colors.card,
+      margin: spacing.xl,
+      borderRadius: borderRadius.lg,
+      padding: spacing.xl,
+    },
+    modalTitle: {
+      ...typography.styles.title2,
+      color: colors.text,
+      marginBottom: spacing.lg,
+    },
+    input: {
+      marginBottom: spacing.md,
+      backgroundColor: colors.surface,
+    },
+    row: {
+      flexDirection: "row" as const,
+      gap: spacing.md,
+    },
+    halfInput: {
+      flex: 1,
+    },
+    locationLabel: {
+      ...typography.styles.subheadline,
+      color: colors.textSecondary,
+      marginBottom: spacing.sm,
+    },
+    locationButtons: {
+      flexDirection: "row" as const,
+      gap: spacing.sm,
+      marginBottom: spacing.xl,
+    },
+    locationChip: {
+      backgroundColor: colors.surfaceElevated,
+    },
+    locationChipSelected: {
+      backgroundColor: colors.primaryLight,
+    },
+    modalActions: {
+      flexDirection: "row" as const,
+      gap: spacing.md,
+    },
+    cancelButton: {
+      flex: 1,
+    },
+    addButton: {
+      flex: 1,
+    },
+  }), [colors, spacing, borderRadius, typography]);
 
   // Navigate to What Can I Make screen
   const handleWhatCanIMake = useCallback(() => {
@@ -212,78 +423,8 @@ export default function PantryScreen() {
     }
   }, [loadPantry]);
 
-  // Render swipe delete action
-  const renderRightActions = (
-    itemId: string,
-    progress: Animated.AnimatedInterpolation<number>
-  ) => {
-    const translateX = progress.interpolate({
-      inputRange: [0, 1],
-      outputRange: [80, 0],
-    });
-
-    return (
-      <Animated.View
-        style={[styles.deleteAction, { transform: [{ translateX }] }]}
-      >
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteItem(itemId)}
-        >
-          <MaterialCommunityIcons name="delete" size={24} color="#fff" />
-          <Text style={styles.deleteText}>Delete</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  };
-
-  // Render pantry item
-  const renderItem = useCallback(
-    ({ item }: { item: PantryItem }) => (
-      <Swipeable
-        renderRightActions={(progress) => renderRightActions(item.id, progress)}
-        overshootRight={false}
-      >
-        <View style={styles.itemCard}>
-          <View style={styles.itemInfo}>
-            <Text style={styles.itemTitle}>{item.title}</Text>
-            <View style={styles.itemMeta}>
-              {item.location && (
-                <Chip icon={getLocationIcon(item.location)} style={styles.chip}>
-                  {item.location}
-                </Chip>
-              )}
-              {item.unit && (
-                <Text style={styles.itemUnit}>
-                  {item.quantity || 1} {item.unit}
-                </Text>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.quantityControls}>
-            <IconButton
-              icon="minus"
-              size={20}
-              onPress={() => handleQuantityChange(item.id, -1)}
-              style={styles.qtyButton}
-            />
-            <Text style={styles.quantityText}>{item.quantity || 1}</Text>
-            <IconButton
-              icon="plus"
-              size={20}
-              onPress={() => handleQuantityChange(item.id, 1)}
-              style={styles.qtyButton}
-            />
-          </View>
-        </View>
-      </Swipeable>
-    ),
-    [handleQuantityChange, handleDeleteItem]
-  );
-
   // Get location icon
-  const getLocationIcon = (
+  const getLocationIcon = useCallback((
     location: string
   ): keyof typeof MaterialCommunityIcons.glyphMap => {
     switch (location) {
@@ -296,99 +437,164 @@ export default function PantryScreen() {
       default:
         return "package-variant";
     }
-  };
+  }, []);
 
-  // Group items by location
-  const groupedItems = items.reduce(
-    (acc, item) => {
-      const location = item.location || "other";
-      if (!acc[location]) acc[location] = [];
-      acc[location].push(item);
-      return acc;
-    },
-    {} as Record<string, PantryItem[]>
+  // Render swipe delete action
+  const renderRightActions = useCallback((
+    itemId: string,
+    progress: Animated.AnimatedInterpolation<number>
+  ) => {
+    const translateX = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [80, 0],
+    });
+
+    return (
+      <Animated.View
+        style={[dynamicStyles.deleteAction, { transform: [{ translateX }] }]}
+      >
+        <TouchableOpacity
+          style={dynamicStyles.deleteButton}
+          onPress={() => handleDeleteItem(itemId)}
+        >
+          <MaterialCommunityIcons name="delete" size={24} color={colors.textOnPrimary} />
+          <Text style={dynamicStyles.deleteText}>Delete</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  }, [dynamicStyles, colors.textOnPrimary, handleDeleteItem]);
+
+  // Render pantry item
+  const renderItem = useCallback(
+    ({ item, index }: { item: PantryItem; index: number }) => (
+      <ReanimatedAnimated.View entering={FadeInDown.delay(index * 50).duration(300)}>
+        <Swipeable
+          renderRightActions={(progress) => renderRightActions(item.id, progress)}
+          overshootRight={false}
+        >
+          <View style={dynamicStyles.itemCard}>
+            <View style={dynamicStyles.itemInfo}>
+              <Text style={dynamicStyles.itemTitle}>{item.title}</Text>
+              <View style={dynamicStyles.itemMeta}>
+                {item.location && (
+                  <Chip icon={getLocationIcon(item.location)} style={dynamicStyles.chip}>
+                    {item.location}
+                  </Chip>
+                )}
+                {item.unit && (
+                  <Text style={dynamicStyles.itemUnit}>
+                    {item.quantity || 1} {item.unit}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            <View style={dynamicStyles.quantityControls}>
+              <IconButton
+                icon="minus"
+                size={20}
+                onPress={() => handleQuantityChange(item.id, -1)}
+                style={dynamicStyles.qtyButton}
+              />
+              <Text style={dynamicStyles.quantityText}>{item.quantity || 1}</Text>
+              <IconButton
+                icon="plus"
+                size={20}
+                onPress={() => handleQuantityChange(item.id, 1)}
+                style={dynamicStyles.qtyButton}
+              />
+            </View>
+          </View>
+        </Swipeable>
+      </ReanimatedAnimated.View>
+    ),
+    [dynamicStyles, handleQuantityChange, handleDeleteItem, getLocationIcon, renderRightActions]
   );
 
   // Loading state
   if (isLoading) {
     return (
-      <Screen style={styles.container}>
-        <View style={styles.loadingContainer}>
+      <Screen style={dynamicStyles.container}>
+        <View style={dynamicStyles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading pantry...</Text>
+          <Text style={dynamicStyles.loadingText}>Loading pantry...</Text>
         </View>
       </Screen>
     );
   }
 
   return (
-    <Screen style={styles.container}>
+    <Screen style={dynamicStyles.container}>
       {/* What Can I Make? Button */}
-      <TouchableOpacity onPress={handleWhatCanIMake} activeOpacity={0.8}>
-        <Surface style={styles.whatCanIMakeButton} elevation={2}>
-          <View style={styles.whatCanIMakeContent}>
-            <MaterialCommunityIcons
-              name="chef-hat"
-              size={28}
-              color={colors.primary}
-            />
-            <View style={styles.whatCanIMakeText}>
-              <Text style={styles.whatCanIMakeTitle}>What Can I Make?</Text>
-              <Text style={styles.whatCanIMakeSubtitle}>
-                Find recipes using your pantry ingredients
-              </Text>
+      <ReanimatedAnimated.View entering={FadeInDown.duration(400)}>
+        <TouchableOpacity onPress={handleWhatCanIMake} activeOpacity={0.8}>
+          <GlassCard style={dynamicStyles.whatCanIMakeButton} elevation={2} padding="none">
+            <View style={{ flexDirection: "row", alignItems: "center", flex: 1, padding: spacing.lg }}>
+              <View style={dynamicStyles.whatCanIMakeContent}>
+                <MaterialCommunityIcons
+                  name="chef-hat"
+                  size={28}
+                  color={colors.primary}
+                />
+                <View style={dynamicStyles.whatCanIMakeText}>
+                  <Text style={dynamicStyles.whatCanIMakeTitle}>What Can I Make?</Text>
+                  <Text style={dynamicStyles.whatCanIMakeSubtitle}>
+                    Find recipes using your pantry ingredients
+                  </Text>
+                </View>
+              </View>
+              <View style={dynamicStyles.whatCanIMakeRight}>
+                {!isPremium && (
+                  <Chip compact style={dynamicStyles.premiumChip} textStyle={dynamicStyles.premiumChipText}>
+                    Premium
+                  </Chip>
+                )}
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={24}
+                  color={colors.textSecondary}
+                />
+              </View>
             </View>
-          </View>
-          <View style={styles.whatCanIMakeRight}>
-            {!isPremium && (
-              <Chip compact style={styles.premiumChip} textStyle={styles.premiumChipText}>
-                Premium
-              </Chip>
-            )}
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={24}
-              color={colors.textSecondary}
-            />
-          </View>
-        </Surface>
-      </TouchableOpacity>
+          </GlassCard>
+        </TouchableOpacity>
+      </ReanimatedAnimated.View>
 
       {/* Header stats */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Pantry</Text>
-        <Text style={styles.headerSubtitle}>
+      <ReanimatedAnimated.View entering={FadeInDown.delay(100).duration(400)} style={dynamicStyles.header}>
+        <Text style={dynamicStyles.headerTitle}>My Pantry</Text>
+        <Text style={dynamicStyles.headerSubtitle}>
           {items.length} item{items.length !== 1 ? "s" : ""}
         </Text>
-      </View>
+      </ReanimatedAnimated.View>
 
       {/* Empty state */}
       {items.length === 0 ? (
-        <View style={styles.emptyContainer}>
+        <ReanimatedAnimated.View entering={FadeIn.delay(200).duration(400)} style={dynamicStyles.emptyContainer}>
           <MaterialCommunityIcons
             name="fridge-outline"
             size={80}
             color={colors.textTertiary}
           />
-          <Text style={styles.emptyTitle}>Your pantry is empty</Text>
-          <Text style={styles.emptySubtitle}>
+          <Text style={dynamicStyles.emptyTitle}>Your pantry is empty</Text>
+          <Text style={dynamicStyles.emptySubtitle}>
             Add items you have at home to get smarter grocery lists
           </Text>
           <Button
             mode="contained"
             onPress={() => setShowAddModal(true)}
-            style={styles.emptyButton}
+            style={dynamicStyles.emptyButton}
             icon="plus"
           >
             Add First Item
           </Button>
-        </View>
+        </ReanimatedAnimated.View>
       ) : (
         <FlatList
           data={items}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={dynamicStyles.listContent}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -397,16 +603,16 @@ export default function PantryScreen() {
               tintColor={colors.primary}
             />
           }
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={() => <View style={dynamicStyles.separator} />}
         />
       )}
 
       {/* FAB to add item */}
       <FAB
         icon="plus"
-        style={styles.fab}
+        style={dynamicStyles.fab}
         onPress={() => setShowAddModal(true)}
-        color="#fff"
+        color={colors.textOnPrimary}
       />
 
       {/* Add Item Modal */}
@@ -414,9 +620,9 @@ export default function PantryScreen() {
         <Modal
           visible={showAddModal}
           onDismiss={() => setShowAddModal(false)}
-          contentContainerStyle={styles.modal}
+          contentContainerStyle={dynamicStyles.modal}
         >
-          <Text style={styles.modalTitle}>Add to Pantry</Text>
+          <Text style={dynamicStyles.modalTitle}>Add to Pantry</Text>
 
           <TextInput
             mode="outlined"
@@ -425,11 +631,11 @@ export default function PantryScreen() {
             onChangeText={(text) =>
               setNewItem((prev) => ({ ...prev, title: text }))
             }
-            style={styles.input}
+            style={dynamicStyles.input}
             autoFocus
           />
 
-          <View style={styles.row}>
+          <View style={dynamicStyles.row}>
             <TextInput
               mode="outlined"
               label="Quantity"
@@ -438,7 +644,7 @@ export default function PantryScreen() {
                 setNewItem((prev) => ({ ...prev, quantity: text }))
               }
               keyboardType="numeric"
-              style={[styles.input, styles.halfInput]}
+              style={[dynamicStyles.input, dynamicStyles.halfInput]}
             />
             <TextInput
               mode="outlined"
@@ -448,12 +654,12 @@ export default function PantryScreen() {
                 setNewItem((prev) => ({ ...prev, unit: text }))
               }
               placeholder="oz, lb, cups..."
-              style={[styles.input, styles.halfInput]}
+              style={[dynamicStyles.input, dynamicStyles.halfInput]}
             />
           </View>
 
-          <Text style={styles.locationLabel}>Storage Location</Text>
-          <View style={styles.locationButtons}>
+          <Text style={dynamicStyles.locationLabel}>Storage Location</Text>
+          <View style={dynamicStyles.locationButtons}>
             {LOCATIONS.map((loc) => (
               <Chip
                 key={loc}
@@ -462,8 +668,8 @@ export default function PantryScreen() {
                   setNewItem((prev) => ({ ...prev, location: loc }))
                 }
                 style={[
-                  styles.locationChip,
-                  newItem.location === loc && styles.locationChipSelected,
+                  dynamicStyles.locationChip,
+                  newItem.location === loc && dynamicStyles.locationChipSelected,
                 ]}
                 icon={getLocationIcon(loc)}
               >
@@ -472,11 +678,11 @@ export default function PantryScreen() {
             ))}
           </View>
 
-          <View style={styles.modalActions}>
+          <View style={dynamicStyles.modalActions}>
             <Button
               mode="outlined"
               onPress={() => setShowAddModal(false)}
-              style={styles.cancelButton}
+              style={dynamicStyles.cancelButton}
             >
               Cancel
             </Button>
@@ -485,7 +691,7 @@ export default function PantryScreen() {
               onPress={handleAddItem}
               loading={isAdding}
               disabled={isAdding || !newItem.title.trim()}
-              style={styles.addButton}
+              style={dynamicStyles.addButton}
             >
               Add Item
             </Button>
@@ -495,219 +701,3 @@ export default function PantryScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-  whatCanIMakeButton: {
-    margin: 16,
-    marginBottom: 8,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  whatCanIMakeContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  whatCanIMakeText: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  whatCanIMakeTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  whatCanIMakeSubtitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  whatCanIMakeRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  premiumChip: {
-    backgroundColor: `${colors.primary}20`,
-    height: 24,
-  },
-  premiumChipText: {
-    fontSize: 11,
-    color: colors.primary,
-  },
-  header: {
-    padding: 16,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: colors.text,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: colors.text,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  emptyButton: {
-    paddingHorizontal: 16,
-  },
-  listContent: {
-    paddingBottom: 100,
-  },
-  itemCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: colors.card,
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  itemTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: colors.text,
-    marginBottom: 6,
-  },
-  itemMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  chip: {
-    height: 28,
-    backgroundColor: colors.lightGray,
-  },
-  itemUnit: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  quantityControls: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  qtyButton: {
-    margin: 0,
-  },
-  quantityText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-    minWidth: 30,
-    textAlign: "center",
-  },
-  separator: {
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  deleteAction: {
-    width: 80,
-    backgroundColor: colors.error,
-  },
-  deleteButton: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  deleteText: {
-    color: "#fff",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  fab: {
-    position: "absolute",
-    right: 16,
-    bottom: 16,
-    backgroundColor: colors.primary,
-  },
-  modal: {
-    backgroundColor: colors.card,
-    margin: 20,
-    borderRadius: 12,
-    padding: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: 16,
-  },
-  input: {
-    marginBottom: 12,
-    backgroundColor: colors.surface,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  halfInput: {
-    flex: 1,
-  },
-  locationLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 8,
-  },
-  locationButtons: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 20,
-  },
-  locationChip: {
-    backgroundColor: colors.lightGray,
-  },
-  locationChipSelected: {
-    backgroundColor: colors.primaryLight,
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-  },
-  addButton: {
-    flex: 1,
-  },
-});

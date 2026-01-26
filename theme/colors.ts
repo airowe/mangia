@@ -1,36 +1,47 @@
+/**
+ * Legacy Colors Export
+ *
+ * @deprecated Use `useTheme()` hook instead of importing colors directly.
+ * This file is maintained for backward compatibility during migration.
+ *
+ * All values now reference the editorial palette from tokens/colors.ts
+ */
+
+import { editorialPalette, palette } from './tokens/colors';
+
 export const colors = {
-  // Brand colors
-  primary: '#CC5500', // burnt orange
-  secondary: '#5D9EC7', // even lighter warm blue
-  accent: '#FFB74D',
-  primaryLight: '#FFDDB5',
-  
-  // UI colors
-  background: '#FDF6F0',
-  card: '#FFFFFF',
-  border: '#DDD',
-  surface: '#FFFFFF',
-  
-  // Text colors
-  text: '#333',
-  textSecondary: '#666',
-  textTertiary: '#999',
-  muted: '#999',
-  
+  // Brand colors - Editorial terracotta palette
+  primary: editorialPalette.terracotta[400], // #D97742
+  secondary: editorialPalette.sage[300], // #A8BCA0
+  accent: editorialPalette.cream[200], // #F5E3C1
+  primaryLight: editorialPalette.terracotta[100],
+
+  // UI colors - Warm cream base
+  background: editorialPalette.cream[100], // #FBF9F5
+  card: palette.white,
+  border: editorialPalette.cream[300],
+  surface: palette.white,
+
+  // Text colors - Warmer editorial blacks
+  text: editorialPalette.editorialDark[600], // #3A322C
+  textSecondary: editorialPalette.editorialDark[400], // #7A716A
+  textTertiary: editorialPalette.editorialDark[300], // #A9A29A
+  muted: editorialPalette.editorialDark[300],
+
   // Status colors
-  error: '#D32F2F',
-  success: '#388E3C',
-  warning: '#F57C00',
-  info: '#1976D2',
-  
+  error: palette.status.error,
+  success: palette.status.success,
+  warning: palette.status.warning,
+  info: palette.status.info,
+
   // Common colors
-  white: '#FFFFFF',
-  black: '#000000',
-  buttonText: '#FFFFFF',
-  transparent: 'transparent',
-  
+  white: palette.white,
+  black: palette.black,
+  buttonText: palette.white,
+  transparent: palette.transparent,
+
   // Additional colors
-  lightGray: '#F5F5F5',
-  mediumGray: '#E0E0E0',
-  darkGray: '#757575',
+  lightGray: editorialPalette.cream[200],
+  mediumGray: editorialPalette.cream[300],
+  darkGray: editorialPalette.editorialDark[500],
 };

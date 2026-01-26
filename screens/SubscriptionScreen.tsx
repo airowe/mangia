@@ -1,10 +1,9 @@
 // screens/SubscriptionScreen.tsx
 // Premium subscription paywall
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
-  StyleSheet,
   ScrollView,
   Alert,
   ActivityIndicator,
@@ -13,9 +12,10 @@ import { Text, Button, IconButton } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { PurchasesPackage } from "react-native-purchases";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { Screen } from "../components/Screen";
-import { colors } from "../theme/colors";
+import { useTheme } from "../theme";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import {
   PREMIUM_FEATURES,
@@ -35,11 +35,13 @@ const PAYWALL_FEATURES: PremiumFeature[] = [
 export default function SubscriptionScreen() {
   const navigation = useNavigation();
   const { isPremium, isLoading, packages, purchase, restore } = useSubscription();
+  const { theme } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
+
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
 
-  // Handle purchase
   const handlePurchase = useCallback(async () => {
     if (!selectedPackage) {
       Alert.alert("Select a Plan", "Please select a subscription plan");
@@ -66,7 +68,6 @@ export default function SubscriptionScreen() {
     }
   }, [selectedPackage, purchase, navigation]);
 
-  // Handle restore
   const handleRestore = useCallback(async () => {
     setIsRestoring(true);
     try {
@@ -93,11 +94,180 @@ export default function SubscriptionScreen() {
     }
   }, [restore, navigation]);
 
+  const styles = useMemo(
+    () => ({
+      container: {
+        flex: 1,
+        backgroundColor: colors.background,
+      },
+      scrollView: {
+        flex: 1,
+      },
+      content: {
+        padding: spacing.lg,
+        paddingBottom: spacing.xxxl,
+      },
+      closeButton: {
+        position: "absolute" as const,
+        top: 0,
+        right: 0,
+        zIndex: 1,
+      },
+      loadingContainer: {
+        flex: 1,
+        justifyContent: "center" as const,
+        alignItems: "center" as const,
+      },
+      loadingText: {
+        marginTop: spacing.md,
+        color: colors.textSecondary,
+        ...typography.styles.body,
+      },
+      successContainer: {
+        flex: 1,
+        justifyContent: "center" as const,
+        alignItems: "center" as const,
+        padding: spacing.xxl,
+      },
+      successTitle: {
+        ...typography.styles.largeTitle,
+        color: colors.text,
+        marginTop: spacing.md,
+        marginBottom: spacing.sm,
+      },
+      successText: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+        textAlign: "center" as const,
+        marginBottom: spacing.xl,
+      },
+      doneButton: {
+        paddingHorizontal: spacing.xxl,
+      },
+      header: {
+        alignItems: "center" as const,
+        marginTop: spacing.xxxl,
+        marginBottom: spacing.xxl,
+      },
+      title: {
+        ...typography.styles.largeTitle,
+        color: colors.text,
+        marginTop: spacing.md,
+        marginBottom: spacing.sm,
+      },
+      subtitle: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+        textAlign: "center" as const,
+      },
+      featuresSection: {
+        marginBottom: spacing.xxl,
+      },
+      featureItem: {
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+        paddingVertical: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      },
+      featureIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: borderRadius.full,
+        backgroundColor: `${colors.primary}15`,
+        justifyContent: "center" as const,
+        alignItems: "center" as const,
+        marginRight: spacing.md,
+      },
+      featureText: {
+        flex: 1,
+      },
+      featureTitle: {
+        ...typography.styles.body,
+        fontWeight: "600" as const,
+        color: colors.text,
+        marginBottom: spacing.xs,
+      },
+      featureDescription: {
+        ...typography.styles.caption1,
+        color: colors.textSecondary,
+      },
+      plansSection: {
+        marginBottom: spacing.xl,
+      },
+      plansTitle: {
+        ...typography.styles.headline,
+        color: colors.text,
+        marginBottom: spacing.md,
+        textAlign: "center" as const,
+      },
+      noPackagesText: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+        textAlign: "center" as const,
+      },
+      planButton: {
+        marginBottom: spacing.md,
+        borderRadius: borderRadius.md,
+      },
+      planButtonSelected: {
+        borderColor: colors.primary,
+        borderWidth: 2,
+      },
+      planButtonContent: {
+        height: 72,
+        justifyContent: "center" as const,
+      },
+      planInfo: {
+        alignItems: "center" as const,
+      },
+      planTitle: {
+        ...typography.styles.body,
+        fontWeight: "600" as const,
+        color: colors.text,
+      },
+      planTitleSelected: {
+        color: colors.textOnPrimary,
+      },
+      planPrice: {
+        ...typography.styles.caption1,
+        color: colors.textSecondary,
+        marginTop: spacing.xs,
+      },
+      planPriceSelected: {
+        color: "rgba(255,255,255,0.8)",
+      },
+      planSavings: {
+        ...typography.styles.caption1,
+        color: colors.success,
+        fontWeight: "600" as const,
+        marginTop: spacing.xs,
+      },
+      purchaseButton: {
+        borderRadius: borderRadius.md,
+        marginBottom: spacing.md,
+      },
+      purchaseButtonContent: {
+        height: 52,
+      },
+      restoreButton: {
+        marginBottom: spacing.xl,
+      },
+      termsText: {
+        ...typography.styles.caption2,
+        color: colors.textTertiary,
+        textAlign: "center" as const,
+        lineHeight: 18,
+      },
+    }),
+    [colors, spacing, borderRadius, typography]
+  );
+
   // Already premium - show success state
   if (isPremium) {
     return (
       <Screen style={styles.container}>
-        <View style={styles.successContainer}>
+        <Animated.View entering={FadeIn.duration(400)} style={styles.successContainer}>
           <MaterialCommunityIcons
             name="crown"
             size={80}
@@ -114,7 +284,7 @@ export default function SubscriptionScreen() {
           >
             Done
           </Button>
-        </View>
+        </Animated.View>
       </Screen>
     );
   }
@@ -147,7 +317,7 @@ export default function SubscriptionScreen() {
         />
 
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
           <MaterialCommunityIcons
             name="crown"
             size={60}
@@ -157,14 +327,18 @@ export default function SubscriptionScreen() {
           <Text style={styles.subtitle}>
             Unlock all features and cook without limits
           </Text>
-        </View>
+        </Animated.View>
 
         {/* Features list */}
         <View style={styles.featuresSection}>
-          {PAYWALL_FEATURES.map((featureKey) => {
+          {PAYWALL_FEATURES.map((featureKey, index) => {
             const feature = PREMIUM_FEATURES[featureKey];
             return (
-              <View key={featureKey} style={styles.featureItem}>
+              <Animated.View
+                key={featureKey}
+                entering={FadeInDown.delay(index * 50).duration(300)}
+                style={styles.featureItem}
+              >
                 <View style={styles.featureIcon}>
                   <MaterialCommunityIcons
                     name={feature.icon as keyof typeof MaterialCommunityIcons.glyphMap}
@@ -183,7 +357,7 @@ export default function SubscriptionScreen() {
                   size={20}
                   color={colors.success}
                 />
-              </View>
+              </Animated.View>
             );
           })}
         </View>
@@ -272,172 +446,3 @@ export default function SubscriptionScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  closeButton: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    zIndex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-  successContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-  },
-  successTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: colors.text,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  successText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  doneButton: {
-    paddingHorizontal: 32,
-  },
-  header: {
-    alignItems: "center",
-    marginTop: 40,
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: colors.text,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: "center",
-  },
-  featuresSection: {
-    marginBottom: 32,
-  },
-  featureItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  featureIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  featureText: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: 2,
-  },
-  featureDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  plansSection: {
-    marginBottom: 24,
-  },
-  plansTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  noPackagesText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: "center",
-  },
-  planButton: {
-    marginBottom: 12,
-    borderRadius: 12,
-  },
-  planButtonSelected: {
-    borderColor: colors.primary,
-    borderWidth: 2,
-  },
-  planButtonContent: {
-    height: 72,
-    justifyContent: "center",
-  },
-  planInfo: {
-    alignItems: "center",
-  },
-  planTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  planTitleSelected: {
-    color: "#fff",
-  },
-  planPrice: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  planPriceSelected: {
-    color: "rgba(255,255,255,0.8)",
-  },
-  planSavings: {
-    fontSize: 12,
-    color: colors.success,
-    fontWeight: "600",
-    marginTop: 4,
-  },
-  purchaseButton: {
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  purchaseButtonContent: {
-    height: 52,
-  },
-  restoreButton: {
-    marginBottom: 24,
-  },
-  termsText: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    textAlign: "center",
-    lineHeight: 18,
-  },
-});

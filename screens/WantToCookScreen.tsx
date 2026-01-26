@@ -1,10 +1,9 @@
 // screens/WantToCookScreen.tsx
 // Home screen showing the "Want to Cook" recipe queue
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
-  StyleSheet,
   FlatList,
   RefreshControl,
   Alert,
@@ -14,10 +13,11 @@ import { Text, Button, FAB } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { Screen } from "../components/Screen";
 import { RecipeQueueCard } from "../components/RecipeQueueCard";
-import { colors } from "../theme/colors";
+import { useTheme } from "../theme";
 import { Recipe } from "../models/Recipe";
 import {
   fetchRecipesByStatus,
@@ -37,10 +37,83 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 export const WantToCookScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { theme, isDark } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
 
   const [recipes, setRecipes] = useState<RecipeWithIngredients[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Dynamic styles based on theme
+  const dynamicStyles = useMemo(() => ({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+    },
+    loadingText: {
+      marginTop: spacing.lg,
+      color: colors.textSecondary,
+      ...typography.styles.body,
+    },
+    listContent: {
+      paddingTop: spacing.sm,
+      paddingBottom: 140,
+    },
+    emptyList: {
+      flex: 1,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+      padding: spacing.xxxl,
+    },
+    emptyTitle: {
+      ...typography.styles.title2,
+      color: colors.text,
+      marginTop: spacing.lg,
+      marginBottom: spacing.sm,
+    },
+    emptySubtitle: {
+      ...typography.styles.body,
+      color: colors.textSecondary,
+      textAlign: "center" as const,
+      marginBottom: spacing.xl,
+      lineHeight: 22,
+    },
+    emptyButton: {
+      paddingHorizontal: spacing.lg,
+    },
+    bottomButtonContainer: {
+      position: "absolute" as const,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: spacing.lg,
+      backgroundColor: isDark
+        ? 'rgba(26, 26, 26, 0.95)'
+        : 'rgba(253, 246, 240, 0.95)',
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    groceryButton: {
+      borderRadius: borderRadius.md,
+    },
+    groceryButtonContent: {
+      paddingVertical: spacing.sm,
+    },
+    fab: {
+      position: "absolute" as const,
+      right: spacing.lg,
+      bottom: 90,
+      backgroundColor: colors.primary,
+    },
+  }), [colors, spacing, borderRadius, typography, isDark]);
 
   // Load recipes with status = 'want_to_cook'
   const loadRecipes = useCallback(async () => {
@@ -84,7 +157,6 @@ export const WantToCookScreen: React.FC = () => {
           try {
             await markAsCooked(recipe.id);
             setRecipes((prev) => prev.filter((r) => r.id !== recipe.id));
-            // TODO: Show celebration animation
           } catch (error) {
             Alert.alert("Error", "Failed to update recipe");
           }
@@ -143,58 +215,63 @@ export const WantToCookScreen: React.FC = () => {
   }, [recipes, navigation]);
 
   // Render empty state
-  const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
+  const renderEmptyState = useCallback(() => (
+    <Animated.View entering={FadeIn.duration(400)} style={dynamicStyles.emptyContainer}>
       <MaterialCommunityIcons
         name="chef-hat"
         size={80}
         color={colors.textTertiary}
       />
-      <Text style={styles.emptyTitle}>No recipes yet</Text>
-      <Text style={styles.emptySubtitle}>
+      <Text style={dynamicStyles.emptyTitle}>No recipes yet</Text>
+      <Text style={dynamicStyles.emptySubtitle}>
         Import a recipe from TikTok, YouTube, or your favorite blog
       </Text>
       <Button
         mode="contained"
         onPress={handleAddRecipe}
-        style={styles.emptyButton}
+        style={dynamicStyles.emptyButton}
         icon="plus"
       >
         Add Your First Recipe
       </Button>
-    </View>
-  );
+    </Animated.View>
+  ), [dynamicStyles, colors.textTertiary, handleAddRecipe]);
+
+  // Render list item with animation
+  const renderItem = useCallback(({ item, index }: { item: RecipeWithIngredients; index: number }) => (
+    <Animated.View entering={FadeInDown.delay(index * 80).duration(300)}>
+      <RecipeQueueCard
+        recipe={item}
+        onPress={handleRecipePress}
+        onMarkCooked={handleMarkCooked}
+        onArchive={handleArchive}
+        onDelete={handleDelete}
+      />
+    </Animated.View>
+  ), [handleRecipePress, handleMarkCooked, handleArchive, handleDelete]);
 
   // Render loading state
   if (isLoading) {
     return (
-      <Screen style={styles.container}>
-        <View style={styles.loadingContainer}>
+      <Screen style={dynamicStyles.container}>
+        <View style={dynamicStyles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading recipes...</Text>
+          <Text style={dynamicStyles.loadingText}>Loading recipes...</Text>
         </View>
       </Screen>
     );
   }
 
   return (
-    <Screen style={styles.container}>
+    <Screen style={dynamicStyles.container}>
       {/* Recipe List */}
       <FlatList
         data={recipes}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <RecipeQueueCard
-            recipe={item}
-            onPress={handleRecipePress}
-            onMarkCooked={handleMarkCooked}
-            onArchive={handleArchive}
-            onDelete={handleDelete}
-          />
-        )}
+        renderItem={renderItem}
         contentContainerStyle={[
-          styles.listContent,
-          recipes.length === 0 && styles.emptyList,
+          dynamicStyles.listContent,
+          recipes.length === 0 && dynamicStyles.emptyList,
         ]}
         refreshControl={
           <RefreshControl
@@ -210,100 +287,31 @@ export const WantToCookScreen: React.FC = () => {
 
       {/* Generate Grocery List Button */}
       {recipes.length > 0 && (
-        <View style={styles.bottomButtonContainer}>
+        <Animated.View entering={FadeInDown.delay(200).duration(300)} style={dynamicStyles.bottomButtonContainer}>
           <Button
             mode="contained"
             onPress={handleGenerateGroceryList}
-            style={styles.groceryButton}
-            contentStyle={styles.groceryButtonContent}
+            style={dynamicStyles.groceryButton}
+            contentStyle={dynamicStyles.groceryButtonContent}
             icon="cart"
           >
             Generate Grocery List ({recipes.length} recipe
             {recipes.length !== 1 ? "s" : ""})
           </Button>
-        </View>
+        </Animated.View>
       )}
 
       {/* FAB for adding recipes */}
       {recipes.length > 0 && (
         <FAB
           icon="plus"
-          style={styles.fab}
+          style={dynamicStyles.fab}
           onPress={handleAddRecipe}
-          color={colors.white}
+          color={colors.textOnPrimary}
         />
       )}
     </Screen>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-  listContent: {
-    paddingTop: 8,
-    paddingBottom: 140, // Space for bottom button + FAB
-  },
-  emptyList: {
-    flex: 1,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: colors.text,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 22,
-  },
-  emptyButton: {
-    paddingHorizontal: 16,
-  },
-  bottomButtonContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: "rgba(253, 246, 240, 0.95)",
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  groceryButton: {
-    borderRadius: 8,
-  },
-  groceryButtonContent: {
-    paddingVertical: 8,
-  },
-  fab: {
-    position: "absolute",
-    right: 16,
-    bottom: 90, // Above the grocery button
-    backgroundColor: colors.primary,
-  },
-});
 
 export default WantToCookScreen;

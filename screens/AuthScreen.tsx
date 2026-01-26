@@ -1,3 +1,9 @@
+/**
+ * AuthScreen
+ *
+ * Sign in and sign up screen with modernized UI using the theme system.
+ */
+
 import React, { useState, useCallback } from 'react';
 import {
   View,
@@ -14,11 +20,19 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSignIn, useSignUp } from '@clerk/clerk-expo';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+} from 'react-native-reanimated';
 import { Screen } from '../components/Screen';
+import { useTheme } from '../theme';
 
 export const AuthScreen = ({ navigation }: any) => {
   const { signIn, setActive: setSignInActive, isLoaded: signInLoaded } = useSignIn();
   const { signUp, setActive: setSignUpActive, isLoaded: signUpLoaded } = useSignUp();
+  const { theme } = useTheme();
+  const { colors, spacing, borderRadius } = theme;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -122,7 +136,7 @@ export const AuthScreen = ({ navigation }: any) => {
   // Verification code screen
   if (pendingVerification) {
     return (
-      <Screen noPadding>
+      <Screen noPadding style={{ backgroundColor: colors.background }}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <KeyboardAvoidingView
             style={styles.container}
@@ -130,28 +144,65 @@ export const AuthScreen = ({ navigation }: any) => {
             keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
           >
             <View style={styles.innerContainer}>
-              <View style={styles.logoContainer}>
-                <Ionicons name="mail" size={60} color="#007AFF" />
-                <Text style={styles.title}>Verify Email</Text>
-                <Text style={styles.subtitle}>
+              <Animated.View
+                entering={FadeInDown.duration(400)}
+                style={styles.logoContainer}
+              >
+                <View
+                  style={[
+                    styles.iconContainer,
+                    {
+                      backgroundColor: colors.primaryLight,
+                      borderRadius: borderRadius.xl,
+                    },
+                  ]}
+                >
+                  <Ionicons name="mail" size={40} color={colors.primary} />
+                </View>
+                <Text style={[styles.title, { color: colors.text }]}>
+                  Verify Email
+                </Text>
+                <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                   Enter the code sent to {email}
                 </Text>
-              </View>
+              </Animated.View>
 
               {error ? (
-                <View style={styles.errorContainer}>
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
+                <Animated.View
+                  entering={FadeIn.duration(200)}
+                  style={[
+                    styles.errorContainer,
+                    { backgroundColor: colors.errorBackground },
+                  ]}
+                >
+                  <Text style={[styles.errorText, { color: colors.error }]}>
+                    {error}
+                  </Text>
+                </Animated.View>
               ) : null}
 
-              <View style={styles.formContainer}>
+              <Animated.View
+                entering={FadeInUp.delay(100).duration(400)}
+                style={styles.formContainer}
+              >
                 <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Verification Code</Text>
-                  <View style={styles.inputWrapper}>
+                  <Text style={[styles.label, { color: colors.text }]}>
+                    Verification Code
+                  </Text>
+                  <View
+                    style={[
+                      styles.inputWrapper,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.border,
+                        borderRadius: borderRadius.md,
+                      },
+                    ]}
+                  >
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="Enter 6-digit code"
-                      placeholderTextColor="#999"
+                      placeholderTextColor={colors.textTertiary}
                       value={code}
                       onChangeText={setCode}
                       keyboardType="number-pad"
@@ -164,14 +215,26 @@ export const AuthScreen = ({ navigation }: any) => {
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.button, isLoading && styles.buttonDisabled]}
+                  style={[
+                    styles.button,
+                    {
+                      backgroundColor: colors.primary,
+                      borderRadius: borderRadius.md,
+                    },
+                    isLoading && styles.buttonDisabled,
+                  ]}
                   onPress={handleSubmit}
                   disabled={isLoading}
+                  activeOpacity={0.8}
                 >
                   {isLoading ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color={colors.textOnPrimary} />
                   ) : (
-                    <Text style={styles.buttonText}>Verify</Text>
+                    <Text
+                      style={[styles.buttonText, { color: colors.textOnPrimary }]}
+                    >
+                      Verify
+                    </Text>
                   )}
                 </TouchableOpacity>
 
@@ -184,10 +247,12 @@ export const AuthScreen = ({ navigation }: any) => {
                     }}
                     disabled={isLoading}
                   >
-                    <Text style={styles.footerLink}>Back to Sign Up</Text>
+                    <Text style={[styles.footerLink, { color: colors.primary }]}>
+                      Back to Sign Up
+                    </Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </Animated.View>
             </View>
           </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
@@ -196,7 +261,7 @@ export const AuthScreen = ({ navigation }: any) => {
   }
 
   return (
-    <Screen noPadding>
+    <Screen noPadding style={{ backgroundColor: colors.background }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <KeyboardAvoidingView
           style={styles.container}
@@ -204,28 +269,63 @@ export const AuthScreen = ({ navigation }: any) => {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
         >
           <View style={styles.innerContainer}>
-            <View style={styles.logoContainer}>
-              <Ionicons name="restaurant" size={60} color="#007AFF" />
-              <Text style={styles.title}>{isSignUp ? 'Create Account' : 'Welcome Back'}</Text>
-              <Text style={styles.subtitle}>
+            <Animated.View
+              entering={FadeInDown.duration(400)}
+              style={styles.logoContainer}
+            >
+              <View
+                style={[
+                  styles.iconContainer,
+                  {
+                    backgroundColor: colors.primaryLight,
+                    borderRadius: borderRadius.xl,
+                  },
+                ]}
+              >
+                <Ionicons name="restaurant" size={40} color={colors.primary} />
+              </View>
+              <Text style={[styles.title, { color: colors.text }]}>
+                {isSignUp ? 'Create Account' : 'Welcome Back'}
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                 {isSignUp ? 'Sign up to get started' : 'Sign in to continue'}
               </Text>
-            </View>
+            </Animated.View>
 
             {error ? (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
+              <Animated.View
+                entering={FadeIn.duration(200)}
+                style={[
+                  styles.errorContainer,
+                  { backgroundColor: colors.errorBackground },
+                ]}
+              >
+                <Text style={[styles.errorText, { color: colors.error }]}>
+                  {error}
+                </Text>
+              </Animated.View>
             ) : null}
 
-            <View style={styles.formContainer}>
+            <Animated.View
+              entering={FadeInUp.delay(100).duration(400)}
+              style={styles.formContainer}
+            >
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
-                <View style={styles.inputWrapper}>
+                <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                      borderRadius: borderRadius.md,
+                    },
+                  ]}
+                >
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.text }]}
                     placeholder="Enter your email"
-                    placeholderTextColor="#999"
+                    placeholderTextColor={colors.textTertiary}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -237,12 +337,23 @@ export const AuthScreen = ({ navigation }: any) => {
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.inputWrapper}>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  Password
+                </Text>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                      borderRadius: borderRadius.md,
+                    },
+                  ]}
+                >
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.text }]}
                     placeholder="Enter your password"
-                    placeholderTextColor="#999"
+                    placeholderTextColor={colors.textTertiary}
                     secureTextEntry={!isPasswordVisible}
                     value={password}
                     onChangeText={setPassword}
@@ -257,7 +368,7 @@ export const AuthScreen = ({ navigation }: any) => {
                     <Ionicons
                       name={isPasswordVisible ? 'eye-off' : 'eye'}
                       size={20}
-                      color="#999"
+                      color={colors.textTertiary}
                     />
                   </TouchableOpacity>
                 </View>
@@ -266,30 +377,48 @@ export const AuthScreen = ({ navigation }: any) => {
               {!isSignUp && (
                 <TouchableOpacity
                   style={styles.forgotPassword}
-                  onPress={() => {/* TODO: Add forgot password with Clerk */}}
+                  onPress={() => {
+                    /* TODO: Add forgot password with Clerk */
+                  }}
                   disabled={isLoading}
                 >
-                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                  <Text
+                    style={[styles.forgotPasswordText, { color: colors.primary }]}
+                  >
+                    Forgot Password?
+                  </Text>
                 </TouchableOpacity>
               )}
 
               <TouchableOpacity
-                style={[styles.button, isLoading && styles.buttonDisabled]}
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: colors.primary,
+                    borderRadius: borderRadius.md,
+                  },
+                  isLoading && styles.buttonDisabled,
+                ]}
                 onPress={handleSubmit}
                 disabled={isLoading}
+                activeOpacity={0.8}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color={colors.textOnPrimary} />
                 ) : (
-                  <Text style={styles.buttonText}>
+                  <Text
+                    style={[styles.buttonText, { color: colors.textOnPrimary }]}
+                  >
                     {isSignUp ? 'Sign Up' : 'Sign In'}
                   </Text>
                 )}
               </TouchableOpacity>
 
               <View style={styles.footer}>
-                <Text style={styles.footerText}>
-                  {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+                <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+                  {isSignUp
+                    ? 'Already have an account? '
+                    : "Don't have an account? "}
                 </Text>
                 <TouchableOpacity
                   onPress={() => {
@@ -298,12 +427,12 @@ export const AuthScreen = ({ navigation }: any) => {
                   }}
                   disabled={isLoading}
                 >
-                  <Text style={styles.footerLink}>
+                  <Text style={[styles.footerLink, { color: colors.primary }]}>
                     {isSignUp ? 'Sign In' : 'Sign Up'}
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </Animated.View>
           </View>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
@@ -324,15 +453,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginTop: 16,
-    color: '#000',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
     marginTop: 8,
     textAlign: 'center',
   },
@@ -346,22 +479,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 8,
     fontWeight: '500',
-    color: '#333',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#fff',
   },
   input: {
     flex: 1,
     height: 50,
     fontSize: 16,
-    color: '#000',
   },
   visibilityBtn: {
     padding: 8,
@@ -369,17 +497,14 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 50,
-    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
-    backgroundColor: '#007AFF',
   },
   buttonDisabled: {
-    backgroundColor: '#A0C8FF',
+    opacity: 0.7,
   },
   buttonText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -389,7 +514,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   forgotPasswordText: {
-    color: '#007AFF',
     fontSize: 14,
   },
   footer: {
@@ -398,22 +522,18 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   footerText: {
-    color: '#666',
     fontSize: 14,
   },
   footerLink: {
-    color: '#007AFF',
     fontSize: 14,
     fontWeight: '600',
   },
   errorContainer: {
-    backgroundColor: '#FFEBEE',
     padding: 12,
     borderRadius: 8,
     marginBottom: 20,
   },
   errorText: {
-    color: '#D32F2F',
     fontSize: 14,
   },
 });

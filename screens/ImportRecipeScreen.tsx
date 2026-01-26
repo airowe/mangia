@@ -1,7 +1,6 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
-  StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -25,8 +24,9 @@ import * as Clipboard from "expo-clipboard";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
-import { colors } from "../theme/colors";
+import { useTheme } from "../theme";
 import {
   parseRecipeFromUrl,
   parseRecipeFromText,
@@ -60,6 +60,9 @@ type InputMode = "url" | "text";
 
 export const ImportRecipeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { theme } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
+
   const {
     importsUsed,
     importsRemaining,
@@ -287,6 +290,208 @@ export const ImportRecipeScreen: React.FC = () => {
     ]);
   }, []);
 
+  const styles = useMemo(
+    () => ({
+      container: {
+        flex: 1,
+        backgroundColor: colors.background,
+      },
+      scrollView: {
+        flex: 1,
+      },
+      content: {
+        padding: spacing.md,
+        paddingBottom: spacing.xxl,
+      },
+      limitBanner: {
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+        justifyContent: "space-between" as const,
+        backgroundColor: colors.primaryLight,
+        borderRadius: borderRadius.md,
+        padding: spacing.sm,
+        marginBottom: spacing.md,
+      },
+      limitBannerWarning: {
+        backgroundColor: `${colors.error}15`,
+      },
+      limitInfo: {
+        flex: 1,
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+        gap: 10,
+      },
+      limitTextContainer: {
+        flex: 1,
+      },
+      limitText: {
+        ...typography.styles.body,
+        color: colors.text,
+        marginBottom: spacing.xs,
+      },
+      limitTextWarning: {
+        color: colors.error,
+      },
+      progressBar: {
+        height: 4,
+        borderRadius: 2,
+      },
+      upgradeLink: {
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+        marginLeft: spacing.sm,
+      },
+      upgradeLinkText: {
+        ...typography.styles.body,
+        fontWeight: "600" as const,
+        color: colors.primary,
+      },
+      inputSection: {
+        marginBottom: spacing.md,
+      },
+      modeToggle: {
+        marginBottom: spacing.md,
+      },
+      label: {
+        ...typography.styles.body,
+        fontWeight: "600" as const,
+        marginBottom: spacing.sm,
+        color: colors.text,
+      },
+      urlInputContainer: {
+        marginBottom: spacing.sm,
+      },
+      urlInput: {
+        backgroundColor: colors.surface,
+      },
+      textInputContainer: {
+        marginBottom: spacing.sm,
+      },
+      textInput: {
+        backgroundColor: colors.surface,
+        minHeight: 120,
+      },
+      platformChip: {
+        flexDirection: "row" as const,
+        marginBottom: spacing.sm,
+      },
+      hint: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+        marginBottom: spacing.md,
+        textAlign: "center" as const,
+      },
+      error: {
+        color: colors.error,
+        marginBottom: spacing.md,
+        textAlign: "center" as const,
+      },
+      importButton: {
+        marginBottom: spacing.md,
+        paddingVertical: spacing.xs,
+      },
+      divider: {
+        marginVertical: spacing.md,
+      },
+      manualButton: {
+        borderColor: colors.primary,
+      },
+      loadingContainer: {
+        alignItems: "center" as const,
+        paddingVertical: spacing.xxl,
+      },
+      loadingText: {
+        marginTop: spacing.md,
+        color: colors.textSecondary,
+      },
+      previewSection: {
+        marginTop: spacing.sm,
+      },
+      recipeImage: {
+        width: "100%" as const,
+        height: 200,
+        borderRadius: borderRadius.md,
+        marginBottom: spacing.md,
+        backgroundColor: colors.surface,
+      },
+      titleInput: {
+        marginBottom: spacing.sm,
+        backgroundColor: colors.surface,
+      },
+      metadataRow: {
+        flexDirection: "row" as const,
+        flexWrap: "wrap" as const,
+        gap: spacing.sm,
+        marginBottom: spacing.md,
+      },
+      metaChip: {
+        backgroundColor: colors.surface,
+      },
+      ingredientsSection: {
+        marginBottom: spacing.md,
+      },
+      sectionHeader: {
+        flexDirection: "row" as const,
+        justifyContent: "space-between" as const,
+        alignItems: "center" as const,
+        marginBottom: spacing.sm,
+      },
+      sectionTitle: {
+        ...typography.styles.headline,
+        color: colors.text,
+      },
+      ingredientRow: {
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+        marginBottom: spacing.sm,
+        gap: spacing.xs,
+      },
+      qtyInput: {
+        width: 60,
+        backgroundColor: colors.surface,
+      },
+      unitInput: {
+        width: 70,
+        backgroundColor: colors.surface,
+      },
+      nameInput: {
+        flex: 1,
+        backgroundColor: colors.surface,
+      },
+      instructionsSection: {
+        marginBottom: spacing.xl,
+      },
+      instructionItem: {
+        paddingVertical: spacing.xs,
+      },
+      stepNumber: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: colors.primary,
+        justifyContent: "center" as const,
+        alignItems: "center" as const,
+        marginRight: spacing.sm,
+      },
+      stepNumberText: {
+        color: colors.textOnPrimary,
+        fontWeight: "600" as const,
+        fontSize: 12,
+      },
+      actionButtons: {
+        flexDirection: "row" as const,
+        gap: spacing.sm,
+      },
+      cancelButton: {
+        flex: 1,
+      },
+      saveButton: {
+        flex: 2,
+      },
+    }),
+    [colors, spacing, borderRadius, typography]
+  );
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -299,51 +504,53 @@ export const ImportRecipeScreen: React.FC = () => {
       >
         {/* Import Limit Banner (for free users) */}
         {!isPremium && !parsedRecipe && (
-          <TouchableOpacity
-            style={[
-              styles.limitBanner,
-              isLimitReached && styles.limitBannerWarning,
-            ]}
-            onPress={() => navigation.navigate("SubscriptionScreen")}
-          >
-            <View style={styles.limitInfo}>
-              <MaterialCommunityIcons
-                name={isLimitReached ? "alert-circle" : "information"}
-                size={20}
-                color={isLimitReached ? colors.error : colors.primary}
-              />
-              <View style={styles.limitTextContainer}>
-                <Text
-                  style={[
-                    styles.limitText,
-                    isLimitReached && styles.limitTextWarning,
-                  ]}
-                >
-                  {isLimitReached
-                    ? "Monthly limit reached"
-                    : `${importsRemaining} of ${monthlyLimit} free imports left`}
-                </Text>
-                <ProgressBar
-                  progress={importsUsed / monthlyLimit}
+          <Animated.View entering={FadeIn.duration(400)}>
+            <TouchableOpacity
+              style={[
+                styles.limitBanner,
+                isLimitReached && styles.limitBannerWarning,
+              ]}
+              onPress={() => navigation.navigate("SubscriptionScreen")}
+            >
+              <View style={styles.limitInfo}>
+                <MaterialCommunityIcons
+                  name={isLimitReached ? "alert-circle" : "information"}
+                  size={20}
                   color={isLimitReached ? colors.error : colors.primary}
-                  style={styles.progressBar}
+                />
+                <View style={styles.limitTextContainer}>
+                  <Text
+                    style={[
+                      styles.limitText,
+                      isLimitReached && styles.limitTextWarning,
+                    ]}
+                  >
+                    {isLimitReached
+                      ? "Monthly limit reached"
+                      : `${importsRemaining} of ${monthlyLimit} free imports left`}
+                  </Text>
+                  <ProgressBar
+                    progress={importsUsed / monthlyLimit}
+                    color={isLimitReached ? colors.error : colors.primary}
+                    style={styles.progressBar}
+                  />
+                </View>
+              </View>
+              <View style={styles.upgradeLink}>
+                <Text style={styles.upgradeLinkText}>Upgrade</Text>
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={16}
+                  color={colors.primary}
                 />
               </View>
-            </View>
-            <View style={styles.upgradeLink}>
-              <Text style={styles.upgradeLinkText}>Upgrade</Text>
-              <MaterialCommunityIcons
-                name="chevron-right"
-                size={16}
-                color={colors.primary}
-              />
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </Animated.View>
         )}
 
         {/* Input Mode Toggle & Section */}
         {!parsedRecipe && (
-          <View style={styles.inputSection}>
+          <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.inputSection}>
             {/* Mode Selector */}
             <SegmentedButtons
               value={inputMode}
@@ -472,7 +679,7 @@ export const ImportRecipeScreen: React.FC = () => {
             >
               Enter Recipe Manually
             </Button>
-          </View>
+          </Animated.View>
         )}
 
         {/* Loading State */}
@@ -487,7 +694,7 @@ export const ImportRecipeScreen: React.FC = () => {
 
         {/* Recipe Preview */}
         {parsedRecipe && !isLoading && (
-          <View style={styles.previewSection}>
+          <Animated.View entering={FadeIn.duration(400)} style={styles.previewSection}>
             <Text style={styles.sectionTitle}>Recipe Preview</Text>
 
             {/* Image */}
@@ -535,7 +742,11 @@ export const ImportRecipeScreen: React.FC = () => {
               </View>
 
               {editedIngredients.map((ingredient, index) => (
-                <View key={index} style={styles.ingredientRow}>
+                <Animated.View
+                  key={index}
+                  entering={FadeInDown.delay(index * 30).duration(300)}
+                  style={styles.ingredientRow}
+                >
                   <TextInput
                     mode="outlined"
                     value={ingredient.quantity}
@@ -566,7 +777,7 @@ export const ImportRecipeScreen: React.FC = () => {
                     size={18}
                     onPress={() => removeIngredient(index)}
                   />
-                </View>
+                </Animated.View>
               ))}
             </View>
 
@@ -614,211 +825,11 @@ export const ImportRecipeScreen: React.FC = () => {
                 Save to Queue
               </Button>
             </View>
-          </View>
+          </Animated.View>
         )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  limitBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: colors.primaryLight,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-  },
-  limitBannerWarning: {
-    backgroundColor: `${colors.error}15`,
-  },
-  limitInfo: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  limitTextContainer: {
-    flex: 1,
-  },
-  limitText: {
-    fontSize: 14,
-    color: colors.text,
-    marginBottom: 4,
-  },
-  limitTextWarning: {
-    color: colors.error,
-  },
-  progressBar: {
-    height: 4,
-    borderRadius: 2,
-  },
-  upgradeLink: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 8,
-  },
-  upgradeLinkText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.primary,
-  },
-  inputSection: {
-    marginBottom: 16,
-  },
-  modeToggle: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 8,
-    color: colors.text,
-  },
-  urlInputContainer: {
-    marginBottom: 8,
-  },
-  urlInput: {
-    backgroundColor: colors.surface,
-  },
-  textInputContainer: {
-    marginBottom: 8,
-  },
-  textInput: {
-    backgroundColor: colors.surface,
-    minHeight: 120,
-  },
-  platformChip: {
-    flexDirection: "row",
-    marginBottom: 8,
-  },
-  hint: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  error: {
-    color: colors.error,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  importButton: {
-    marginBottom: 16,
-    paddingVertical: 4,
-  },
-  divider: {
-    marginVertical: 16,
-  },
-  manualButton: {
-    borderColor: colors.primary,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    paddingVertical: 32,
-  },
-  loadingText: {
-    marginTop: 16,
-    color: colors.textSecondary,
-  },
-  previewSection: {
-    marginTop: 8,
-  },
-  recipeImage: {
-    width: "100%",
-    height: 200,
-    borderRadius: 12,
-    marginBottom: 16,
-    backgroundColor: colors.surface,
-  },
-  titleInput: {
-    marginBottom: 12,
-    backgroundColor: colors.surface,
-  },
-  metadataRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 16,
-  },
-  metaChip: {
-    backgroundColor: colors.surface,
-  },
-  ingredientsSection: {
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  ingredientRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-    gap: 4,
-  },
-  qtyInput: {
-    width: 60,
-    backgroundColor: colors.surface,
-  },
-  unitInput: {
-    width: 70,
-    backgroundColor: colors.surface,
-  },
-  nameInput: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  instructionsSection: {
-    marginBottom: 24,
-  },
-  instructionItem: {
-    paddingVertical: 4,
-  },
-  stepNumber: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 8,
-  },
-  stepNumberText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 12,
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-  },
-  saveButton: {
-    flex: 2,
-  },
-});
 
 export default ImportRecipeScreen;

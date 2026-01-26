@@ -20,6 +20,7 @@ import {
   getOfferings,
   purchasePackage,
   restorePurchases,
+  isRevenueCatConfigured,
   PREMIUM_ENTITLEMENT,
 } from "../lib/revenuecat";
 
@@ -84,6 +85,14 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         }
 
         setIsInitialized(true);
+
+        // Listen for customer info updates from RevenueCat (only if configured)
+        if (isRevenueCatConfigured()) {
+          Purchases.addCustomerInfoUpdateListener((info) => {
+            setCustomerInfo(info);
+            setIsPremium(hasPremiumEntitlement(info));
+          });
+        }
       } catch (error) {
         console.error("Failed to initialize subscriptions:", error);
       } finally {
@@ -92,12 +101,6 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     };
 
     initialize();
-
-    // Listen for customer info updates from RevenueCat
-    Purchases.addCustomerInfoUpdateListener((info) => {
-      setCustomerInfo(info);
-      setIsPremium(hasPremiumEntitlement(info));
-    });
 
     // Note: RevenueCat listener persists until app restart
     return () => {

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
@@ -17,7 +16,9 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { Button } from "react-native-paper";
-import { colors } from "../theme/colors";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+
+import { useTheme } from "../theme";
 import { Recipe } from "../models/Recipe";
 import {
   MealPlan,
@@ -46,6 +47,9 @@ type DayMeals = {
 
 const MealPlannerScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { theme } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
+
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [selectedDate, setSelectedDate] = useState(getToday());
   const [loading, setLoading] = useState(true);
@@ -149,7 +153,7 @@ const MealPlannerScreen: React.FC = () => {
       ...marks[selectedDate],
       selected: true,
       selectedColor: colors.primary,
-      selectedTextColor: "white",
+      selectedTextColor: colors.textOnPrimary,
     };
 
     return marks;
@@ -216,128 +220,312 @@ const MealPlannerScreen: React.FC = () => {
   const dayMeals = getDayMeals();
   const mealTypes: MealTypeKey[] = ["breakfast", "lunch", "dinner"];
 
-  const renderMealBlock = (mealType: MealTypeKey) => {
+  const styles = useMemo(
+    () => ({
+      container: {
+        flex: 1,
+        backgroundColor: colors.background,
+      },
+      content: {
+        flex: 1,
+        padding: spacing.md,
+      },
+      calendar: {
+        marginBottom: spacing.sm,
+      },
+      loadingContainer: {
+        flex: 1,
+        justifyContent: "center" as const,
+        alignItems: "center" as const,
+        backgroundColor: colors.background,
+      },
+      dateHeader: {
+        ...typography.styles.headline,
+        color: colors.text,
+        marginBottom: spacing.md,
+      },
+      mealBlocksContainer: {
+        paddingBottom: spacing.md,
+      },
+      groceryButton: {
+        marginBottom: spacing.xl,
+        marginTop: spacing.sm,
+      },
+      mealBlock: {
+        backgroundColor: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginBottom: spacing.sm,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+      },
+      mealHeader: {
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+        marginBottom: spacing.sm,
+        gap: spacing.sm,
+      },
+      mealType: {
+        ...typography.styles.body,
+        fontWeight: "600" as const,
+        color: colors.primary,
+      },
+      mealContent: {
+        flexDirection: "row" as const,
+        alignItems: "center" as const,
+      },
+      mealImage: {
+        width: 60,
+        height: 60,
+        borderRadius: borderRadius.sm,
+        marginRight: spacing.sm,
+      },
+      mealInfo: {
+        flex: 1,
+      },
+      mealName: {
+        ...typography.styles.body,
+        color: colors.text,
+        marginBottom: spacing.xs,
+      },
+      mealMeta: {
+        ...typography.styles.caption2,
+        color: colors.textSecondary,
+      },
+      removeIcon: {
+        padding: spacing.xs,
+      },
+      emptyMeal: {
+        alignItems: "center" as const,
+        padding: spacing.md,
+      },
+      addMealText: {
+        color: colors.primary,
+        ...typography.styles.body,
+        marginTop: spacing.sm,
+      },
+      // Modal styles
+      modalContainer: {
+        flex: 1,
+        backgroundColor: colors.background,
+      },
+      modalHeader: {
+        flexDirection: "row" as const,
+        justifyContent: "space-between" as const,
+        alignItems: "center" as const,
+        padding: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      },
+      modalTitle: {
+        ...typography.styles.title2,
+        color: colors.text,
+      },
+      closeButton: {
+        padding: spacing.xs,
+      },
+      recipeList: {
+        padding: spacing.md,
+      },
+      recipeItem: {
+        flexDirection: "row" as const,
+        backgroundColor: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.sm,
+        marginBottom: spacing.sm,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+      },
+      recipeImage: {
+        width: 70,
+        height: 70,
+        borderRadius: borderRadius.sm,
+        marginRight: spacing.sm,
+      },
+      recipePlaceholder: {
+        backgroundColor: colors.surface,
+        justifyContent: "center" as const,
+        alignItems: "center" as const,
+      },
+      recipeInfo: {
+        flex: 1,
+        justifyContent: "center" as const,
+      },
+      recipeTitle: {
+        ...typography.styles.body,
+        fontWeight: "500" as const,
+        color: colors.text,
+        marginBottom: spacing.xs,
+      },
+      recipeMeta: {
+        flexDirection: "row" as const,
+        gap: spacing.sm,
+      },
+      recipeMetaText: {
+        ...typography.styles.caption2,
+        color: colors.textSecondary,
+      },
+      emptyRecipes: {
+        flex: 1,
+        justifyContent: "center" as const,
+        alignItems: "center" as const,
+        padding: spacing.xxl,
+      },
+      emptyRecipesText: {
+        ...typography.styles.body,
+        color: colors.textSecondary,
+        textAlign: "center" as const,
+        marginTop: spacing.md,
+      },
+      savingOverlay: {
+        position: "absolute" as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(255, 255, 255, 0.8)",
+        justifyContent: "center" as const,
+        alignItems: "center" as const,
+      },
+    }),
+    [colors, spacing, borderRadius, typography]
+  );
+
+  const renderMealBlock = (mealType: MealTypeKey, index: number) => {
     const meal = dayMeals[mealType];
     const recipe = meal?.recipe as Recipe | undefined;
 
     return (
-      <TouchableOpacity
-        style={styles.mealBlock}
-        onPress={() => {
-          if (meal) {
-            removeMeal(meal);
-          } else {
-            setSelectedMealType(mealType);
-            setShowRecipePicker(true);
-          }
-        }}
+      <Animated.View
+        key={mealType}
+        entering={FadeInDown.delay(index * 100).duration(300)}
       >
-        <View style={styles.mealHeader}>
-          <MaterialCommunityIcons
-            name={
-              mealType === "breakfast"
-                ? "coffee"
-                : mealType === "lunch"
-                  ? "food"
-                  : "silverware-fork-knife"
+        <TouchableOpacity
+          style={styles.mealBlock}
+          onPress={() => {
+            if (meal) {
+              removeMeal(meal);
+            } else {
+              setSelectedMealType(mealType);
+              setShowRecipePicker(true);
             }
-            size={20}
-            color={colors.primary}
-          />
-          <Text style={styles.mealType}>
-            {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
-          </Text>
-        </View>
-
-        {meal ? (
-          <View style={styles.mealContent}>
-            {recipe?.image_url && (
-              <Image
-                source={{ uri: recipe.image_url }}
-                style={styles.mealImage}
-              />
-            )}
-            <View style={styles.mealInfo}>
-              <Text style={styles.mealName} numberOfLines={2}>
-                {meal.title || recipe?.title}
-              </Text>
-              {recipe?.cook_time && (
-                <Text style={styles.mealMeta}>
-                  <MaterialCommunityIcons
-                    name="clock-outline"
-                    size={12}
-                    color={colors.textSecondary}
-                  />{" "}
-                  {recipe.cook_time} min
-                </Text>
-              )}
-            </View>
+          }}
+        >
+          <View style={styles.mealHeader}>
             <MaterialCommunityIcons
-              name="close-circle"
+              name={
+                mealType === "breakfast"
+                  ? "coffee"
+                  : mealType === "lunch"
+                    ? "food"
+                    : "silverware-fork-knife"
+              }
               size={20}
-              color={colors.error}
-              style={styles.removeIcon}
-            />
-          </View>
-        ) : (
-          <View style={styles.emptyMeal}>
-            <MaterialCommunityIcons
-              name="plus-circle-outline"
-              size={32}
               color={colors.primary}
             />
-            <Text style={styles.addMealText}>Add {mealType}</Text>
+            <Text style={styles.mealType}>
+              {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
+            </Text>
           </View>
-        )}
-      </TouchableOpacity>
+
+          {meal ? (
+            <View style={styles.mealContent}>
+              {recipe?.image_url && (
+                <Image
+                  source={{ uri: recipe.image_url }}
+                  style={styles.mealImage}
+                />
+              )}
+              <View style={styles.mealInfo}>
+                <Text style={styles.mealName} numberOfLines={2}>
+                  {meal.title || recipe?.title}
+                </Text>
+                {recipe?.cook_time && (
+                  <Text style={styles.mealMeta}>
+                    <MaterialCommunityIcons
+                      name="clock-outline"
+                      size={12}
+                      color={colors.textSecondary}
+                    />{" "}
+                    {recipe.cook_time} min
+                  </Text>
+                )}
+              </View>
+              <MaterialCommunityIcons
+                name="close-circle"
+                size={20}
+                color={colors.error}
+                style={styles.removeIcon}
+              />
+            </View>
+          ) : (
+            <View style={styles.emptyMeal}>
+              <MaterialCommunityIcons
+                name="plus-circle-outline"
+                size={32}
+                color={colors.primary}
+              />
+              <Text style={styles.addMealText}>Add {mealType}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </Animated.View>
     );
   };
 
-  const renderRecipeItem = ({ item }: { item: Recipe }) => (
-    <TouchableOpacity
-      style={styles.recipeItem}
-      onPress={() => handleAddMealToPlan(item)}
-      disabled={saving}
-    >
-      {item.image_url ? (
-        <Image source={{ uri: item.image_url }} style={styles.recipeImage} />
-      ) : (
-        <View style={[styles.recipeImage, styles.recipePlaceholder]}>
-          <MaterialCommunityIcons
-            name="food"
-            size={24}
-            color={colors.textSecondary}
-          />
+  const renderRecipeItem = ({ item, index }: { item: Recipe; index: number }) => (
+    <Animated.View entering={FadeInDown.delay(index * 50).duration(300)}>
+      <TouchableOpacity
+        style={styles.recipeItem}
+        onPress={() => handleAddMealToPlan(item)}
+        disabled={saving}
+      >
+        {item.image_url ? (
+          <Image source={{ uri: item.image_url }} style={styles.recipeImage} />
+        ) : (
+          <View style={[styles.recipeImage, styles.recipePlaceholder]}>
+            <MaterialCommunityIcons
+              name="food"
+              size={24}
+              color={colors.textSecondary}
+            />
+          </View>
+        )}
+        <View style={styles.recipeInfo}>
+          <Text style={styles.recipeTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <View style={styles.recipeMeta}>
+            {item.cook_time && (
+              <Text style={styles.recipeMetaText}>
+                <MaterialCommunityIcons
+                  name="clock-outline"
+                  size={12}
+                  color={colors.textSecondary}
+                />{" "}
+                {item.cook_time} min
+              </Text>
+            )}
+            {item.servings && (
+              <Text style={styles.recipeMetaText}>
+                <MaterialCommunityIcons
+                  name="account-group"
+                  size={12}
+                  color={colors.textSecondary}
+                />{" "}
+                {item.servings}
+              </Text>
+            )}
+          </View>
         </View>
-      )}
-      <View style={styles.recipeInfo}>
-        <Text style={styles.recipeTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <View style={styles.recipeMeta}>
-          {item.cook_time && (
-            <Text style={styles.recipeMetaText}>
-              <MaterialCommunityIcons
-                name="clock-outline"
-                size={12}
-                color={colors.textSecondary}
-              />{" "}
-              {item.cook_time} min
-            </Text>
-          )}
-          {item.servings && (
-            <Text style={styles.recipeMetaText}>
-              <MaterialCommunityIcons
-                name="account-group"
-                size={12}
-                color={colors.textSecondary}
-              />{" "}
-              {item.servings}
-            </Text>
-          )}
-        </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 
   if (loading) {
@@ -376,30 +564,32 @@ const MealPlannerScreen: React.FC = () => {
       />
 
       <ScrollView style={styles.content}>
-        <Text style={styles.dateHeader}>
-          {new Date(selectedDate).toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}
-        </Text>
+        <Animated.View entering={FadeIn.duration(400)}>
+          <Text style={styles.dateHeader}>
+            {new Date(selectedDate).toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })}
+          </Text>
+        </Animated.View>
 
         <View style={styles.mealBlocksContainer}>
-          {mealTypes.map((mealType) => (
-            <View key={mealType}>{renderMealBlock(mealType)}</View>
-          ))}
+          {mealTypes.map((mealType, index) => renderMealBlock(mealType, index))}
         </View>
 
         {/* Generate Grocery List Button */}
         {weekRecipeIds.length > 0 && (
-          <Button
-            mode="contained"
-            onPress={handleGenerateGroceryList}
-            style={styles.groceryButton}
-            icon="cart"
-          >
-            Generate Grocery List ({weekRecipeIds.length} recipes)
-          </Button>
+          <Animated.View entering={FadeIn.delay(300).duration(400)}>
+            <Button
+              mode="contained"
+              onPress={handleGenerateGroceryList}
+              style={styles.groceryButton}
+              icon="cart"
+            >
+              Generate Grocery List ({weekRecipeIds.length} recipes)
+            </Button>
+          </Animated.View>
         )}
       </ScrollView>
 
@@ -437,7 +627,7 @@ const MealPlannerScreen: React.FC = () => {
           </View>
 
           {recipes.length === 0 ? (
-            <View style={styles.emptyRecipes}>
+            <Animated.View entering={FadeIn.duration(400)} style={styles.emptyRecipes}>
               <MaterialCommunityIcons
                 name="book-open-variant"
                 size={48}
@@ -446,7 +636,7 @@ const MealPlannerScreen: React.FC = () => {
               <Text style={styles.emptyRecipesText}>
                 No recipes yet. Import some recipes to start meal planning!
               </Text>
-            </View>
+            </Animated.View>
           ) : (
             <FlatList
               data={recipes}
@@ -466,177 +656,5 @@ const MealPlannerScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  calendar: {
-    marginBottom: 8,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.background,
-  },
-  dateHeader: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: 16,
-  },
-  mealBlocksContainer: {
-    paddingBottom: 16,
-  },
-  groceryButton: {
-    marginBottom: 24,
-    marginTop: 8,
-  },
-  mealBlock: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  mealHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-    gap: 8,
-  },
-  mealType: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.primary,
-  },
-  mealContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  mealImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  mealInfo: {
-    flex: 1,
-  },
-  mealName: {
-    fontSize: 16,
-    color: colors.text,
-    marginBottom: 4,
-  },
-  mealMeta: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  removeIcon: {
-    padding: 4,
-  },
-  emptyMeal: {
-    alignItems: "center",
-    padding: 16,
-  },
-  addMealText: {
-    color: colors.primary,
-    fontSize: 14,
-    marginTop: 8,
-  },
-  // Modal styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  closeButton: {
-    padding: 4,
-  },
-  recipeList: {
-    padding: 16,
-  },
-  recipeItem: {
-    flexDirection: "row",
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  recipeImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  recipePlaceholder: {
-    backgroundColor: colors.surface,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  recipeInfo: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  recipeTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: colors.text,
-    marginBottom: 4,
-  },
-  recipeMeta: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  recipeMetaText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  emptyRecipes: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-  },
-  emptyRecipesText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginTop: 16,
-  },
-  savingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
 
 export default MealPlannerScreen;
