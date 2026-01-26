@@ -248,6 +248,18 @@ export const lightColors: SemanticColors = {
   cookingTextSecondary: 'rgba(251, 249, 245, 0.7)',
 };
 
+// Convenience export for direct color access (for components that need raw hex values)
+export const mangiaColors = {
+  terracotta: editorialPalette.terracotta[400],  // #D97742
+  sage: editorialPalette.sage[300],  // #A8BCA0
+  cream: editorialPalette.cream[100],  // #FBF9F5
+  creamDark: editorialPalette.cream[200],  // #F5E3C1
+  dark: editorialPalette.editorialDark[600],  // #3A322C
+  brown: editorialPalette.editorialDark[400],  // #7A716A
+  deepBrown: '#2A1F18',
+  taupe: editorialPalette.editorialDark[300],  // #A9A29A
+} as const;
+
 export const darkColors: SemanticColors = {
   // Brand - Lighter terracotta for visibility on dark
   primary: editorialPalette.terracotta[300],  // #E8B799
