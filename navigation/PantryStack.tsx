@@ -1,6 +1,12 @@
+/**
+ * PantryStack
+ *
+ * Navigation stack for the Pantry tab.
+ * Editorial design: screens handle their own headers internally.
+ */
+
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { CustomHeader } from "../components/CustomHeader";
 import PantryScreen from "../screens/PantryScreen";
 import WhatCanIMakeScreen from "../screens/WhatCanIMakeScreen";
 import RecipeDetailScreen from "../screens/RecipeDetailScreen";
@@ -21,16 +27,7 @@ export default function PantryStack() {
     <Stack.Navigator
       initialRouteName="PantryMain"
       screenOptions={{
-        header: ({ route, options }) => {
-          const showBackButton = route.name !== "PantryMain";
-          return (
-            <CustomHeader
-              showBackButton={showBackButton}
-              title={options.title as string}
-            />
-          );
-        },
-        headerShown: true,
+        headerShown: false, // Editorial design: screens handle their own headers
       }}
     >
       <Stack.Screen

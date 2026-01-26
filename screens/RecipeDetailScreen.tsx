@@ -1,34 +1,39 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+/**
+ * RecipeDetailScreen
+ *
+ * Editorial recipe detail screen with hero image, metadata pills,
+ * ingredient checkboxes, and prominent "Start Cooking" CTA.
+ *
+ * Reference: /ui-redesign/screens/recipe_detail.html
+ */
+
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
-  Image,
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
-  Share,
-  Linking,
   Alert,
+  Linking,
   FlatList,
+  StyleSheet,
   Dimensions,
-} from "react-native";
+} from 'react-native';
 import {
   useRoute,
   useNavigation,
   type RouteProp,
-} from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Button, Portal, Modal, RadioButton } from "react-native-paper";
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Screen } from "../components/Screen";
-import { useTheme } from "../theme";
+} from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Button, Portal, Modal, RadioButton } from 'react-native-paper';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Screen } from '../components/Screen';
+import { mangiaColors } from '../theme/tokens/colors';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const HERO_HEIGHT = 320;
-import { Recipe, RecipeSourceType, RecipeNote } from "../models/Recipe";
-import { RecipeRatingNotes } from "../components/RecipeRatingNotes";
+import { Recipe, RecipeSourceType, RecipeIngredient } from '../models/Recipe';
+import { RecipeRatingNotes } from '../components/RecipeRatingNotes';
 import {
   fetchRecipeById,
   markAsCooked,
@@ -36,20 +41,31 @@ import {
   deleteRecipe,
   restoreRecipe,
   RecipeWithIngredients,
-} from "../lib/recipeService";
-import { ServingAdjuster } from "../components/ServingAdjuster";
-import { getScaledIngredientDisplay } from "../utils/recipeScaling";
-import { CollectionWithCount } from "../models/Collection";
+} from '../lib/recipeService';
+import { ServingAdjuster } from '../components/ServingAdjuster';
+import { getScaledIngredientDisplay } from '../utils/recipeScaling';
+import { CollectionWithCount } from '../models/Collection';
 import {
   fetchCollections,
   addRecipeToCollection,
   getCollectionsForRecipe,
-} from "../lib/collectionService";
-import { shareRecipe, shareIngredients } from "../lib/recipeSharing";
+} from '../lib/collectionService';
+import { shareRecipe, shareIngredients } from '../lib/recipeSharing';
+
+// Recipe components
+import {
+  RecipeHero,
+  MetadataPills,
+  IngredientList,
+  InstructionsPreview,
+  StartCookingButton,
+} from '../components/recipe';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 type RecipeDetailScreenRouteProp = RouteProp<
   { params: { recipeId: string } },
-  "params"
+  'params'
 >;
 
 type RootStackParamList = {
@@ -64,24 +80,6 @@ export default function RecipeDetailScreen() {
   const route = useRoute<RecipeDetailScreenRouteProp>();
   const navigation = useNavigation<NavigationProp>();
   const { recipeId } = route.params;
-  const { theme, isDark } = useTheme();
-  const { colors, spacing, borderRadius, typography } = theme;
-
-  // Platform icons and colors - using dynamic primary color
-  const PLATFORM_CONFIG: Record<
-    RecipeSourceType,
-    {
-      icon: keyof typeof MaterialCommunityIcons.glyphMap;
-      color: string;
-      label: string;
-    }
-  > = useMemo(() => ({
-    tiktok: { icon: "music-note", color: isDark ? "#FFFFFF" : "#000000", label: "TikTok" },
-    youtube: { icon: "youtube", color: "#FF0000", label: "YouTube" },
-    instagram: { icon: "instagram", color: "#E4405F", label: "Instagram" },
-    blog: { icon: "web", color: "#4CAF50", label: "Blog" },
-    manual: { icon: "pencil", color: colors.primary, label: "Manual" },
-  }), [colors.primary, isDark]);
 
   const [recipe, setRecipe] = useState<RecipeWithIngredients | null>(null);
   const [loading, setLoading] = useState(true);
@@ -93,6 +91,7 @@ export default function RecipeDetailScreen() {
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
   const [recipeCollections, setRecipeCollections] = useState<string[]>([]);
   const [isAddingToCollection, setIsAddingToCollection] = useState(false);
+  const [moreMenuVisible, setMoreMenuVisible] = useState(false);
 
   const loadRecipe = useCallback(async () => {
     try {
@@ -101,8 +100,8 @@ export default function RecipeDetailScreen() {
       const data = await fetchRecipeById(recipeId);
       setRecipe(data);
     } catch (err) {
-      console.error("Failed to load recipe:", err);
-      setError("Failed to load recipe. Please try again.");
+      console.error('Failed to load recipe:', err);
+      setError('Failed to load recipe. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -127,32 +126,40 @@ export default function RecipeDetailScreen() {
     return currentServings / recipe.servings;
   }, [recipe?.servings, currentServings]);
 
+  const handleBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
   const handleShare = async () => {
     if (!recipe) return;
 
-    Alert.alert("Share Recipe", "What would you like to share?", [
+    Alert.alert('Share Recipe', 'What would you like to share?', [
       {
-        text: "Full Recipe",
+        text: 'Full Recipe',
         onPress: async () => {
           try {
             await shareRecipe(recipe);
           } catch (error) {
-            console.error("Error sharing recipe:", error);
+            console.error('Error sharing recipe:', error);
           }
         },
       },
       {
-        text: "Ingredients Only",
+        text: 'Ingredients Only',
         onPress: async () => {
           try {
             await shareIngredients(recipe);
           } catch (error) {
-            console.error("Error sharing ingredients:", error);
+            console.error('Error sharing ingredients:', error);
           }
         },
       },
-      { text: "Cancel", style: "cancel" },
+      { text: 'Cancel', style: 'cancel' },
     ]);
+  };
+
+  const handleMore = () => {
+    setMoreMenuVisible(true);
   };
 
   const openSourceLink = () => {
@@ -165,23 +172,22 @@ export default function RecipeDetailScreen() {
   const handleMarkCooked = useCallback(async () => {
     if (!recipe) return;
 
-    Alert.alert("Mark as Cooked", `Did you make "${recipe.title}"?`, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert('Mark as Cooked', `Did you make "${recipe.title}"?`, [
+      { text: 'Cancel', style: 'cancel' },
       {
         text: "Yes, I made it!",
         onPress: async () => {
           setIsUpdating(true);
           try {
             await markAsCooked(recipe.id);
-            // Show celebration
-            Alert.alert("Delicious!", "Recipe marked as cooked. Nice work!", [
+            Alert.alert('Delicious!', 'Recipe marked as cooked. Nice work!', [
               {
-                text: "OK",
+                text: 'OK',
                 onPress: () => navigation.goBack(),
               },
             ]);
           } catch (error) {
-            Alert.alert("Error", "Failed to update recipe");
+            Alert.alert('Error', 'Failed to update recipe');
           } finally {
             setIsUpdating(false);
           }
@@ -199,7 +205,7 @@ export default function RecipeDetailScreen() {
       await archiveRecipe(recipe.id);
       navigation.goBack();
     } catch (error) {
-      Alert.alert("Error", "Failed to archive recipe");
+      Alert.alert('Error', 'Failed to archive recipe');
     } finally {
       setIsUpdating(false);
     }
@@ -212,10 +218,10 @@ export default function RecipeDetailScreen() {
     setIsUpdating(true);
     try {
       await restoreRecipe(recipe.id);
-      setRecipe({ ...recipe, status: "want_to_cook" });
-      Alert.alert("Restored", "Recipe added back to your queue");
+      setRecipe({ ...recipe, status: 'want_to_cook' });
+      Alert.alert('Restored', 'Recipe added back to your queue');
     } catch (error) {
-      Alert.alert("Error", "Failed to restore recipe");
+      Alert.alert('Error', 'Failed to restore recipe');
     } finally {
       setIsUpdating(false);
     }
@@ -226,20 +232,20 @@ export default function RecipeDetailScreen() {
     if (!recipe) return;
 
     Alert.alert(
-      "Delete Recipe",
+      'Delete Recipe',
       `Are you sure you want to delete "${recipe.title}"? This cannot be undone.`,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: "Delete",
-          style: "destructive",
+          text: 'Delete',
+          style: 'destructive',
           onPress: async () => {
             setIsUpdating(true);
             try {
               await deleteRecipe(recipe.id);
               navigation.goBack();
             } catch (error) {
-              Alert.alert("Error", "Failed to delete recipe");
+              Alert.alert('Error', 'Failed to delete recipe');
             } finally {
               setIsUpdating(false);
             }
@@ -252,17 +258,17 @@ export default function RecipeDetailScreen() {
   // Add to grocery list
   const handleAddToGroceryList = useCallback(() => {
     if (!recipe) return;
-    navigation.navigate("GroceryListScreen", { recipeIds: [recipe.id] });
+    navigation.navigate('GroceryListScreen', { recipeIds: [recipe.id] });
   }, [recipe, navigation]);
 
   // Start cooking mode
   const handleStartCooking = useCallback(() => {
     if (!recipe) return;
     if (!recipe.instructions || recipe.instructions.length === 0) {
-      Alert.alert("No Instructions", "This recipe doesn't have any instructions to follow.");
+      Alert.alert('No Instructions', "This recipe doesn't have any instructions to follow.");
       return;
     }
-    navigation.navigate("CookingModeScreen", { recipeId: recipe.id });
+    navigation.navigate('CookingModeScreen', { recipeId: recipe.id });
   }, [recipe, navigation]);
 
   // Open add to collection modal
@@ -277,8 +283,8 @@ export default function RecipeDetailScreen() {
       setSelectedCollectionId(null);
       setCollectionModalVisible(true);
     } catch (error) {
-      console.error("Error loading collections:", error);
-      Alert.alert("Error", "Failed to load collections");
+      console.error('Error loading collections:', error);
+      Alert.alert('Error', 'Failed to load collections');
     }
   }, [recipe]);
 
@@ -291,765 +297,296 @@ export default function RecipeDetailScreen() {
       await addRecipeToCollection(selectedCollectionId, recipe.id);
       const selectedCollection = collections.find((c) => c.id === selectedCollectionId);
       Alert.alert(
-        "Added!",
+        'Added!',
         `"${recipe.title}" has been added to "${selectedCollection?.name || 'collection'}".`
       );
       setCollectionModalVisible(false);
     } catch (error: any) {
-      if (error.message?.includes("already in this collection")) {
-        Alert.alert("Already Added", "This recipe is already in that collection.");
+      if (error.message?.includes('already in this collection')) {
+        Alert.alert('Already Added', 'This recipe is already in that collection.');
       } else {
-        Alert.alert("Error", "Failed to add recipe to collection");
+        Alert.alert('Error', 'Failed to add recipe to collection');
       }
     } finally {
       setIsAddingToCollection(false);
     }
   }, [recipe, selectedCollectionId, collections]);
 
-  // Get platform config
-  const sourceType = recipe?.source_type || "manual";
-  const platform = PLATFORM_CONFIG[sourceType] || PLATFORM_CONFIG.manual;
+  // Get category for display
+  const getCategory = () => {
+    if (recipe?.meal_type) {
+      return recipe.meal_type.charAt(0).toUpperCase() + recipe.meal_type.slice(1);
+    }
+    return 'Recipe';
+  };
 
-  // Dynamic styles based on theme - Editorial magazine design
-  const dynamicStyles = useMemo(() => ({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center" as const,
-      alignItems: "center" as const,
-      padding: spacing.xl,
-    },
-    errorContainer: {
-      flex: 1,
-      justifyContent: "center" as const,
-      alignItems: "center" as const,
-      padding: spacing.xl,
-    },
-    errorText: {
-      ...typography.styles.body,
-      color: colors.error,
-      marginBottom: spacing.lg,
-      textAlign: "center" as const,
-    },
-    retryButton: {
-      backgroundColor: colors.primary,
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.md,
-      borderRadius: borderRadius.full,
-    },
-    retryButtonText: {
-      color: colors.textOnPrimary,
-      fontWeight: "600" as const,
-    },
-    // Hero image section - editorial magazine style
-    heroContainer: {
-      position: 'relative' as const,
-      height: HERO_HEIGHT,
-      width: '100%' as const,
-    },
-    heroImage: {
-      width: '100%' as const,
-      height: '100%' as const,
-    },
-    heroGradient: {
-      position: 'absolute' as const,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: HERO_HEIGHT * 0.7,
-    },
-    heroContent: {
-      position: 'absolute' as const,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: spacing.xl,
-    },
-    heroTitle: {
-      ...typography.editorialStyles.recipeTitle,
-      color: '#FFFFFF',
-      marginBottom: spacing.sm,
-      textShadowColor: 'rgba(0,0,0,0.3)',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 4,
-    },
-    heroShareButton: {
-      position: 'absolute' as const,
-      top: 50,
-      right: spacing.md,
-      backgroundColor: 'rgba(0,0,0,0.4)',
-      borderRadius: borderRadius.full,
-      padding: spacing.sm,
-    },
-    placeholderImage: {
-      width: "100%" as const,
-      height: 200,
-      backgroundColor: colors.surfaceElevated,
-      justifyContent: "center" as const,
-      alignItems: "center" as const,
-    },
-    // Quick info bar - horizontal pills
-    quickInfoBar: {
-      flexDirection: 'row' as const,
-      flexWrap: 'wrap' as const,
-      gap: spacing.sm,
-      padding: spacing.lg,
-      backgroundColor: colors.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    quickInfoPill: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: spacing.xs,
-      backgroundColor: colors.surfaceElevated,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: borderRadius.full,
-    },
-    quickInfoText: {
-      ...typography.editorialStyles.byline,
-      color: colors.textSecondary,
-    },
-    header: {
-      padding: spacing.xl,
-      backgroundColor: colors.card,
-    },
-    titleRow: {
-      flexDirection: "row" as const,
-      justifyContent: "space-between" as const,
-      alignItems: "flex-start" as const,
-    },
-    title: {
-      flex: 1,
-      ...typography.editorialStyles.recipeTitle,
-      color: colors.text,
-      marginBottom: spacing.sm,
-    },
-    shareButton: {
-      padding: spacing.sm,
-      marginLeft: spacing.sm,
-    },
-    platformBadge: {
-      flexDirection: "row" as const,
-      alignItems: "center" as const,
-      gap: spacing.xs,
-      marginBottom: spacing.md,
-    },
-    platformLabel: {
-      ...typography.editorialStyles.byline,
-      fontWeight: "500" as const,
-    },
-    viewOriginal: {
-      flexDirection: "row" as const,
-      alignItems: "center" as const,
-      gap: spacing.xs,
-      marginLeft: spacing.md,
-    },
-    viewOriginalText: {
-      ...typography.editorialStyles.byline,
-      color: colors.primary,
-    },
-    description: {
-      ...typography.editorialStyles.recipeBody,
-      color: colors.textSecondary,
-      marginBottom: spacing.lg,
-    },
-    metaContainer: {
-      flexDirection: "row" as const,
-      flexWrap: "wrap" as const,
-      gap: spacing.lg,
-      marginBottom: spacing.sm,
-    },
-    metaItem: {
-      flexDirection: "row" as const,
-      alignItems: "center" as const,
-      gap: spacing.xs,
-    },
-    metaText: {
-      ...typography.styles.subheadline,
-      color: colors.textSecondary,
-    },
-    statusBadge: {
-      flexDirection: "row" as const,
-      alignItems: "center" as const,
-      gap: spacing.xs,
-      marginTop: spacing.md,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.lg,
-      backgroundColor: colors.surfaceElevated,
-      borderRadius: borderRadius.full,
-      alignSelf: "flex-start" as const,
-    },
-    statusText: {
-      ...typography.editorialStyles.byline,
-      fontWeight: "600" as const,
-    },
-    // Sections - editorial spacing, no borders
-    section: {
-      padding: spacing.xl,
-      backgroundColor: colors.card,
-      marginTop: spacing.xs,
-    },
-    sectionTitle: {
-      ...typography.editorialStyles.sectionHeading,
-      color: colors.text,
-      marginBottom: spacing.xl,
-    },
-    ingredientsHeader: {
-      flexDirection: "row" as const,
-      justifyContent: "space-between" as const,
-      alignItems: "center" as const,
-      marginBottom: spacing.xl,
-    },
-    scaledBadge: {
-      flexDirection: "row" as const,
-      alignItems: "center" as const,
-      backgroundColor: `${colors.info}15`,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.xs,
-      borderRadius: borderRadius.full,
-      gap: spacing.xs,
-    },
-    scaledBadgeText: {
-      ...typography.editorialStyles.byline,
-      color: colors.info,
-      fontWeight: "600" as const,
-    },
-    ingredientsList: {
-      marginLeft: spacing.xs,
-    },
-    ingredientItem: {
-      flexDirection: "row" as const,
-      alignItems: "flex-start" as const,
-      marginBottom: spacing.lg,
-    },
-    bulletPoint: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: colors.primary,
-      marginTop: 7,
-      marginRight: spacing.lg,
-    },
-    ingredientText: {
-      flex: 1,
-      ...typography.editorialStyles.ingredient,
-      color: colors.text,
-    },
-    instructionsContainer: {
-      gap: spacing.xl,
-    },
-    instructionStep: {
-      flexDirection: "row" as const,
-      gap: spacing.lg,
-    },
-    stepNumber: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.primary,
-      justifyContent: "center" as const,
-      alignItems: "center" as const,
-    },
-    stepNumberText: {
-      ...typography.editorialStyles.byline,
-      color: colors.textOnPrimary,
-      fontWeight: "700" as const,
-      fontSize: 14,
-    },
-    instructionText: {
-      flex: 1,
-      ...typography.editorialStyles.recipeBody,
-      color: colors.text,
-    },
-    noContent: {
-      fontStyle: "italic" as const,
-      color: colors.textSecondary,
-    },
-    // CTA section - prominent Start Cooking button
-    actionsSection: {
-      padding: spacing.xl,
-      backgroundColor: colors.card,
-      marginTop: spacing.xs,
-      gap: spacing.md,
-    },
-    cookingButton: {
-      borderRadius: borderRadius.full,
-      marginBottom: spacing.md,
-    },
-    cookingButtonContent: {
-      paddingVertical: spacing.md,
-    },
-    primaryButton: {
-      borderRadius: borderRadius.full,
-    },
-    secondaryButton: {
-      borderRadius: borderRadius.full,
-      borderColor: colors.primary,
-    },
-    buttonContent: {
-      paddingVertical: spacing.sm,
-    },
-    textButton: {
-      alignSelf: "center" as const,
-    },
-    deleteButton: {
-      alignSelf: "center" as const,
-      marginTop: spacing.sm,
-    },
-    footer: {
-      height: 40,
-    },
-    collectionModal: {
-      backgroundColor: colors.card,
-      margin: spacing.xl,
-      padding: spacing.xl,
-      borderRadius: borderRadius.lg,
-      maxHeight: '70%' as const,
-    },
-    collectionModalTitle: {
-      ...typography.editorialStyles.sectionHeading,
-      color: colors.text,
-      marginBottom: spacing.lg,
-    },
-    collectionList: {
-      maxHeight: 300,
-    },
-    collectionOption: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      padding: spacing.md,
-      borderRadius: borderRadius.md,
-      marginBottom: spacing.sm,
-      backgroundColor: colors.background,
-    },
-    collectionOptionSelected: {
-      backgroundColor: colors.primaryLight,
-      borderWidth: 1,
-      borderColor: colors.primary,
-    },
-    collectionOptionDisabled: {
-      opacity: 0.6,
-    },
-    collectionOptionIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: borderRadius.md,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-    },
-    collectionOptionInfo: {
-      flex: 1,
-      marginLeft: spacing.md,
-    },
-    collectionOptionName: {
-      ...typography.styles.body,
-      fontWeight: '500' as const,
-      color: colors.text,
-    },
-    collectionOptionCount: {
-      ...typography.styles.caption1,
-      color: colors.textSecondary,
-    },
-    collectionModalActions: {
-      flexDirection: 'row' as const,
-      justifyContent: 'flex-end' as const,
-      gap: spacing.md,
-      marginTop: spacing.lg,
-    },
-    collectionModalButton: {
-      minWidth: 80,
-    },
-    noCollectionsContainer: {
-      alignItems: 'center' as const,
-      padding: spacing.xxxl,
-    },
-    noCollectionsText: {
-      ...typography.styles.subheadline,
-      color: colors.textSecondary,
-      textAlign: 'center' as const,
-      marginTop: spacing.md,
-    },
-  }), [colors, spacing, borderRadius, typography]);
-
+  // Loading state
   if (loading) {
     return (
       <Screen>
-        <View style={dynamicStyles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={mangiaColors.terracotta} />
         </View>
       </Screen>
     );
   }
 
+  // Error state
   if (error || !recipe) {
     return (
       <Screen>
-        <View style={dynamicStyles.errorContainer}>
-          <Text style={dynamicStyles.errorText}>{error || "Recipe not found"}</Text>
-          <TouchableOpacity style={dynamicStyles.retryButton} onPress={loadRecipe}>
-            <Text style={dynamicStyles.retryButtonText}>Retry</Text>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error || 'Recipe not found'}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadRecipe}>
+            <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
       </Screen>
     );
   }
 
-  const isWantToCook = recipe.status === "want_to_cook";
-  const isCooked = recipe.status === "cooked";
-  const isArchived = recipe.status === "archived";
-
-  // Calculate total time for quick info bar
+  const isWantToCook = recipe.status === 'want_to_cook';
+  const isCooked = recipe.status === 'cooked';
+  const isArchived = recipe.status === 'archived';
   const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
+  const hasInstructions = recipe.instructions && recipe.instructions.length > 0;
 
   return (
-    <Screen noPadding>
-      <ScrollView style={dynamicStyles.container}>
-        {/* Hero Image with Gradient Overlay */}
-        {recipe.image_url ? (
-          <Animated.View entering={FadeIn.duration(400)} style={dynamicStyles.heroContainer}>
-            <Image
-              source={{ uri: recipe.image_url }}
-              style={dynamicStyles.heroImage}
-              resizeMode="cover"
-            />
-            <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.8)']}
-              style={dynamicStyles.heroGradient}
-            />
-            <View style={dynamicStyles.heroContent}>
-              {recipe.meal_type && (
-                <Animated.Text
-                  entering={FadeInDown.delay(100).duration(300)}
-                  style={[dynamicStyles.platformLabel, { color: colors.accent, marginBottom: spacing.xs }]}
-                >
-                  {recipe.meal_type.toUpperCase()}
-                </Animated.Text>
-              )}
-              <Animated.Text
-                entering={FadeInDown.delay(200).duration(300)}
-                style={dynamicStyles.heroTitle}
-                numberOfLines={3}
-              >
-                {recipe.title}
-              </Animated.Text>
-            </View>
-            <TouchableOpacity onPress={handleShare} style={dynamicStyles.heroShareButton}>
-              <Ionicons name="share-social-outline" size={22} color="#FFFFFF" />
-            </TouchableOpacity>
-          </Animated.View>
-        ) : (
-          <View style={dynamicStyles.placeholderImage}>
-            <MaterialCommunityIcons
-              name="food"
-              size={80}
-              color={colors.textTertiary}
-            />
-          </View>
-        )}
-
-        {/* Quick Info Bar - Horizontal Pills */}
-        <Animated.View entering={FadeInDown.delay(100).duration(300)} style={dynamicStyles.quickInfoBar}>
-          {totalTime > 0 && (
-            <View style={dynamicStyles.quickInfoPill}>
-              <MaterialCommunityIcons name="clock-outline" size={16} color={colors.primary} />
-              <Text style={dynamicStyles.quickInfoText}>{totalTime} min</Text>
-            </View>
-          )}
-          {recipe.servings && recipe.servings > 0 && (
-            <View style={dynamicStyles.quickInfoPill}>
-              <MaterialCommunityIcons name="account-group-outline" size={16} color={colors.primary} />
-              <Text style={dynamicStyles.quickInfoText}>{recipe.servings} servings</Text>
-            </View>
-          )}
-          {/* Platform source */}
-          <TouchableOpacity
-            style={dynamicStyles.quickInfoPill}
-            onPress={recipe.source_url ? openSourceLink : undefined}
-            disabled={!recipe.source_url}
-          >
-            <MaterialCommunityIcons name={platform.icon} size={16} color={platform.color} />
-            <Text style={[dynamicStyles.quickInfoText, { color: platform.color }]}>
-              {platform.label}
-            </Text>
-            {recipe.source_url && (
-              <Ionicons name="open-outline" size={12} color={platform.color} />
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Header - Only shown if no hero image */}
-        {!recipe.image_url && (
-          <View style={dynamicStyles.header}>
-            <View style={dynamicStyles.titleRow}>
-              <Text style={dynamicStyles.title}>{recipe.title}</Text>
-              <TouchableOpacity onPress={handleShare} style={dynamicStyles.shareButton}>
-                <Ionicons
-                  name="share-social-outline"
-                  size={24}
-                  color={colors.primary}
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Platform Badge */}
-            <View style={dynamicStyles.platformBadge}>
-              <MaterialCommunityIcons
-                name={platform.icon}
-                size={16}
-                color={platform.color}
-              />
-              <Text style={[dynamicStyles.platformLabel, { color: platform.color }]}>
-                {platform.label}
-              </Text>
-              {recipe.source_url && (
-                <TouchableOpacity
-                  onPress={openSourceLink}
-                  style={dynamicStyles.viewOriginal}
-                >
-                  <Text style={dynamicStyles.viewOriginalText}>View Original</Text>
-                  <Ionicons
-                    name="open-outline"
-                    size={14}
-                    color={colors.primary}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* Description Section */}
-        {recipe.description && (
-          <Animated.View entering={FadeInDown.delay(200).duration(300)} style={dynamicStyles.section}>
-            <Text style={dynamicStyles.description}>{recipe.description}</Text>
-          </Animated.View>
-        )}
-
-        {/* Status Badge */}
-        {(isCooked || isArchived) && (
-          <View style={[dynamicStyles.section, { paddingVertical: spacing.md }]}>
-            {isCooked && (
-              <View style={dynamicStyles.statusBadge}>
-                <MaterialCommunityIcons
-                  name="check-circle"
-                  size={16}
-                  color={colors.success}
-                />
-                <Text style={[dynamicStyles.statusText, { color: colors.success }]}>
-                  COOKED
-                </Text>
-              </View>
-            )}
-            {isArchived && (
-              <View style={dynamicStyles.statusBadge}>
-                <MaterialCommunityIcons
-                  name="archive"
-                  size={16}
-                  color={colors.textSecondary}
-                />
-                <Text
-                  style={[dynamicStyles.statusText, { color: colors.textSecondary }]}
-                >
-                  ARCHIVED
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Serving Adjuster */}
-        {recipe.servings && recipe.servings > 0 && (
-          <View style={dynamicStyles.section}>
-            <ServingAdjuster
-              originalServings={recipe.servings}
-              currentServings={currentServings || recipe.servings}
-              onServingsChange={setCurrentServings}
-            />
-          </View>
-        )}
-
-        {/* Ingredients - Editorial list style */}
-        <Animated.View entering={FadeInDown.delay(300).duration(300)} style={dynamicStyles.section}>
-          <View style={dynamicStyles.ingredientsHeader}>
-            <Text style={[dynamicStyles.sectionTitle, { marginBottom: 0 }]}>
-              Ingredients
-            </Text>
-            {scaleFactor !== 1 && (
-              <View style={dynamicStyles.scaledBadge}>
-                <MaterialCommunityIcons name="scale" size={14} color={colors.info} />
-                <Text style={dynamicStyles.scaledBadgeText}>SCALED</Text>
-              </View>
-            )}
-          </View>
-          <View style={dynamicStyles.ingredientsList}>
-            {recipe.ingredients && recipe.ingredients.length > 0 ? (
-              recipe.ingredients.map((ing, idx) => (
-                <Animated.View
-                  key={idx}
-                  entering={FadeInDown.delay(350 + idx * 30).duration(300)}
-                  style={dynamicStyles.ingredientItem}
-                >
-                  <View style={dynamicStyles.bulletPoint} />
-                  <Text style={dynamicStyles.ingredientText}>
-                    {getScaledIngredientDisplay(ing, scaleFactor)}
-                  </Text>
-                </Animated.View>
-              ))
-            ) : (
-              <Text style={dynamicStyles.noContent}>No ingredients listed</Text>
-            )}
-          </View>
-        </Animated.View>
-
-        {/* Instructions - Editorial step layout */}
-        <Animated.View entering={FadeInDown.delay(400).duration(300)} style={dynamicStyles.section}>
-          <Text style={dynamicStyles.sectionTitle}>Instructions</Text>
-          <View style={dynamicStyles.instructionsContainer}>
-            {recipe.instructions && recipe.instructions.length > 0 ? (
-              recipe.instructions.map((step, idx) => (
-                <Animated.View
-                  key={idx}
-                  entering={FadeInDown.delay(450 + idx * 50).duration(300)}
-                  style={dynamicStyles.instructionStep}
-                >
-                  <View style={dynamicStyles.stepNumber}>
-                    <Text style={dynamicStyles.stepNumberText}>{idx + 1}</Text>
-                  </View>
-                  <Text style={dynamicStyles.instructionText}>{step}</Text>
-                </Animated.View>
-              ))
-            ) : (
-              <Text style={dynamicStyles.noContent}>No instructions provided</Text>
-            )}
-          </View>
-        </Animated.View>
-
-        {/* Rating & Notes */}
-        <RecipeRatingNotes
-          recipeId={recipeId}
-          currentRating={recipe.rating}
-          onRatingChange={(newRating) => {
-            setRecipe((prev) => (prev ? { ...prev, rating: newRating } : null));
-          }}
+    <View style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero Image Section */}
+        <RecipeHero
+          imageUrl={recipe.image_url}
+          title={recipe.title}
+          author={recipe.source_type === 'manual' ? 'My Recipe' : undefined}
+          category={getCategory()}
+          onBack={handleBack}
+          onSave={handleOpenCollectionModal}
+          onMore={handleMore}
         />
 
-        {/* Action Buttons - Prominent Start Cooking CTA */}
-        <Animated.View entering={FadeInDown.delay(500).duration(300)} style={dynamicStyles.actionsSection}>
-          {isWantToCook && (
-            <>
-              {/* Primary CTA - Start Cooking */}
-              <Button
-                mode="contained"
-                onPress={handleStartCooking}
-                disabled={isUpdating}
-                icon="chef-hat"
-                style={dynamicStyles.cookingButton}
-                contentStyle={dynamicStyles.cookingButtonContent}
-                buttonColor={colors.primary}
-                labelStyle={{ fontSize: 16, fontWeight: '600' }}
-              >
-                Start Cooking
-              </Button>
+        {/* Content Area - Overlaps Hero */}
+        <View style={styles.contentArea}>
+          {/* Metadata Pills */}
+          <MetadataPills
+            cookTime={totalTime}
+            servings={recipe.servings}
+          />
 
+          {/* Description */}
+          {recipe.description && (
+            <Animated.View
+              entering={FadeInDown.delay(150).duration(300)}
+              style={styles.descriptionSection}
+            >
+              <Text style={styles.descriptionText}>{recipe.description}</Text>
+            </Animated.View>
+          )}
+
+          {/* Status Badge */}
+          {(isCooked || isArchived) && (
+            <Animated.View
+              entering={FadeInDown.delay(180).duration(300)}
+              style={styles.statusSection}
+            >
+              {isCooked && (
+                <View style={[styles.statusBadge, styles.statusBadgeCooked]}>
+                  <Feather name="check-circle" size={16} color={mangiaColors.sage} />
+                  <Text style={[styles.statusText, { color: mangiaColors.sage }]}>
+                    COOKED
+                  </Text>
+                </View>
+              )}
+              {isArchived && (
+                <View style={styles.statusBadge}>
+                  <Feather name="archive" size={16} color={mangiaColors.taupe} />
+                  <Text style={[styles.statusText, { color: mangiaColors.taupe }]}>
+                    ARCHIVED
+                  </Text>
+                </View>
+              )}
+            </Animated.View>
+          )}
+
+          {/* Serving Adjuster */}
+          {recipe.servings && recipe.servings > 0 && (
+            <View style={styles.servingSection}>
+              <ServingAdjuster
+                originalServings={recipe.servings}
+                currentServings={currentServings || recipe.servings}
+                onServingsChange={setCurrentServings}
+              />
+            </View>
+          )}
+
+          {/* Ingredients */}
+          <IngredientList
+            ingredients={recipe.ingredients || []}
+            scaleFactor={scaleFactor}
+          />
+
+          {/* Instructions Preview */}
+          {hasInstructions && (
+            <InstructionsPreview instructions={recipe.instructions} />
+          )}
+
+          {/* Rating & Notes */}
+          <View style={styles.ratingSection}>
+            <RecipeRatingNotes
+              recipeId={recipeId}
+              currentRating={recipe.rating}
+              onRatingChange={(newRating) => {
+                setRecipe((prev) => (prev ? { ...prev, rating: newRating } : null));
+              }}
+            />
+          </View>
+
+          {/* Action Buttons */}
+          <Animated.View
+            entering={FadeInDown.delay(400).duration(300)}
+            style={styles.actionsSection}
+          >
+            {isWantToCook && (
+              <>
+                <Button
+                  mode="contained"
+                  onPress={handleMarkCooked}
+                  loading={isUpdating}
+                  disabled={isUpdating}
+                  icon="check"
+                  style={styles.actionButton}
+                  contentStyle={styles.buttonContent}
+                  buttonColor={mangiaColors.sage}
+                >
+                  Mark as Cooked
+                </Button>
+
+                <Button
+                  mode="outlined"
+                  onPress={handleAddToGroceryList}
+                  disabled={isUpdating}
+                  icon="cart"
+                  style={styles.actionButton}
+                  contentStyle={styles.buttonContent}
+                  textColor={mangiaColors.dark}
+                >
+                  Add to Grocery List
+                </Button>
+
+                <Button
+                  mode="text"
+                  onPress={handleArchive}
+                  disabled={isUpdating}
+                  icon="archive"
+                  textColor={mangiaColors.taupe}
+                  style={styles.textButton}
+                >
+                  Archive
+                </Button>
+              </>
+            )}
+
+            {(isCooked || isArchived) && (
               <Button
-                mode="contained"
-                onPress={handleMarkCooked}
+                mode="outlined"
+                onPress={handleRestore}
                 loading={isUpdating}
                 disabled={isUpdating}
-                icon="check"
-                style={dynamicStyles.primaryButton}
-                contentStyle={dynamicStyles.buttonContent}
-                buttonColor={colors.success}
+                icon="refresh-cw"
+                style={styles.actionButton}
+                contentStyle={styles.buttonContent}
+                textColor={mangiaColors.dark}
               >
-                Mark as Cooked
+                Add Back to Queue
               </Button>
+            )}
 
-              <Button
-                mode="outlined"
-                onPress={handleAddToGroceryList}
-                disabled={isUpdating}
-                icon="cart"
-                style={dynamicStyles.secondaryButton}
-                contentStyle={dynamicStyles.buttonContent}
-              >
-                Add to Grocery List
-              </Button>
-
-              <Button
-                mode="outlined"
-                onPress={handleOpenCollectionModal}
-                disabled={isUpdating}
-                icon="folder-plus"
-                style={dynamicStyles.secondaryButton}
-                contentStyle={dynamicStyles.buttonContent}
-              >
-                Add to Collection
-              </Button>
-
-              <Button
-                mode="text"
-                onPress={handleArchive}
-                disabled={isUpdating}
-                icon="archive"
-                textColor={colors.textSecondary}
-                style={dynamicStyles.textButton}
-              >
-                Archive
-              </Button>
-            </>
-          )}
-
-          {(isCooked || isArchived) && (
             <Button
-              mode="outlined"
-              onPress={handleRestore}
-              loading={isUpdating}
+              mode="text"
+              onPress={handleDelete}
               disabled={isUpdating}
-              icon="restore"
-              style={dynamicStyles.secondaryButton}
-              contentStyle={dynamicStyles.buttonContent}
+              icon="trash-2"
+              textColor="#D32F2F"
+              style={styles.deleteButton}
             >
-              Add Back to Queue
+              Delete Recipe
             </Button>
+          </Animated.View>
+
+          {/* Footer spacer for floating button */}
+          <View style={styles.footerSpacer} />
+        </View>
+      </ScrollView>
+
+      {/* Floating Start Cooking Button */}
+      {isWantToCook && hasInstructions && (
+        <StartCookingButton
+          onPress={handleStartCooking}
+          disabled={isUpdating}
+        />
+      )}
+
+      {/* More Menu Modal */}
+      <Portal>
+        <Modal
+          visible={moreMenuVisible}
+          onDismiss={() => setMoreMenuVisible(false)}
+          contentContainerStyle={styles.moreMenuModal}
+        >
+          <Text style={styles.modalTitle}>Options</Text>
+
+          <TouchableOpacity style={styles.menuItem} onPress={() => {
+            setMoreMenuVisible(false);
+            handleShare();
+          }}>
+            <Feather name="share" size={20} color={mangiaColors.dark} />
+            <Text style={styles.menuItemText}>Share Recipe</Text>
+          </TouchableOpacity>
+
+          {recipe.source_url && (
+            <TouchableOpacity style={styles.menuItem} onPress={() => {
+              setMoreMenuVisible(false);
+              openSourceLink();
+            }}>
+              <Feather name="external-link" size={20} color={mangiaColors.dark} />
+              <Text style={styles.menuItemText}>View Original</Text>
+            </TouchableOpacity>
           )}
 
-          <Button
-            mode="text"
-            onPress={handleDelete}
-            disabled={isUpdating}
-            icon="delete"
-            textColor={colors.error}
-            style={dynamicStyles.deleteButton}
-          >
-            Delete Recipe
-          </Button>
-        </Animated.View>
+          <TouchableOpacity style={styles.menuItem} onPress={() => {
+            setMoreMenuVisible(false);
+            handleOpenCollectionModal();
+          }}>
+            <Feather name="folder-plus" size={20} color={mangiaColors.dark} />
+            <Text style={styles.menuItemText}>Add to Collection</Text>
+          </TouchableOpacity>
 
-        <View style={dynamicStyles.footer} />
-      </ScrollView>
+          <TouchableOpacity
+            style={[styles.menuItem, styles.menuItemCancel]}
+            onPress={() => setMoreMenuVisible(false)}
+          >
+            <Text style={styles.menuItemCancelText}>Cancel</Text>
+          </TouchableOpacity>
+        </Modal>
+      </Portal>
 
       {/* Add to Collection Modal */}
       <Portal>
         <Modal
           visible={collectionModalVisible}
           onDismiss={() => setCollectionModalVisible(false)}
-          contentContainerStyle={dynamicStyles.collectionModal}
+          contentContainerStyle={styles.collectionModal}
         >
-          <Text style={dynamicStyles.collectionModalTitle}>Add to Collection</Text>
+          <Text style={styles.modalTitle}>Add to Collection</Text>
 
           {collections.length === 0 ? (
-            <View style={dynamicStyles.noCollectionsContainer}>
-              <MaterialCommunityIcons
-                name="folder-plus"
-                size={48}
-                color={colors.textTertiary}
-              />
-              <Text style={dynamicStyles.noCollectionsText}>
+            <View style={styles.noCollectionsContainer}>
+              <Feather name="folder-plus" size={48} color={mangiaColors.taupe} />
+              <Text style={styles.noCollectionsText}>
                 No collections yet. Create one from the Recipes tab.
               </Text>
             </View>
@@ -1058,43 +595,40 @@ export default function RecipeDetailScreen() {
               <FlatList
                 data={collections}
                 keyExtractor={(item) => item.id}
-                style={dynamicStyles.collectionList}
+                style={styles.collectionList}
                 renderItem={({ item }) => {
                   const isInCollection = recipeCollections.includes(item.id);
                   return (
                     <TouchableOpacity
                       style={[
-                        dynamicStyles.collectionOption,
-                        selectedCollectionId === item.id && dynamicStyles.collectionOptionSelected,
-                        isInCollection && dynamicStyles.collectionOptionDisabled,
+                        styles.collectionOption,
+                        selectedCollectionId === item.id && styles.collectionOptionSelected,
+                        isInCollection && styles.collectionOptionDisabled,
                       ]}
                       onPress={() => !isInCollection && setSelectedCollectionId(item.id)}
                       disabled={isInCollection}
                     >
-                      <View style={[dynamicStyles.collectionOptionIcon, { backgroundColor: item.color + '20' }]}>
+                      <View style={[styles.collectionIcon, { backgroundColor: item.color + '20' }]}>
                         <MaterialCommunityIcons
                           name={item.icon as any}
                           size={20}
                           color={item.color}
                         />
                       </View>
-                      <View style={dynamicStyles.collectionOptionInfo}>
-                        <Text style={dynamicStyles.collectionOptionName}>{item.name}</Text>
-                        <Text style={dynamicStyles.collectionOptionCount}>
+                      <View style={styles.collectionInfo}>
+                        <Text style={styles.collectionName}>{item.name}</Text>
+                        <Text style={styles.collectionCount}>
                           {item.recipe_count} recipe{item.recipe_count !== 1 ? 's' : ''}
                         </Text>
                       </View>
                       {isInCollection ? (
-                        <MaterialCommunityIcons
-                          name="check-circle"
-                          size={24}
-                          color={colors.success}
-                        />
+                        <Feather name="check-circle" size={24} color={mangiaColors.sage} />
                       ) : (
                         <RadioButton
                           value={item.id}
                           status={selectedCollectionId === item.id ? 'checked' : 'unchecked'}
                           onPress={() => setSelectedCollectionId(item.id)}
+                          color={mangiaColors.terracotta}
                         />
                       )}
                     </TouchableOpacity>
@@ -1102,11 +636,12 @@ export default function RecipeDetailScreen() {
                 }}
               />
 
-              <View style={dynamicStyles.collectionModalActions}>
+              <View style={styles.modalActions}>
                 <Button
                   mode="outlined"
                   onPress={() => setCollectionModalVisible(false)}
-                  style={dynamicStyles.collectionModalButton}
+                  style={styles.modalButton}
+                  textColor={mangiaColors.dark}
                 >
                   Cancel
                 </Button>
@@ -1115,7 +650,8 @@ export default function RecipeDetailScreen() {
                   onPress={handleAddToCollection}
                   loading={isAddingToCollection}
                   disabled={!selectedCollectionId || isAddingToCollection}
-                  style={dynamicStyles.collectionModalButton}
+                  style={styles.modalButton}
+                  buttonColor={mangiaColors.terracotta}
                 >
                   Add
                 </Button>
@@ -1124,6 +660,239 @@ export default function RecipeDetailScreen() {
           )}
         </Modal>
       </Portal>
-    </Screen>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: mangiaColors.cream,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  errorText: {
+    fontFamily: 'System',
+    fontSize: 16,
+    color: '#D32F2F',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: mangiaColors.terracotta,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 999,
+  },
+  retryButtonText: {
+    fontFamily: 'System',
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
+  },
+
+  // Content Area
+  contentArea: {
+    backgroundColor: mangiaColors.cream,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    marginTop: -24,
+    paddingTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 40,
+    elevation: 10,
+  },
+  descriptionSection: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  descriptionText: {
+    fontFamily: 'System',
+    fontSize: 16,
+    color: mangiaColors.brown,
+    lineHeight: 24,
+  },
+  statusSection: {
+    paddingHorizontal: 24,
+    marginBottom: 16,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: mangiaColors.creamDark,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  statusBadgeCooked: {
+    backgroundColor: `${mangiaColors.sage}20`,
+  },
+  statusText: {
+    fontFamily: 'System',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  servingSection: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  ratingSection: {
+    paddingHorizontal: 24,
+    marginBottom: 16,
+  },
+
+  // Actions
+  actionsSection: {
+    paddingHorizontal: 24,
+    gap: 12,
+    marginBottom: 24,
+  },
+  actionButton: {
+    borderRadius: 999,
+    borderColor: mangiaColors.creamDark,
+  },
+  buttonContent: {
+    paddingVertical: 8,
+  },
+  textButton: {
+    alignSelf: 'center',
+  },
+  deleteButton: {
+    alignSelf: 'center',
+    marginTop: 8,
+  },
+  footerSpacer: {
+    height: 100,
+  },
+
+  // More Menu Modal
+  moreMenuModal: {
+    backgroundColor: 'white',
+    margin: 24,
+    borderRadius: 16,
+    padding: 24,
+  },
+  modalTitle: {
+    fontFamily: 'Georgia',
+    fontSize: 24,
+    fontWeight: '400',
+    color: mangiaColors.dark,
+    marginBottom: 16,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: mangiaColors.creamDark,
+  },
+  menuItemText: {
+    fontFamily: 'System',
+    fontSize: 16,
+    color: mangiaColors.dark,
+  },
+  menuItemCancel: {
+    borderBottomWidth: 0,
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  menuItemCancelText: {
+    fontFamily: 'System',
+    fontSize: 16,
+    fontWeight: '600',
+    color: mangiaColors.taupe,
+  },
+
+  // Collection Modal
+  collectionModal: {
+    backgroundColor: 'white',
+    margin: 24,
+    padding: 24,
+    borderRadius: 16,
+    maxHeight: '70%',
+  },
+  noCollectionsContainer: {
+    alignItems: 'center',
+    padding: 48,
+  },
+  noCollectionsText: {
+    fontFamily: 'System',
+    fontSize: 14,
+    color: mangiaColors.taupe,
+    textAlign: 'center',
+    marginTop: 16,
+  },
+  collectionList: {
+    maxHeight: 300,
+  },
+  collectionOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: mangiaColors.cream,
+  },
+  collectionOptionSelected: {
+    backgroundColor: `${mangiaColors.terracotta}15`,
+    borderWidth: 1,
+    borderColor: mangiaColors.terracotta,
+  },
+  collectionOptionDisabled: {
+    opacity: 0.6,
+  },
+  collectionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  collectionInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  collectionName: {
+    fontFamily: 'System',
+    fontSize: 16,
+    fontWeight: '500',
+    color: mangiaColors.dark,
+  },
+  collectionCount: {
+    fontFamily: 'System',
+    fontSize: 12,
+    color: mangiaColors.taupe,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 16,
+  },
+  modalButton: {
+    minWidth: 80,
+    borderRadius: 999,
+  },
+});

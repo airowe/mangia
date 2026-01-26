@@ -1,13 +1,18 @@
-import React, { useRef } from "react";
+/**
+ * HomeStack
+ *
+ * Navigation stack for the Home tab.
+ * Editorial design: screens handle their own headers internally.
+ */
+
+import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { WantToCookScreen } from "../screens/WantToCookScreen";
-import { CustomHeader } from "../components/CustomHeader";
 import { ManualEntryScreen } from "../screens/ManualEntryScreen";
 import { ImportRecipeScreen } from "../screens/ImportRecipeScreen";
 import RecipeDetailScreen from "../screens/RecipeDetailScreen";
 import SubscriptionScreen from "../screens/SubscriptionScreen";
 import CookingModeScreen from "../screens/CookingModeScreen";
-import { Animated } from "react-native";
 
 // Define the param list for the root stack
 export type RootStackParamList = {
@@ -22,29 +27,13 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-import { NativeStackNavigationOptions } from "@react-navigation/native-stack";
-
 export default function HomeStack() {
-  const scrollY = useRef(new Animated.Value(0)).current;
-
-  const screenOptions: NativeStackNavigationOptions = {
-    header: ({ route, options }) => {
-      const showBackButton = route.name !== "WantToCookScreen";
-      return (
-        <CustomHeader
-          showBackButton={showBackButton}
-          title={options.title as string}
-          scrollY={route.name === "WantToCookScreen" ? scrollY : undefined}
-        />
-      );
-    },
-    headerShown: true,
-  };
-
   return (
     <Stack.Navigator
       initialRouteName="WantToCookScreen"
-      screenOptions={screenOptions}
+      screenOptions={{
+        headerShown: false, // Editorial design: screens handle their own headers
+      }}
     >
       <Stack.Screen
         name="WantToCookScreen"

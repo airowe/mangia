@@ -5,6 +5,23 @@
  * Editorial design: Warm & Magazine-style with terracotta, sage, and cream.
  */
 
+/**
+ * Mangia Brand Colors
+ * Direct hex values matching the HTML prototypes in /ui-redesign/screens/
+ * Use these for pixel-perfect replication of the design system.
+ */
+export const mangiaColors = {
+  terracotta: '#D97742',    // Primary accent
+  sage: '#A8BCA0',          // Secondary accent
+  cream: '#FBF9F5',         // Background
+  creamDark: '#F5E3C1',     // Card backgrounds, accents
+  dark: '#3A322C',          // Primary text
+  brown: '#7A716A',         // Secondary text
+  deepBrown: '#2A1F18',     // Cooking mode background
+  taupe: '#A9A29A',         // Tertiary text
+  white: '#FFFFFF',
+} as const;
+
 // Editorial color palette - warm, earthy tones for magazine aesthetic
 export const editorialPalette = {
   terracotta: {

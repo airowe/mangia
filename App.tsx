@@ -21,18 +21,23 @@ import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { ThemeProvider, useTheme } from './theme';
 import TabNavigator from './navigation/TabNavigator';
 import {
-  ActivityIndicator,
-  StyleSheet,
-  View,
-  Text,
-} from 'react-native';
+  Provider as PaperProvider,
+  MD3LightTheme,
+  MD3DarkTheme,
+} from "react-native-paper";
+import { SubscriptionProvider } from "./contexts/SubscriptionContext";
+import { ThemeProvider, useTheme } from "./theme";
+import TabNavigator from "./navigation/TabNavigator";
+import { ActivityIndicator, StyleSheet, View, Text } from "react-native";
 
 const Stack = createNativeStackNavigator();
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 if (!CLERK_PUBLISHABLE_KEY) {
-  console.error('Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable');
+  console.error(
+    "Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable",
+  );
 }
 
 // Loading component while Clerk initializes
@@ -40,7 +45,12 @@ function LoadingScreen() {
   const { theme } = useTheme();
 
   return (
-    <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[
+        styles.loadingContainer,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
       <ActivityIndicator size="large" color={theme.colors.primary} />
     </View>
   );
@@ -86,8 +96,8 @@ function RootNavigator() {
             component={AccountScreen}
             options={{
               headerShown: true,
-              title: 'Account',
-              headerBackTitle: 'Back',
+              title: "Account",
+              headerBackTitle: "Back",
               headerStyle: {
                 backgroundColor: theme.colors.background,
               },
@@ -98,6 +108,39 @@ function RootNavigator() {
       )}
     </Stack.Navigator>
   );
+}
+
+// Paper theme provider that syncs with our app theme
+function ThemedPaperProvider({ children }: { children: React.ReactNode }) {
+  const { theme, isDark } = useTheme();
+
+  const paperTheme = useMemo(() => {
+    const baseTheme = isDark ? MD3DarkTheme : MD3LightTheme;
+
+    return {
+      ...baseTheme,
+      colors: {
+        ...baseTheme.colors,
+        primary: theme.colors.primary,
+        onPrimary: theme.colors.textOnPrimary,
+        primaryContainer: theme.colors.primaryLight,
+        onPrimaryContainer: theme.colors.text,
+        secondary: theme.colors.secondary,
+        onSecondary: theme.colors.textOnPrimary,
+        background: theme.colors.background,
+        onBackground: theme.colors.text,
+        surface: theme.colors.card,
+        onSurface: theme.colors.text,
+        surfaceVariant: theme.colors.surface,
+        onSurfaceVariant: theme.colors.textSecondary,
+        outline: theme.colors.border,
+        error: theme.colors.error,
+        onError: theme.colors.textOnPrimary,
+      },
+    };
+  }, [theme, isDark]);
+
+  return <PaperProvider theme={paperTheme}>{children}</PaperProvider>;
 }
 
 // Main app content with navigation
@@ -118,7 +161,12 @@ function ErrorScreen() {
   const { theme } = useTheme();
 
   return (
-    <View style={[styles.errorContainer, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[
+        styles.errorContainer,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
       <Text style={[styles.errorText, { color: theme.colors.error }]}>
         Missing Clerk publishable key
       </Text>
@@ -140,15 +188,18 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      <ClerkProvider
+        publishableKey={CLERK_PUBLISHABLE_KEY}
+        tokenCache={tokenCache}
+      >
         <ClerkLoaded>
-          <PaperProvider>
+          <ThemedPaperProvider>
             <SafeAreaProvider>
               <GestureHandlerRootView style={styles.root}>
                 <AppContent />
               </GestureHandlerRootView>
             </SafeAreaProvider>
-          </PaperProvider>
+          </ThemedPaperProvider>
         </ClerkLoaded>
       </ClerkProvider>
     </ThemeProvider>
@@ -161,17 +212,17 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   errorText: {
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
