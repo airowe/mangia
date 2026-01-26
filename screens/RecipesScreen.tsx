@@ -1,107 +1,18 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "react-native-paper";
-import { View, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Text } from 'react-native';
+import { View, ScrollView, RefreshControl, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { fetchAllRecipes, fetchRecipes } from "../lib/recipes";
 import { Recipe } from "../models/Recipe";
 import { Screen } from "../components/Screen";
-import { colors } from "../theme/colors";
+import { useTheme } from "../theme";
 import { RecipeItem } from "../components/RecipeItem";
 import { RecipeList as RecipeListComponent } from '../components/RecipeList';
+import { FeaturedRecipeCard } from '../components/editorial';
 import { RecipeLibraryStackParamList } from "../navigation/RecipeLibraryStack";
-
-interface RecipeListProps {
-  title: string;
-  recipes: Recipe[];
-  loading?: boolean;
-  error: string | null;
-  onRetry: () => void;
-  onPressRecipe: (recipe: Recipe) => void;
-  hasMore?: boolean;
-  isFetching?: boolean;
-  onEndReached?: () => void;
-  horizontal?: boolean;
-}
-
-const RecipeList: React.FC<RecipeListProps> = ({
-  title,
-  recipes,
-  loading = false,
-  error,
-  onRetry,
-  onPressRecipe,
-  hasMore = false,
-  isFetching = false,
-  onEndReached,
-  horizontal = false,
-}) => {
-  // If no recipes and not loading, don't render anything
-  if (recipes.length === 0 && !loading) {
-    return null;
-  }
-
-  // If error, show error message with retry button
-  if (error) {
-    return (
-      <View style={styles.section}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <Button mode="contained" onPress={onRetry} style={styles.retryButton}>
-            Retry
-          </Button>
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {!hasMore && recipes.length > 0 && (
-          <Text style={styles.endOfList}>End of list</Text>
-        )}
-      </View>
-      
-      <ScrollView
-        horizontal={horizontal}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.recipesContainer}
-        onScrollEndDrag={({ nativeEvent }) => {
-          if (onEndReached && !isFetching && hasMore) {
-            const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-            const isCloseToEnd =
-              layoutMeasurement.width + contentOffset.x >=
-              contentSize.width - 50; // 50px from the end
-            
-            if (isCloseToEnd) {
-              onEndReached();
-            }
-          }
-        }}
-        scrollEventThrottle={400}
-      >
-        {recipes.map((recipe) => (
-          <View key={recipe.id} style={styles.recipeCard}>
-            <RecipeItem 
-              recipe={recipe}
-              onPress={onPressRecipe}
-              showMealType={true}
-            />
-          </View>
-        ))}
-        {isFetching && (
-          <View style={styles.loadingMore}>
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={styles.loadingText}>Loading more...</Text>
-          </View>
-        )}
-      </ScrollView>
-    </View>
-  );
-};
 
 type RecipesScreenNavigationProp = NativeStackNavigationProp<
   RecipeLibraryStackParamList,
@@ -110,6 +21,8 @@ type RecipesScreenNavigationProp = NativeStackNavigationProp<
 
 export const RecipesScreen = () => {
   const navigation = useNavigation<RecipesScreenNavigationProp>();
+  const { theme, isDark } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
 
   const [userRecipes, setUserRecipes] = useState<Recipe[]>([]);
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
@@ -119,7 +32,7 @@ export const RecipesScreen = () => {
     hasMore: true,
     isFetching: false,
   });
-  
+
   const [allRecipesPagination, setAllRecipesPagination] = useState({
     page: 1,
     limit: 10,
@@ -136,6 +49,149 @@ export const RecipesScreen = () => {
   });
   const [refreshing, setRefreshing] = useState(false);
 
+  // Get featured recipe (first one with an image, or just first one)
+  const featuredRecipe = useMemo(() => {
+    const withImage = userRecipes.find(r => r.image_url);
+    return withImage || userRecipes[0];
+  }, [userRecipes]);
+
+  // Remaining recipes (excluding featured)
+  const remainingRecipes = useMemo(() => {
+    if (!featuredRecipe) return userRecipes;
+    return userRecipes.filter(r => r.id !== featuredRecipe.id);
+  }, [userRecipes, featuredRecipe]);
+
+  // Dynamic styles based on theme - Editorial magazine design
+  const dynamicStyles = useMemo(() => ({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    // Featured hero section
+    featuredSection: {
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.xl,
+    },
+    featuredLabel: {
+      ...typography.editorialStyles.byline,
+      color: colors.primary,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    // Section styling
+    section: {
+      marginBottom: spacing.xl,
+    },
+    sectionHeader: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+      alignItems: 'center' as const,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.lg,
+    },
+    sectionTitle: {
+      ...typography.editorialStyles.sectionHeading,
+      color: colors.text,
+    },
+    viewAllButton: {
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.md,
+    },
+    viewAllText: {
+      ...typography.editorialStyles.byline,
+      color: colors.primary,
+    },
+    recipesContainer: {
+      paddingHorizontal: spacing.sm,
+      paddingBottom: spacing.sm,
+      minHeight: 200,
+    },
+    recipeCard: {
+      width: 200,
+      marginHorizontal: spacing.sm,
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+      overflow: 'hidden' as const,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 8,
+      elevation: 3,
+      marginBottom: spacing.lg,
+    },
+    loadingMore: {
+      padding: spacing.lg,
+      alignItems: "center" as const,
+      flexDirection: "row" as const,
+      justifyContent: "center" as const,
+      gap: spacing.sm,
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      ...typography.editorialStyles.byline,
+    },
+    endOfList: {
+      color: colors.textSecondary,
+      ...typography.editorialStyles.byline,
+      textAlign: 'center' as const,
+      paddingVertical: spacing.xl,
+    },
+    errorContainer: {
+      padding: spacing.xl,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+      margin: spacing.lg,
+      borderWidth: 1,
+      borderColor: colors.error,
+    },
+    errorText: {
+      ...typography.editorialStyles.recipeBody,
+      color: colors.error,
+      marginBottom: spacing.md,
+      textAlign: "center" as const,
+    },
+    retryButton: {
+      marginTop: spacing.md,
+      padding: spacing.sm,
+      backgroundColor: colors.primary,
+      borderRadius: borderRadius.full,
+    },
+    // Bottom action bar
+    buttonContainer: {
+      flexDirection: "row" as const,
+      justifyContent: "center" as const,
+      padding: spacing.lg,
+      backgroundColor: colors.card,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      gap: spacing.sm,
+    },
+    button: {
+      flex: 1,
+      height: 48,
+      justifyContent: "center" as const,
+      borderRadius: borderRadius.full,
+    },
+    buttonLabel: {
+      ...typography.editorialStyles.byline,
+      fontWeight: "600" as const,
+      marginVertical: 0,
+      paddingVertical: 0,
+      fontSize: 13,
+    },
+    containedButton: {
+      backgroundColor: colors.primary,
+      elevation: 0,
+    },
+    outlinedButton: {
+      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+  }), [colors, spacing, borderRadius, typography, isDark]);
+
   const loadUserRecipes = useCallback(async (showLoading = true, loadMore = false) => {
     try {
       if (showLoading) {
@@ -143,19 +199,19 @@ export const RecipesScreen = () => {
       } else {
         setUserRecipesPagination(prev => ({ ...prev, isFetching: true }));
       }
-      
+
       setError((prev) => ({ ...prev, user: null }));
-      
+
       const page = loadMore ? userRecipesPagination.page + 1 : 1;
-      const response = await fetchRecipes({ 
+      const response = await fetchRecipes({
         page,
-        limit: userRecipesPagination.limit 
+        limit: userRecipesPagination.limit
       });
-      
-      setUserRecipes(prev => 
+
+      setUserRecipes(prev =>
         loadMore ? [...prev, ...response.data] : response.data
       );
-      
+
       setUserRecipesPagination(prev => ({
         ...prev,
         page,
@@ -211,7 +267,7 @@ export const RecipesScreen = () => {
         setRefreshing(false);
       }
     },
-    [fetchAllRecipes, allRecipesPagination.limit]
+    [allRecipesPagination.limit]
   );
 
   const handleRefresh = () => {
@@ -291,12 +347,12 @@ export const RecipesScreen = () => {
       await loadAllRecipes();
     };
     loadData();
-  }, []); // These are now stable due to useCallback
+  }, []);
 
   return (
     <Screen>
       <ScrollView
-        style={styles.container}
+        style={dynamicStyles.container}
         onScroll={(event) => handleScroll(event, 0)}
         scrollEventThrottle={400}
         refreshControl={
@@ -309,61 +365,77 @@ export const RecipesScreen = () => {
         }
         scrollEnabled={!userRecipesPagination.isFetching}
       >
-        <RecipeListComponent
-          title="Your Recipes"
-          recipes={userRecipes}
-          loading={loading.user}
-          error={error.user}
-          onRetry={loadUserRecipes}
-          onPressRecipe={handlePressRecipe}
-          hasMore={userRecipesPagination.hasMore}
-          isFetching={userRecipesPagination.isFetching}
-          onEndReached={handleLoadMoreUserRecipes}
-          horizontal
-        />
-      </ScrollView>
-      <ScrollView
-        style={styles.container}
-        onScroll={(event) => handleScroll(event, 1)}
-        scrollEventThrottle={400}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+        {/* Featured Recipe Hero */}
+        {featuredRecipe && !loading.user && (
+          <Animated.View entering={FadeIn.duration(500)} style={dynamicStyles.featuredSection}>
+            <Text style={dynamicStyles.featuredLabel}>FEATURED</Text>
+            <FeaturedRecipeCard
+              recipe={featuredRecipe}
+              onPress={handlePressRecipe}
+              variant="hero"
+            />
+          </Animated.View>
+        )}
+
+        {/* Your Recipes Section */}
+        {remainingRecipes.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(100).duration(400)}>
+            <View style={dynamicStyles.sectionHeader}>
+              <Text style={dynamicStyles.sectionTitle}>Your Recipes</Text>
+            </View>
+            <RecipeListComponent
+              recipes={remainingRecipes}
+              loading={loading.user}
+              error={error.user}
+              onRetry={loadUserRecipes}
+              onPressRecipe={handlePressRecipe}
+              hasMore={userRecipesPagination.hasMore}
+              isFetching={userRecipesPagination.isFetching}
+              onEndReached={handleLoadMoreUserRecipes}
+              horizontal
+            />
+          </Animated.View>
+        )}
+
+        {/* All Recipes Section */}
+        <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+          <View style={dynamicStyles.sectionHeader}>
+            <Text style={dynamicStyles.sectionTitle}>Discover</Text>
+          </View>
+          <RecipeListComponent
+            recipes={allRecipes}
+            loading={loading.all}
+            error={error.all}
+            onRetry={loadAllRecipes}
+            onPressRecipe={handlePressRecipe}
+            hasMore={allRecipesPagination.hasMore}
+            isFetching={allRecipesPagination.isFetching}
+            onEndReached={handleLoadMoreAllRecipes}
+            horizontal
           />
-        }
-        scrollEnabled={!allRecipesPagination.isFetching}
-      >
-        <RecipeListComponent
-          title="All Recipes"
-          recipes={allRecipes}
-          loading={loading.all}
-          error={error.all}
-          onRetry={loadAllRecipes}
-          onPressRecipe={handlePressRecipe}
-          hasMore={allRecipesPagination.hasMore}
-          isFetching={allRecipesPagination.isFetching}
-          onEndReached={handleLoadMoreAllRecipes}
-          horizontal
-        />
+        </Animated.View>
+
+        {/* Loading indicator */}
         {allRecipesPagination.hasMore && allRecipesPagination.isFetching && (
-          <View style={styles.loadingMore}>
+          <View style={dynamicStyles.loadingMore}>
             <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={styles.loadingText}>Loading...</Text>
+            <Text style={dynamicStyles.loadingText}>Loading more...</Text>
           </View>
         )}
-        {!allRecipesPagination.hasMore && (
-          <Text style={styles.endOfList}>End of list</Text>
+
+        {/* End of list */}
+        {!allRecipesPagination.hasMore && allRecipes.length > 0 && (
+          <Text style={dynamicStyles.endOfList}>You've seen all recipes</Text>
         )}
       </ScrollView>
-      <View style={styles.buttonContainer}>
+
+      {/* Bottom Action Bar */}
+      <Animated.View entering={FadeInDown.delay(300).duration(400)} style={dynamicStyles.buttonContainer}>
         <Button
           mode="contained"
           onPress={handleSearch}
-          style={[styles.button, styles.containedButton]}
-          labelStyle={[styles.buttonLabel, { color: "white" }]}
+          style={[dynamicStyles.button, dynamicStyles.containedButton]}
+          labelStyle={[dynamicStyles.buttonLabel, { color: colors.textOnPrimary }]}
           theme={{ colors: { primary: colors.primary } }}
           icon="magnify"
           compact
@@ -373,8 +445,8 @@ export const RecipesScreen = () => {
         <Button
           mode="outlined"
           onPress={handleCollections}
-          style={[styles.button, styles.outlinedButton]}
-          labelStyle={[styles.buttonLabel, { color: colors.primary }]}
+          style={[dynamicStyles.button, dynamicStyles.outlinedButton]}
+          labelStyle={[dynamicStyles.buttonLabel, { color: colors.primary }]}
           theme={{ colors: { primary: colors.primary } }}
           icon="folder-multiple"
           compact
@@ -395,156 +467,15 @@ export const RecipesScreen = () => {
         <Button
           mode="outlined"
           onPress={handleAddRecipe}
-          style={[styles.button, styles.outlinedButton]}
-          labelStyle={[styles.buttonLabel, { color: colors.primary }]}
+          style={[dynamicStyles.button, dynamicStyles.outlinedButton]}
+          labelStyle={[dynamicStyles.buttonLabel, { color: colors.primary }]}
           theme={{ colors: { primary: colors.primary } }}
           icon="plus"
           compact
         >
           Add
         </Button>
-      </View>
+      </Animated.View>
     </Screen>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  recipesContainer: {
-    paddingHorizontal: 8,
-    paddingBottom: 8,
-    minHeight: 200, // Ensure there's enough space for the loading indicator
-  },
-  recipeCard: {
-    width: 200,
-    marginHorizontal: 8,
-    backgroundColor: colors.card,
-    borderRadius: 8,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    marginBottom: 16,
-  },
-  recipeList: {
-    padding: 0,
-    margin: 0,
-  },
-  loadingContainer: {
-    padding: 20,
-    alignItems: "center",
-  },
-  loadingMore: {
-    padding: 16,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-  },
-  loadMoreButton: {
-    display: 'none', // Hide load more button since we're using infinite scroll
-  },
-  loadMoreText: {
-    color: colors.primary,
-    fontWeight: "500",
-  },
-  loadingText: {
-    color: colors.textSecondary,
-  },
-  endOfList: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontStyle: 'italic',
-  },
-  emptyContainer: {
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  errorContainer: {
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 8,
-    margin: 16,
-    borderWidth: 1,
-    borderColor: colors.error,
-  },
-  errorText: {
-    color: colors.error,
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  emptyText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: colors.textTertiary,
-  },
-  retryButton: {
-    marginTop: 10,
-    padding: 8,
-    backgroundColor: colors.primary,
-    borderRadius: 4,
-  },
-  retryButtonText: {
-    color: colors.white,
-    fontWeight: "500",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    padding: 16,
-    backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  button: {
-    flex: 1,
-    marginHorizontal: 8,
-    height: 48,
-    justifyContent: "center",
-    borderRadius: 8,
-  },
-  buttonLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginVertical: 0,
-    paddingVertical: 0,
-    height: 20,
-    lineHeight: 20,
-  },
-  containedButton: {
-    backgroundColor: colors.primary,
-    elevation: 0,
-  },
-  outlinedButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-});

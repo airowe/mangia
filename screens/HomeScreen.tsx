@@ -1,35 +1,46 @@
+/**
+ * HomeScreen
+ *
+ * Main home screen displaying pantry items and products.
+ * Editorial design with warm colors and magazine-style typography.
+ */
+
 import React, {
   useState,
   useEffect,
   useCallback,
   useRef,
   useMemo,
-} from "react";
+} from 'react';
 import {
   StyleSheet,
   View,
+  Text,
   Animated,
   RefreshControl,
   Alert,
   ActivityIndicator,
-} from "react-native";
-import { Screen } from "../components/Screen";
-import { AddToPantrySheet } from "../components/AddToPantrySheet";
-import BottomSheet, { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
-import PantryList from "../components/PantryList";
-import ProductList from "../components/ProductList";
-import { PantryItem, Product } from "../models/Product";
+  Platform,
+} from 'react-native';
+import { BlurView } from 'expo-blur';
+import AnimatedRN, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { Screen } from '../components/Screen';
+import { AddToPantrySheet } from '../components/AddToPantrySheet';
+import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import PantryList from '../components/PantryList';
+import ProductList from '../components/ProductList';
+import { PantryItem, Product } from '../models/Product';
 import {
   fetchPantryItems,
   addToPantry,
   updatePantryItemQuantity,
   removeFromPantry,
-} from "../lib/pantry";
-import { colors } from "../theme/colors";
-import { Button } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { fetchAllProducts } from "../lib/products";
+} from '../lib/pantry';
+import { useTheme } from '../theme';
+import { Button } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { fetchAllProducts } from '../lib/products';
 
 type RootStackParamList = {
   ManualEntryScreen: undefined;
@@ -38,7 +49,7 @@ type RootStackParamList = {
 
 type HomeScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "ManualEntryScreen"
+  'ManualEntryScreen'
 >;
 
 interface PaginationState {
@@ -50,34 +61,28 @@ interface PaginationState {
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { theme, isDark } = useTheme();
+  const { colors, spacing, borderRadius } = theme;
+
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["40%"], []);
+  const snapPoints = useMemo(() => ['40%'], []);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
 
-  // For debugging
-  useEffect(() => {
-    console.log("BottomSheet ref:", bottomSheetRef.current);
-  }, []);
-
   const handleAddToPantryPress = useCallback(() => {
-    console.log("Add to pantry pressed");
-    console.log("BottomSheet ref current:", bottomSheetRef.current);
     if (bottomSheetRef.current) {
-      console.log("Expanding bottom sheet...");
       bottomSheetRef.current.expand();
-    } else {
-      console.error("BottomSheet ref is not attached");
     }
   }, []);
 
   const handleManualPress = useCallback(() => {
     bottomSheetRef.current?.close();
-    navigation.navigate("ManualEntryScreen");
+    navigation.navigate('ManualEntryScreen');
   }, [navigation]);
 
   const handleImportRecipePress = useCallback(() => {
-    navigation.navigate("ImportRecipeScreen");
+    navigation.navigate('ImportRecipeScreen');
   }, [navigation]);
+
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoadingPantry, setIsLoadingPantry] = useState<boolean>(true);
@@ -92,7 +97,7 @@ export const HomeScreen: React.FC = () => {
 
   // Filter out products that are already in the pantry
   const availableProducts = allProducts.filter(
-    (product) => !pantryItems.some((item) => item.id === product.id),
+    (product) => !pantryItems.some((item) => item.id === product.id)
   );
 
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -115,7 +120,7 @@ export const HomeScreen: React.FC = () => {
 
         // Update products list based on pagination
         setAllProducts((prev) =>
-          pageNum === 1 ? products : [...prev, ...products],
+          pageNum === 1 ? products : [...prev, ...products]
         );
 
         // Update pagination state
@@ -127,15 +132,15 @@ export const HomeScreen: React.FC = () => {
           limit: response.limit || prev.limit,
         }));
       } catch (error) {
-        console.error("Error loading products:", error);
-        Alert.alert("Error", "Failed to load products");
+        console.error('Error loading products:', error);
+        Alert.alert('Error', 'Failed to load products');
       } finally {
         setIsLoadingProducts(false);
         setLoadingMore(false);
         setIsRefreshing(false);
       }
     },
-    [pagination.limit],
+    [pagination.limit]
   );
 
   const loadPantryItems = useCallback(async () => {
@@ -145,8 +150,8 @@ export const HomeScreen: React.FC = () => {
       setIsLoadingPantry(false);
       return items;
     } catch (error) {
-      console.error("Error loading pantry items:", error);
-      Alert.alert("Error", "Failed to load pantry items");
+      console.error('Error loading pantry items:', error);
+      Alert.alert('Error', 'Failed to load pantry items');
       setIsLoadingPantry(false);
       return [];
     }
@@ -159,7 +164,7 @@ export const HomeScreen: React.FC = () => {
 
       const { data, error } = await addToPantry(product);
       if (error) {
-        console.error("Error adding to pantry:", error);
+        console.error('Error adding to pantry:', error);
         // Revert optimistic update on error
         setAllProducts((prev) => [...prev, product]);
         return;
@@ -170,25 +175,24 @@ export const HomeScreen: React.FC = () => {
         setPantryItems((prev) => [...prev, data]);
       }
     } catch (error) {
-      console.error("Error in handleAddToPantry:", error);
+      console.error('Error in handleAddToPantry:', error);
       // Revert optimistic update on error
       setAllProducts((prev) => [...prev, product]);
     }
   }, []);
 
   const handleRemoveFromPantry = useCallback(async (product: PantryItem) => {
-    //Add a confirm alert
     Alert.alert(
-      "Remove Item",
+      'Remove Item',
       `Are you sure you want to remove ${product.title} from your pantry?`,
       [
         {
-          text: "Cancel",
-          style: "cancel",
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: "Remove",
-          style: "destructive",
+          text: 'Remove',
+          style: 'destructive',
           onPress: async () => {
             try {
               // Optimistically update the UI
@@ -196,21 +200,19 @@ export const HomeScreen: React.FC = () => {
 
               const result = await removeFromPantry(product.id);
               if (!result) {
-                console.error("Error removing from pantry:", result);
+                console.error('Error removing from pantry:', result);
                 // Revert optimistic update on error
                 setPantryItems((prev) => [...prev, product]);
                 return;
               }
-
-              // The item was already removed optimistically at the start
             } catch (error) {
-              console.error("Error in handleRemoveFromPantry:", error);
+              console.error('Error in handleRemoveFromPantry:', error);
               // Revert optimistic update on error
               setPantryItems((prev) => [...prev, product]);
             }
           },
         },
-      ],
+      ]
     );
   }, []);
 
@@ -227,7 +229,7 @@ export const HomeScreen: React.FC = () => {
       // Optimistically update the UI
       const updatedProduct = { ...currentProduct, quantity: newQuantity };
       setPantryItems((prev) =>
-        prev.map((item) => (item.id === productId ? updatedProduct : item)),
+        prev.map((item) => (item.id === productId ? updatedProduct : item))
       );
 
       try {
@@ -236,14 +238,14 @@ export const HomeScreen: React.FC = () => {
         if (result.error) throw result.error;
       } catch (error) {
         // Revert optimistic update on error
-        console.error("Error updating quantity:", error);
+        console.error('Error updating quantity:', error);
         setPantryItems((prev) =>
-          prev.map((item) => (item.id === productId ? currentProduct : item)),
+          prev.map((item) => (item.id === productId ? currentProduct : item))
         );
-        Alert.alert("Error", "Failed to update item quantity");
+        Alert.alert('Error', 'Failed to update item quantity');
       }
     },
-    [pantryItems],
+    [pantryItems]
   );
 
   const handleLoadMore = useCallback(() => {
@@ -260,14 +262,60 @@ export const HomeScreen: React.FC = () => {
   // Show loading indicator while pantry is loading
   if (isLoadingPantry) {
     return isLoadingProducts ? (
-      <View style={styles.loadingContainer}>
+      <View
+        style={[styles.loadingContainer, { backgroundColor: colors.background }]}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     ) : null;
   }
 
+  const supportsBlur = Platform.OS === 'ios';
+
+  const renderSheetBackground = useCallback(
+    (bgProps: any) => {
+      if (supportsBlur) {
+        return (
+          <View
+            style={[
+              styles.sheetBackground,
+              { borderRadius: borderRadius.xl },
+            ]}
+            {...bgProps}
+          >
+            <BlurView
+              intensity={80}
+              tint={isDark ? 'dark' : 'light'}
+              style={StyleSheet.absoluteFill}
+            />
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: colors.glass },
+              ]}
+            />
+          </View>
+        );
+      }
+
+      return (
+        <View
+          style={[
+            styles.sheetBackground,
+            {
+              backgroundColor: colors.surface,
+              borderRadius: borderRadius.xl,
+            },
+          ]}
+          {...bgProps}
+        />
+      );
+    },
+    [supportsBlur, isDark, colors.glass, colors.surface, borderRadius.xl]
+  );
+
   return (
-    <Screen style={styles.container}>
+    <Screen style={StyleSheet.flatten([styles.container, { backgroundColor: colors.background }])}>
       <Animated.ScrollView
         style={styles.scrollView}
         refreshControl={
@@ -287,15 +335,12 @@ export const HomeScreen: React.FC = () => {
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           {
             useNativeDriver: true,
-            listener: (event: any) => {
-              // Optional: Add any additional scroll handling here
-            },
-          },
+          }
         )}
         scrollEventThrottle={16}
         contentInsetAdjustmentBehavior="automatic"
       >
-        <View style={styles.listContainer}>
+        <View style={[styles.listContainer, { paddingHorizontal: spacing.lg }]}>
           {/* Pantry Items */}
           <PantryList
             title="My Pantry"
@@ -323,13 +368,36 @@ export const HomeScreen: React.FC = () => {
         </View>
       </Animated.ScrollView>
 
-      <View style={styles.buttonContainer}>
+      {/* Action buttons */}
+      <View
+        style={[
+          styles.buttonContainer,
+          {
+            backgroundColor: supportsBlur ? 'transparent' : colors.glass,
+            borderTopColor: colors.border,
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.lg,
+          },
+        ]}
+      >
+        {supportsBlur && (
+          <>
+            <BlurView
+              intensity={60}
+              tint={isDark ? 'dark' : 'light'}
+              style={StyleSheet.absoluteFill}
+            />
+            <View
+              style={[StyleSheet.absoluteFill, { backgroundColor: colors.glass }]}
+            />
+          </>
+        )}
         <View style={styles.buttonRow}>
           <Button
             mode="outlined"
             onPress={handleImportRecipePress}
-            style={styles.importButton}
-            labelStyle={styles.importButtonLabel}
+            style={[styles.importButton, { borderColor: colors.primary, borderRadius: borderRadius.full }]}
+            labelStyle={[styles.importButtonLabel, { color: colors.primary }]}
             icon="link-variant"
           >
             Import Recipe
@@ -337,9 +405,9 @@ export const HomeScreen: React.FC = () => {
           <Button
             mode="contained"
             onPress={handleAddToPantryPress}
-            style={styles.addButton}
+            style={[styles.addButton, { borderRadius: borderRadius.full }]}
             labelStyle={styles.addButtonLabel}
-            theme={{ colors: { primary: colors.primary } }}
+            buttonColor={colors.primary}
             icon="plus"
           >
             Add to Pantry
@@ -353,14 +421,16 @@ export const HomeScreen: React.FC = () => {
         snapPoints={snapPoints}
         enablePanDownToClose={true}
         enableContentPanningGesture={true}
-        handleComponent={null}
-        backgroundStyle={styles.sheetBackground}
+        handleIndicatorStyle={{
+          backgroundColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
+        }}
+        backgroundComponent={renderSheetBackground}
         backdropComponent={(props) => (
           <BottomSheetBackdrop
             {...props}
             disappearsOnIndex={-1}
             appearsOnIndex={0}
-            opacity={0.5}
+            opacity={isDark ? 0.7 : 0.5}
           />
         )}
       >
@@ -372,83 +442,59 @@ export const HomeScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   sheetBackground: {
-    backgroundColor: "#fff",
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
   container: {
     flex: 1,
-    backgroundColor: colors.background,
     padding: 8,
-  },
-  section: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 8,
-    paddingHorizontal: 8,
-  },
-  productsList: {
-    paddingBottom: 16,
-  },
-  productsRow: {
-    justifyContent: "space-between",
-    paddingHorizontal: 4,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
   },
   scrollViewContent: {
-    paddingBottom: 80,
-    paddingTop: 0, // We'll control the top padding dynamically
+    paddingBottom: 100,
+    paddingTop: 0,
   },
-  listContainer: {
-    paddingHorizontal: 16,
-  },
+  listContainer: {},
   buttonContainer: {
-    padding: 16,
-    backgroundColor: "rgba(253, 246, 240, 0.95)",
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -1 },
-    shadowOpacity: 0.08,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
   },
   buttonRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
   },
   importButton: {
     flex: 1,
-    borderRadius: 8,
-    borderColor: colors.primary,
   },
   importButtonLabel: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   addButton: {
     flex: 1,
-    borderRadius: 8,
-    paddingVertical: 8,
+    paddingVertical: 2,
   },
   addButtonLabel: {
     fontSize: 14,
-    fontWeight: "600",
-    paddingVertical: 4,
+    fontWeight: '600',
   },
 });
 

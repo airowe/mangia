@@ -1,63 +1,47 @@
-import React from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
-import HomeStack from "./HomeStack";
-import MealPlanningStack from "./MealPlanningStack";
-import RecipeLibraryStack from "./RecipeLibraryStack";
-import PantryStack from "./PantryStack";
-import { colors } from "../theme/colors";
+/**
+ * TabNavigator
+ *
+ * Main bottom tab navigation with custom glass tab bar and primary action button.
+ */
+
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import HomeStack from './HomeStack';
+import MealPlanningStack from './MealPlanningStack';
+import RecipeLibraryStack from './RecipeLibraryStack';
+import PantryStack from './PantryStack';
+import { CustomTabBar } from '../components/navigation';
 
 const Tab = createBottomTabNavigator();
 
 export default function TabNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = "home";
-
-          if (route.name === "Home") iconName = "home";
-          else if (route.name === "Pantry") iconName = "basket";
-          else if (route.name === "MealPlanner") iconName = "restaurant";
-          else if (route.name === "Recipes") iconName = "book";
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.secondary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: colors.background,
-          borderTopColor: colors.secondary,
-          borderTopWidth: 1,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "500",
-        },
-      })}
+      }}
     >
       <Tab.Screen
         name="Home"
         component={HomeStack}
-        options={{ title: "Home" }}
+        options={{ title: 'Home' }}
       />
       <Tab.Screen
         name="Pantry"
         component={PantryStack}
-        options={{ title: "Pantry" }}
+        options={{ title: 'Pantry' }}
       />
       <Tab.Screen
         name="MealPlanner"
         component={MealPlanningStack}
-        options={{ title: "Meal Planner" }}
+        options={{ title: 'Planner' }}
       />
       <Tab.Screen
         name="Recipes"
         component={RecipeLibraryStack}
-        options={{ title: "Recipes" }}
+        options={{ title: 'Recipes' }}
       />
-
     </Tab.Navigator>
   );
 }
