@@ -8,6 +8,15 @@ export interface RecipeWithIngredients extends Recipe {
   ingredients: RecipeIngredient[];
 }
 
+// API response types
+interface RecipesResponse {
+  recipes: RecipeWithIngredients[];
+}
+
+interface RecipeResponse {
+  recipe: RecipeWithIngredients;
+}
+
 /**
  * Fetch recipes by status (want_to_cook, cooked, archived)
  */
@@ -15,10 +24,10 @@ export async function fetchRecipesByStatus(
   status: RecipeStatus,
 ): Promise<RecipeWithIngredients[]> {
   try {
-    const data = await apiClient.get<RecipeWithIngredients[]>(
+    const response = await apiClient.get<RecipesResponse>(
       `/api/recipes?status=${status}`
     );
-    return data || [];
+    return response.recipes || [];
   } catch (error) {
     console.error("Error fetching recipes:", error);
     throw error;
@@ -30,8 +39,8 @@ export async function fetchRecipesByStatus(
  */
 export async function fetchAllUserRecipes(): Promise<RecipeWithIngredients[]> {
   try {
-    const data = await apiClient.get<RecipeWithIngredients[]>('/api/recipes');
-    return data || [];
+    const response = await apiClient.get<RecipesResponse>('/api/recipes');
+    return response.recipes || [];
   } catch (error) {
     console.error("Error fetching recipes:", error);
     throw error;
@@ -45,8 +54,8 @@ export async function fetchRecipeById(
   recipeId: string,
 ): Promise<RecipeWithIngredients | null> {
   try {
-    const data = await apiClient.get<RecipeWithIngredients>(`/api/recipes/${recipeId}`);
-    return data || null;
+    const response = await apiClient.get<RecipeResponse>(`/api/recipes/${recipeId}`);
+    return response.recipe || null;
   } catch (error) {
     console.error("Error fetching recipe:", error);
     throw error;
@@ -108,10 +117,10 @@ export async function searchRecipes(
   query: string,
 ): Promise<RecipeWithIngredients[]> {
   try {
-    const data = await apiClient.get<RecipeWithIngredients[]>(
+    const response = await apiClient.get<RecipesResponse>(
       `/api/recipes?search=${encodeURIComponent(query)}`
     );
-    return data || [];
+    return response.recipes || [];
   } catch (error) {
     console.error("Error searching recipes:", error);
     throw error;
@@ -126,11 +135,11 @@ export async function createRecipe(
   ingredients?: RecipeIngredient[]
 ): Promise<RecipeWithIngredients> {
   try {
-    const data = await apiClient.post<RecipeWithIngredients>('/api/recipes', {
+    const response = await apiClient.post<RecipeResponse>('/api/recipes', {
       ...recipe,
       ingredients,
     });
-    return data;
+    return response.recipe;
   } catch (error) {
     console.error("Error creating recipe:", error);
     throw error;
@@ -146,11 +155,11 @@ export async function updateRecipe(
   ingredients?: RecipeIngredient[]
 ): Promise<RecipeWithIngredients> {
   try {
-    const data = await apiClient.patch<RecipeWithIngredients>(
+    const response = await apiClient.patch<RecipeResponse>(
       `/api/recipes/${recipeId}`,
       { ...updates, ingredients }
     );
-    return data;
+    return response.recipe;
   } catch (error) {
     console.error("Error updating recipe:", error);
     throw error;
