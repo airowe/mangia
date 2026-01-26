@@ -456,8 +456,8 @@ export const RecipesScreen = () => {
         <Button
           mode="outlined"
           onPress={handleCookbooks}
-          style={[styles.button, styles.outlinedButton]}
-          labelStyle={[styles.buttonLabel, { color: colors.primary }]}
+          style={[dynamicStyles.button, dynamicStyles.outlinedButton]}
+          labelStyle={[dynamicStyles.buttonLabel, { color: colors.primary }]}
           theme={{ colors: { primary: colors.primary } }}
           icon="bookshelf"
           compact
