@@ -1,72 +1,101 @@
-// screens/SubscriptionScreen.tsx
-// Premium subscription paywall
+/**
+ * SubscriptionScreen
+ *
+ * Editorial-style paywall screen for Mangia Pro subscription.
+ * Matches the HTML prototype with hero image, benefits list, and plan selector.
+ */
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback } from 'react';
 import {
   View,
+  Text,
+  StyleSheet,
   ScrollView,
+  TouchableOpacity,
+  Image,
   Alert,
   ActivityIndicator,
-} from "react-native";
-import { Text, Button, IconButton } from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { PurchasesPackage } from "react-native-purchases";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+  Platform,
+  Dimensions,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { BlurView } from 'expo-blur';
+import { Feather } from '@expo/vector-icons';
+import { PurchasesPackage } from 'react-native-purchases';
+import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { mangiaColors } from '../theme/tokens/colors';
+import { useSubscription } from '../contexts/SubscriptionContext';
+import { formatPrice, getSubscriptionPeriod } from '../lib/revenuecat';
 
-import { Screen } from "../components/Screen";
-import { useTheme } from "../theme";
-import { useSubscription } from "../contexts/SubscriptionContext";
-import {
-  PREMIUM_FEATURES,
-  PremiumFeature,
-} from "../hooks/usePremiumFeature";
-import { formatPrice, getSubscriptionPeriod } from "../lib/revenuecat";
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Features to display on paywall
-const PAYWALL_FEATURES: PremiumFeature[] = [
-  "unlimited_imports",
-  "what_can_i_make",
-  "cookbook_collection",
-  "grocery_export",
-  "meal_planning",
+// Paywall benefits
+const BENEFITS = [
+  {
+    id: 'unlimited',
+    icon: 'layers' as const,
+    iconBg: `${mangiaColors.sage}33`,
+    iconColor: mangiaColors.sage,
+    title: 'Unlimited Recipes',
+    description: 'Save as many as you can cook.',
+  },
+  {
+    id: 'family',
+    icon: 'users' as const,
+    iconBg: `${mangiaColors.terracotta}33`,
+    iconColor: mangiaColors.terracotta,
+    title: 'Family Sharing',
+    description: 'Sync grocery lists with your partner.',
+  },
+  {
+    id: 'scan',
+    icon: 'search' as const,
+    iconBg: `${mangiaColors.deepBrown}1A`,
+    iconColor: mangiaColors.deepBrown,
+    title: 'Scan Cookbooks',
+    description: 'Digitize your physical books instantly.',
+  },
 ];
 
 export default function SubscriptionScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { isPremium, isLoading, packages, purchase, restore } = useSubscription();
-  const { theme } = useTheme();
-  const { colors, spacing, borderRadius, typography } = theme;
 
+  const [selectedPlan, setSelectedPlan] = useState<'annual' | 'monthly'>('annual');
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
+
+  const annualPackage = packages.find(p => p.identifier.includes('yearly') || p.identifier.includes('annual'));
+  const monthlyPackage = packages.find(p => p.identifier.includes('monthly'));
 
   const handlePurchase = useCallback(async () => {
-    if (!selectedPackage) {
-      Alert.alert("Select a Plan", "Please select a subscription plan");
+    const pkg = selectedPlan === 'annual' ? annualPackage : monthlyPackage;
+    if (!pkg) {
+      Alert.alert('Plan Unavailable', 'Selected plan is not available.');
       return;
     }
 
     setIsPurchasing(true);
     try {
-      const success = await purchase(selectedPackage);
+      const success = await purchase(pkg);
       if (success) {
         Alert.alert(
-          "Welcome to Premium!",
-          "You now have access to all premium features.",
-          [{ text: "Let's Go!", onPress: () => navigation.goBack() }]
+          'Welcome to Mangia Pro!',
+          'You now have access to all premium features.',
+          [{ text: "Let's Cook!", onPress: () => navigation.goBack() }]
         );
       }
     } catch (error: any) {
       Alert.alert(
-        "Purchase Failed",
-        error.message || "There was an error processing your purchase."
+        'Purchase Failed',
+        error.message || 'There was an error processing your purchase.'
       );
     } finally {
       setIsPurchasing(false);
     }
-  }, [selectedPackage, purchase, navigation]);
+  }, [selectedPlan, annualPackage, monthlyPackage, purchase, navigation]);
 
   const handleRestore = useCallback(async () => {
     setIsRestoring(true);
@@ -74,375 +103,562 @@ export default function SubscriptionScreen() {
       const restored = await restore();
       if (restored) {
         Alert.alert(
-          "Purchases Restored",
-          "Your premium subscription has been restored.",
-          [{ text: "Great!", onPress: () => navigation.goBack() }]
+          'Purchases Restored',
+          'Your premium subscription has been restored.',
+          [{ text: 'Great!', onPress: () => navigation.goBack() }]
         );
       } else {
         Alert.alert(
-          "No Purchases Found",
+          'No Purchases Found',
           "We couldn't find any previous purchases to restore."
         );
       }
     } catch (error: any) {
       Alert.alert(
-        "Restore Failed",
-        error.message || "There was an error restoring your purchases."
+        'Restore Failed',
+        error.message || 'There was an error restoring your purchases.'
       );
     } finally {
       setIsRestoring(false);
     }
   }, [restore, navigation]);
 
-  const styles = useMemo(
-    () => ({
-      container: {
-        flex: 1,
-        backgroundColor: colors.background,
-      },
-      scrollView: {
-        flex: 1,
-      },
-      content: {
-        padding: spacing.lg,
-        paddingBottom: spacing.xxxl,
-      },
-      closeButton: {
-        position: "absolute" as const,
-        top: 0,
-        right: 0,
-        zIndex: 1,
-      },
-      loadingContainer: {
-        flex: 1,
-        justifyContent: "center" as const,
-        alignItems: "center" as const,
-      },
-      loadingText: {
-        marginTop: spacing.md,
-        color: colors.textSecondary,
-        ...typography.styles.body,
-      },
-      successContainer: {
-        flex: 1,
-        justifyContent: "center" as const,
-        alignItems: "center" as const,
-        padding: spacing.xxl,
-      },
-      successTitle: {
-        ...typography.styles.largeTitle,
-        color: colors.text,
-        marginTop: spacing.md,
-        marginBottom: spacing.sm,
-      },
-      successText: {
-        ...typography.styles.body,
-        color: colors.textSecondary,
-        textAlign: "center" as const,
-        marginBottom: spacing.xl,
-      },
-      doneButton: {
-        paddingHorizontal: spacing.xxl,
-      },
-      header: {
-        alignItems: "center" as const,
-        marginTop: spacing.xxxl,
-        marginBottom: spacing.xxl,
-      },
-      title: {
-        ...typography.styles.largeTitle,
-        color: colors.text,
-        marginTop: spacing.md,
-        marginBottom: spacing.sm,
-      },
-      subtitle: {
-        ...typography.styles.body,
-        color: colors.textSecondary,
-        textAlign: "center" as const,
-      },
-      featuresSection: {
-        marginBottom: spacing.xxl,
-      },
-      featureItem: {
-        flexDirection: "row" as const,
-        alignItems: "center" as const,
-        paddingVertical: spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-      },
-      featureIcon: {
-        width: 44,
-        height: 44,
-        borderRadius: borderRadius.full,
-        backgroundColor: `${colors.primary}15`,
-        justifyContent: "center" as const,
-        alignItems: "center" as const,
-        marginRight: spacing.md,
-      },
-      featureText: {
-        flex: 1,
-      },
-      featureTitle: {
-        ...typography.styles.body,
-        fontWeight: "600" as const,
-        color: colors.text,
-        marginBottom: spacing.xs,
-      },
-      featureDescription: {
-        ...typography.styles.caption1,
-        color: colors.textSecondary,
-      },
-      plansSection: {
-        marginBottom: spacing.xl,
-      },
-      plansTitle: {
-        ...typography.styles.headline,
-        color: colors.text,
-        marginBottom: spacing.md,
-        textAlign: "center" as const,
-      },
-      noPackagesText: {
-        ...typography.styles.body,
-        color: colors.textSecondary,
-        textAlign: "center" as const,
-      },
-      planButton: {
-        marginBottom: spacing.md,
-        borderRadius: borderRadius.md,
-      },
-      planButtonSelected: {
-        borderColor: colors.primary,
-        borderWidth: 2,
-      },
-      planButtonContent: {
-        height: 72,
-        justifyContent: "center" as const,
-      },
-      planInfo: {
-        alignItems: "center" as const,
-      },
-      planTitle: {
-        ...typography.styles.body,
-        fontWeight: "600" as const,
-        color: colors.text,
-      },
-      planTitleSelected: {
-        color: colors.textOnPrimary,
-      },
-      planPrice: {
-        ...typography.styles.caption1,
-        color: colors.textSecondary,
-        marginTop: spacing.xs,
-      },
-      planPriceSelected: {
-        color: "rgba(255,255,255,0.8)",
-      },
-      planSavings: {
-        ...typography.styles.caption1,
-        color: colors.success,
-        fontWeight: "600" as const,
-        marginTop: spacing.xs,
-      },
-      purchaseButton: {
-        borderRadius: borderRadius.md,
-        marginBottom: spacing.md,
-      },
-      purchaseButtonContent: {
-        height: 52,
-      },
-      restoreButton: {
-        marginBottom: spacing.xl,
-      },
-      termsText: {
-        ...typography.styles.caption2,
-        color: colors.textTertiary,
-        textAlign: "center" as const,
-        lineHeight: 18,
-      },
-    }),
-    [colors, spacing, borderRadius, typography]
-  );
+  const handleClose = () => {
+    navigation.goBack();
+  };
 
   // Already premium - show success state
   if (isPremium) {
     return (
-      <Screen style={styles.container}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         <Animated.View entering={FadeIn.duration(400)} style={styles.successContainer}>
-          <MaterialCommunityIcons
-            name="crown"
-            size={80}
-            color={colors.primary}
-          />
+          <View style={styles.successIcon}>
+            <Feather name="award" size={48} color={mangiaColors.terracotta} />
+          </View>
           <Text style={styles.successTitle}>You're Premium!</Text>
           <Text style={styles.successText}>
-            You have access to all premium features.
+            You have access to all Mangia Pro features.
           </Text>
-          <Button
-            mode="contained"
-            onPress={() => navigation.goBack()}
-            style={styles.doneButton}
-          >
-            Done
-          </Button>
+          <TouchableOpacity style={styles.doneButton} onPress={handleClose}>
+            <Text style={styles.doneButtonText}>Done</Text>
+          </TouchableOpacity>
         </Animated.View>
-      </Screen>
+      </View>
     );
   }
 
   // Loading state
   if (isLoading) {
     return (
-      <Screen style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      </Screen>
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={mangiaColors.terracotta} />
+        <Text style={styles.loadingText}>Loading plans...</Text>
+      </View>
     );
   }
 
   return (
-    <Screen style={styles.container} noPadding>
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        bounces={false}
       >
-        {/* Close button */}
-        <IconButton
-          icon="close"
-          size={24}
-          onPress={() => navigation.goBack()}
-          style={styles.closeButton}
-        />
-
-        {/* Header */}
-        <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
-          <MaterialCommunityIcons
-            name="crown"
-            size={60}
-            color={colors.primary}
+        {/* Hero Image Area */}
+        <View style={styles.heroArea}>
+          <Image
+            source={{ uri: 'https://media.screensdesign.com/gasset/ddf8db0d-e34a-434d-a794-5db488564e1b.png' }}
+            style={styles.heroImage}
+            resizeMode="cover"
           />
-          <Text style={styles.title}>Upgrade to Premium</Text>
-          <Text style={styles.subtitle}>
-            Unlock all features and cook without limits
-          </Text>
-        </Animated.View>
+          <View style={styles.heroOverlay} />
 
-        {/* Features list */}
-        <View style={styles.featuresSection}>
-          {PAYWALL_FEATURES.map((featureKey, index) => {
-            const feature = PREMIUM_FEATURES[featureKey];
-            return (
-              <Animated.View
-                key={featureKey}
-                entering={FadeInDown.delay(index * 50).duration(300)}
-                style={styles.featureItem}
-              >
-                <View style={styles.featureIcon}>
-                  <MaterialCommunityIcons
-                    name={feature.icon as keyof typeof MaterialCommunityIcons.glyphMap}
-                    size={24}
-                    color={colors.primary}
-                  />
-                </View>
-                <View style={styles.featureText}>
-                  <Text style={styles.featureTitle}>{feature.title}</Text>
-                  <Text style={styles.featureDescription}>
-                    {feature.description}
-                  </Text>
-                </View>
-                <MaterialCommunityIcons
-                  name="check-circle"
-                  size={20}
-                  color={colors.success}
-                />
-              </Animated.View>
-            );
-          })}
+          {/* Close Button */}
+          <TouchableOpacity
+            style={[styles.closeButton, { top: insets.top + 8 }]}
+            onPress={handleClose}
+            activeOpacity={0.8}
+          >
+            <BlurView intensity={40} tint="light" style={styles.closeButtonBlur}>
+              <Feather name="x" size={18} color="white" />
+            </BlurView>
+          </TouchableOpacity>
+
+          {/* Mangia Pro Badge */}
+          <View style={styles.proBadge}>
+            <Text style={styles.proBadgeText}>Mangia Pro</Text>
+          </View>
         </View>
 
-        {/* Subscription options */}
-        <View style={styles.plansSection}>
-          <Text style={styles.plansTitle}>Choose Your Plan</Text>
-
-          {packages.length === 0 ? (
-            <Text style={styles.noPackagesText}>
-              No subscription plans available
+        {/* Content */}
+        <View style={styles.content}>
+          {/* Headline */}
+          <Animated.View
+            entering={FadeInDown.delay(100).duration(400)}
+            style={styles.headline}
+          >
+            <Text style={styles.headlineText}>
+              Become the Head Chef{'\n'}of Your Kitchen
             </Text>
-          ) : (
-            packages.map((pkg) => {
-              const isSelected = selectedPackage?.identifier === pkg.identifier;
-              const isYearly = pkg.identifier.includes("yearly");
+          </Animated.View>
 
-              return (
-                <Button
-                  key={pkg.identifier}
-                  mode={isSelected ? "contained" : "outlined"}
-                  onPress={() => setSelectedPackage(pkg)}
-                  style={[
-                    styles.planButton,
-                    isSelected && styles.planButtonSelected,
-                  ]}
-                  contentStyle={styles.planButtonContent}
-                >
-                  <View style={styles.planInfo}>
-                    <Text
-                      style={[
-                        styles.planTitle,
-                        isSelected && styles.planTitleSelected,
-                      ]}
-                    >
-                      {isYearly ? "Yearly" : "Monthly"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.planPrice,
-                        isSelected && styles.planPriceSelected,
-                      ]}
-                    >
-                      {formatPrice(pkg)}/{getSubscriptionPeriod(pkg)}
-                    </Text>
-                    {isYearly && (
-                      <Text style={styles.planSavings}>Save 40%</Text>
-                    )}
-                  </View>
-                </Button>
-              );
-            })
-          )}
+          {/* Benefits List */}
+          <Animated.View
+            entering={FadeInDown.delay(200).duration(400)}
+            style={styles.benefits}
+          >
+            {BENEFITS.map((benefit, index) => (
+              <View key={benefit.id} style={styles.benefitItem}>
+                <View style={[styles.benefitIcon, { backgroundColor: benefit.iconBg }]}>
+                  <Feather name={benefit.icon} size={20} color={benefit.iconColor} />
+                </View>
+                <View style={styles.benefitText}>
+                  <Text style={styles.benefitTitle}>{benefit.title}</Text>
+                  <Text style={styles.benefitDescription}>{benefit.description}</Text>
+                </View>
+              </View>
+            ))}
+          </Animated.View>
+        </View>
+      </ScrollView>
+
+      {/* Sticky Footer */}
+      <Animated.View
+        entering={FadeInUp.delay(300).duration(400)}
+        style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
+      >
+        {/* Plan Selector */}
+        <View style={styles.planSelector}>
+          {/* Annual Plan */}
+          <TouchableOpacity
+            style={[
+              styles.planCard,
+              selectedPlan === 'annual' && styles.planCardSelected,
+            ]}
+            onPress={() => setSelectedPlan('annual')}
+            activeOpacity={0.9}
+          >
+            <View style={styles.bestValueBadge}>
+              <Text style={styles.bestValueText}>Best Value</Text>
+            </View>
+            <Text style={[
+              styles.planLabel,
+              selectedPlan === 'annual' && styles.planLabelSelected,
+            ]}>
+              Annual
+            </Text>
+            <View style={styles.planPriceRow}>
+              <Text style={[
+                styles.planPrice,
+                selectedPlan === 'annual' && styles.planPriceSelected,
+              ]}>
+                {annualPackage ? formatPrice(annualPackage) : '$29.99'}
+              </Text>
+              <Text style={[
+                styles.planPeriod,
+                selectedPlan === 'annual' && styles.planPeriodSelected,
+              ]}>
+                /year
+              </Text>
+            </View>
+            <View style={[
+              styles.trialBadge,
+              selectedPlan === 'annual' && styles.trialBadgeSelected,
+            ]}>
+              <Text style={styles.trialText}>7 days free</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Monthly Plan */}
+          <TouchableOpacity
+            style={[
+              styles.planCard,
+              styles.planCardOutlined,
+              selectedPlan === 'monthly' && styles.planCardSelected,
+            ]}
+            onPress={() => setSelectedPlan('monthly')}
+            activeOpacity={0.9}
+          >
+            <Text style={[
+              styles.planLabel,
+              styles.planLabelOutlined,
+              selectedPlan === 'monthly' && styles.planLabelSelected,
+            ]}>
+              Monthly
+            </Text>
+            <View style={styles.planPriceRow}>
+              <Text style={[
+                styles.planPrice,
+                styles.planPriceOutlined,
+                selectedPlan === 'monthly' && styles.planPriceSelected,
+              ]}>
+                {monthlyPackage ? formatPrice(monthlyPackage) : '$4.99'}
+              </Text>
+              <Text style={[
+                styles.planPeriod,
+                styles.planPeriodOutlined,
+                selectedPlan === 'monthly' && styles.planPeriodSelected,
+              ]}>
+                /mo
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
-        {/* Purchase button */}
-        <Button
-          mode="contained"
+        {/* Subscribe Button */}
+        <TouchableOpacity
+          style={[styles.subscribeButton, (isPurchasing || isRestoring) && styles.buttonDisabled]}
           onPress={handlePurchase}
-          loading={isPurchasing}
-          disabled={isPurchasing || isRestoring || !selectedPackage}
-          style={styles.purchaseButton}
-          contentStyle={styles.purchaseButtonContent}
-        >
-          {isPurchasing ? "Processing..." : "Subscribe Now"}
-        </Button>
-
-        {/* Restore purchases */}
-        <Button
-          mode="text"
-          onPress={handleRestore}
-          loading={isRestoring}
           disabled={isPurchasing || isRestoring}
-          style={styles.restoreButton}
+          activeOpacity={0.9}
         >
-          Restore Purchases
-        </Button>
+          {isPurchasing ? (
+            <ActivityIndicator color={mangiaColors.cream} />
+          ) : (
+            <Text style={styles.subscribeButtonText}>Start 7-Day Free Trial</Text>
+          )}
+        </TouchableOpacity>
 
-        {/* Terms */}
-        <Text style={styles.termsText}>
-          Subscriptions automatically renew unless cancelled at least 24 hours
-          before the end of the current period. Your account will be charged for
-          renewal within 24 hours prior to the end of the current period.
+        {/* Restore Purchases */}
+        <TouchableOpacity
+          style={styles.restoreButton}
+          onPress={handleRestore}
+          disabled={isPurchasing || isRestoring}
+        >
+          <Text style={styles.restoreText}>
+            {isRestoring ? 'Restoring...' : 'Restore Purchases'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Legal Text */}
+        <Text style={styles.legalText}>
+          Auto-renews. Cancel anytime in Settings.
         </Text>
-      </ScrollView>
-    </Screen>
+      </Animated.View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: mangiaColors.cream,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 300, // Space for sticky footer
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: mangiaColors.brown,
+  },
+
+  // Hero
+  heroArea: {
+    height: 280,
+    position: 'relative',
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+    borderBottomLeftRadius: 60,
+    borderBottomRightRadius: 60,
+  },
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderBottomLeftRadius: 60,
+    borderBottomRightRadius: 60,
+  },
+  closeButton: {
+    position: 'absolute',
+    right: 24,
+    zIndex: 10,
+  },
+  closeButtonBlur: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  proBadge: {
+    position: 'absolute',
+    bottom: -16,
+    alignSelf: 'center',
+    backgroundColor: mangiaColors.dark,
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: mangiaColors.cream,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  proBadgeText: {
+    fontFamily: 'Georgia',
+    fontSize: 18,
+    fontWeight: '700',
+    color: mangiaColors.cream,
+    letterSpacing: 1,
+  },
+
+  // Content
+  content: {
+    paddingHorizontal: 24,
+    paddingTop: 40,
+  },
+  headline: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  headlineText: {
+    fontFamily: 'Georgia',
+    fontSize: 28,
+    lineHeight: 34,
+    color: mangiaColors.dark,
+    textAlign: 'center',
+  },
+
+  // Benefits
+  benefits: {
+    gap: 16,
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: mangiaColors.creamDark,
+    gap: 16,
+  },
+  benefitIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  benefitText: {
+    flex: 1,
+  },
+  benefitTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: mangiaColors.dark,
+    marginBottom: 2,
+  },
+  benefitDescription: {
+    fontSize: 12,
+    color: mangiaColors.brown,
+  },
+
+  // Footer
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: mangiaColors.creamDark,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+
+  // Plan Selector
+  planSelector: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 24,
+  },
+  planCard: {
+    flex: 1,
+    backgroundColor: mangiaColors.terracotta,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: mangiaColors.terracotta,
+    position: 'relative',
+  },
+  planCardOutlined: {
+    backgroundColor: 'white',
+    borderColor: mangiaColors.creamDark,
+  },
+  planCardSelected: {
+    borderColor: mangiaColors.terracotta,
+  },
+  bestValueBadge: {
+    position: 'absolute',
+    top: -12,
+    right: 8,
+    backgroundColor: mangiaColors.creamDark,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  bestValueText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: mangiaColors.dark,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  planLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.9)',
+    marginBottom: 4,
+  },
+  planLabelOutlined: {
+    color: mangiaColors.brown,
+  },
+  planLabelSelected: {
+    color: 'white',
+  },
+  planPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  planPrice: {
+    fontFamily: 'Georgia',
+    fontSize: 24,
+    color: 'white',
+  },
+  planPriceOutlined: {
+    color: mangiaColors.dark,
+  },
+  planPriceSelected: {
+    color: 'white',
+  },
+  planPeriod: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    marginLeft: 4,
+  },
+  planPeriodOutlined: {
+    color: mangiaColors.brown,
+  },
+  planPeriodSelected: {
+    color: 'rgba(255,255,255,0.8)',
+  },
+  trialBadge: {
+    marginTop: 8,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  trialBadgeSelected: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  trialText: {
+    fontSize: 10,
+    color: 'white',
+  },
+
+  // Subscribe Button
+  subscribeButton: {
+    height: 56,
+    backgroundColor: mangiaColors.dark,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  subscribeButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: mangiaColors.cream,
+  },
+
+  // Restore
+  restoreButton: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  restoreText: {
+    fontSize: 14,
+    color: mangiaColors.terracotta,
+    fontWeight: '500',
+  },
+
+  // Legal
+  legalText: {
+    fontSize: 10,
+    color: mangiaColors.brown,
+    opacity: 0.6,
+    textAlign: 'center',
+  },
+
+  // Success State
+  successContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  successIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: `${mangiaColors.terracotta}20`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  successTitle: {
+    fontFamily: 'Georgia',
+    fontSize: 28,
+    color: mangiaColors.dark,
+    marginBottom: 12,
+  },
+  successText: {
+    fontSize: 16,
+    color: mangiaColors.brown,
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  doneButton: {
+    backgroundColor: mangiaColors.terracotta,
+    paddingHorizontal: 48,
+    paddingVertical: 16,
+    borderRadius: 999,
+  },
+  doneButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+  },
+});
