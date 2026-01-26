@@ -1,22 +1,40 @@
 // lib/cookbookService.ts
 // Service for managing cookbook collection (premium feature)
+//
+// @deprecated This service uses the legacy Supabase client.
+// The app has been migrated to Clerk + API architecture.
+// This file is kept for reference but cookbook functionality
+// needs to be migrated to use the new API.
 
 import { supabase } from "./supabase";
 import { Cookbook } from "../models/Cookbook";
 
 /**
+ * Helper to ensure supabase is available
+ */
+function getSupabaseClient() {
+  if (!supabase) {
+    throw new Error(
+      "Supabase is not configured. Cookbook functionality requires migration to the new API.",
+    );
+  }
+  return supabase;
+}
+
+/**
  * Fetch all cookbooks for the current user
  */
 export async function fetchCookbooks(): Promise<Cookbook[]> {
+  const client = getSupabaseClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await client.auth.getUser();
 
   if (!user) {
     throw new Error("User not authenticated");
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("cookbooks")
     .select("*")
     .eq("user_id", user.id)
@@ -34,15 +52,16 @@ export async function fetchCookbooks(): Promise<Cookbook[]> {
  * Search cookbooks by title or author
  */
 export async function searchCookbooks(query: string): Promise<Cookbook[]> {
+  const client = getSupabaseClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await client.auth.getUser();
 
   if (!user) {
     throw new Error("User not authenticated");
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("cookbooks")
     .select("*")
     .eq("user_id", user.id)
@@ -61,17 +80,18 @@ export async function searchCookbooks(query: string): Promise<Cookbook[]> {
  * Create a new cookbook
  */
 export async function createCookbook(
-  cookbook: Omit<Cookbook, "id" | "user_id" | "created_at">
+  cookbook: Omit<Cookbook, "id" | "user_id" | "created_at">,
 ): Promise<Cookbook> {
+  const client = getSupabaseClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await client.auth.getUser();
 
   if (!user) {
     throw new Error("User not authenticated");
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("cookbooks")
     .insert({
       user_id: user.id,
@@ -96,9 +116,10 @@ export async function createCookbook(
  */
 export async function updateCookbook(
   cookbookId: string,
-  updates: Partial<Omit<Cookbook, "id" | "user_id" | "created_at">>
+  updates: Partial<Omit<Cookbook, "id" | "user_id" | "created_at">>,
 ): Promise<Cookbook> {
-  const { data, error } = await supabase
+  const client = getSupabaseClient();
+  const { data, error } = await client
     .from("cookbooks")
     .update({
       ...updates,
@@ -120,7 +141,8 @@ export async function updateCookbook(
  * Delete a cookbook
  */
 export async function deleteCookbook(cookbookId: string): Promise<void> {
-  const { error } = await supabase
+  const client = getSupabaseClient();
+  const { error } = await client
     .from("cookbooks")
     .delete()
     .eq("id", cookbookId);
@@ -135,9 +157,10 @@ export async function deleteCookbook(cookbookId: string): Promise<void> {
  * Get cookbook by ID
  */
 export async function getCookbookById(
-  cookbookId: string
+  cookbookId: string,
 ): Promise<Cookbook | null> {
-  const { data, error } = await supabase
+  const client = getSupabaseClient();
+  const { data, error } = await client
     .from("cookbooks")
     .select("*")
     .eq("id", cookbookId)

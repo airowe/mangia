@@ -225,64 +225,132 @@ export type FontSizeKey = keyof typeof fontSize;
  *
  * Magazine-style typography for the Warm & Editorial design.
  * Uses serif fonts for headlines and generous line heights.
+ * Sizes match the HTML prototypes in /ui-redesign/screens/
  */
 export const editorialTextStyles = {
-  // Large display headline (home hero, featured recipes)
+  // "On The Menu" - 32px serif (home_screen.html)
   displayHeadline: {
-    fontFamily: fontFamily.serifBold,
-    fontSize: 36,
-    fontWeight: '700' as TextStyle['fontWeight'],
-    lineHeight: 42,
-    letterSpacing: -0.5,
+    fontFamily: fontFamily.serif,
+    fontSize: 32,
+    fontWeight: '400' as TextStyle['fontWeight'],
+    lineHeight: 36,
+    letterSpacing: 0,
   },
 
-  // Recipe title on detail screen
+  // Recipe detail title - 40px serif (recipe_detail.html: text-4xl)
   recipeTitle: {
-    fontFamily: fontFamily.serifBold,
-    fontSize: 28,
-    fontWeight: '700' as TextStyle['fontWeight'],
-    lineHeight: 34,
+    fontFamily: fontFamily.serif,
+    fontSize: 36,
+    fontWeight: '400' as TextStyle['fontWeight'],
+    lineHeight: 40,
     letterSpacing: -0.3,
   },
 
-  // Section headings
-  sectionHeading: {
+  // Featured card title - 24px serif (home_screen.html: text-2xl)
+  featuredCardTitle: {
     fontFamily: fontFamily.serif,
-    fontSize: 22,
-    fontWeight: '600' as TextStyle['fontWeight'],
+    fontSize: 24,
+    fontWeight: '400' as TextStyle['fontWeight'],
     lineHeight: 28,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
   },
 
-  // Card titles
+  // Greeting header - 24px serif (home_screen.html: text-2xl)
+  greeting: {
+    fontFamily: fontFamily.serif,
+    fontSize: 24,
+    fontWeight: '400' as TextStyle['fontWeight'],
+    lineHeight: 28,
+    letterSpacing: 0,
+  },
+
+  // Section headings - 20px serif (home_screen.html: text-xl)
+  sectionHeading: {
+    fontFamily: fontFamily.serif,
+    fontSize: 20,
+    fontWeight: '400' as TextStyle['fontWeight'],
+    lineHeight: 24,
+    letterSpacing: 0,
+  },
+
+  // Queue item title - 18px serif (home_screen.html: text-lg)
   cardTitle: {
     fontFamily: fontFamily.serif,
     fontSize: 18,
-    fontWeight: '600' as TextStyle['fontWeight'],
-    lineHeight: 24,
-    letterSpacing: -0.1,
+    fontWeight: '400' as TextStyle['fontWeight'],
+    lineHeight: 22,
+    letterSpacing: 0,
   },
 
-  // Cooking mode step text - LARGE for hands-free readability
+  // Paywall headline - 28px serif (paywall_screen.html: text-[28px])
+  paywallHeadline: {
+    fontFamily: fontFamily.serif,
+    fontSize: 28,
+    fontWeight: '400' as TextStyle['fontWeight'],
+    lineHeight: 34,
+    letterSpacing: 0,
+  },
+
+  // Cooking mode step text - 34px serif (cooking_mode.html: text-[34px])
   cookingStep: {
     fontFamily: fontFamily.serif,
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: '400' as TextStyle['fontWeight'],
     lineHeight: 44,
     letterSpacing: 0,
   },
 
-  // Step label "STEP 1 OF 8"
+  // Category label "PREPARING THE BASE" - 14px sans, uppercase
+  cookingCategory: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 14,
+    fontWeight: '700' as TextStyle['fontWeight'],
+    lineHeight: 18,
+    letterSpacing: 2,
+    textTransform: 'uppercase' as const,
+  },
+
+  // "BON APPÉTIT" label - 12px, uppercase, tracking-widest
+  brandLabel: {
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+    fontWeight: '700' as TextStyle['fontWeight'],
+    lineHeight: 16,
+    letterSpacing: 3,
+    textTransform: 'uppercase' as const,
+  },
+
+  // Step indicator "STEP 3 OF 8" - 12px, uppercase, tracking-widest
+  stepIndicator: {
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+    fontWeight: '700' as TextStyle['fontWeight'],
+    lineHeight: 16,
+    letterSpacing: 3,
+    textTransform: 'uppercase' as const,
+  },
+
+  // Cooking step label (alias for stepIndicator, used in CookingModeScreen)
   cookingStepLabel: {
     fontFamily: fontFamily.semibold,
     fontSize: 13,
     fontWeight: '600' as TextStyle['fontWeight'],
-    lineHeight: 16,
-    letterSpacing: 1.5,
+    lineHeight: 18,
+    letterSpacing: 2,
     textTransform: 'uppercase' as const,
   },
 
-  // Byline/attribution text
+  // Category tag "Italian Classic" - 10px, uppercase
+  categoryTag: {
+    fontFamily: fontFamily.bold,
+    fontSize: 10,
+    fontWeight: '700' as TextStyle['fontWeight'],
+    lineHeight: 14,
+    letterSpacing: 2,
+    textTransform: 'uppercase' as const,
+  },
+
+  // Byline/attribution text - 12px uppercase
   byline: {
     fontFamily: fontFamily.medium,
     fontSize: 12,
@@ -292,7 +360,7 @@ export const editorialTextStyles = {
     textTransform: 'uppercase' as const,
   },
 
-  // Recipe body text with generous line height
+  // Recipe body text
   recipeBody: {
     fontFamily: fontFamily.regular,
     fontSize: 17,
@@ -307,6 +375,24 @@ export const editorialTextStyles = {
     fontSize: 16,
     fontWeight: '400' as TextStyle['fontWeight'],
     lineHeight: 26,
+    letterSpacing: 0,
+  },
+
+  // Meta text (time, servings) - 12px
+  meta: {
+    fontFamily: fontFamily.regular,
+    fontSize: 12,
+    fontWeight: '400' as TextStyle['fontWeight'],
+    lineHeight: 16,
+    letterSpacing: 0,
+  },
+
+  // Price text - 24px serif (paywall_screen.html: text-2xl)
+  price: {
+    fontFamily: fontFamily.serif,
+    fontSize: 24,
+    fontWeight: '400' as TextStyle['fontWeight'],
+    lineHeight: 28,
     letterSpacing: 0,
   },
 } as const;
