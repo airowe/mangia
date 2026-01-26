@@ -1,13 +1,20 @@
 /**
  * TabNavigator
  *
- * Main bottom tab navigation with custom glass tab bar and primary action button.
+ * Main bottom tab navigation with editorial glass tab bar and center FAB.
+ *
+ * Tabs:
+ * 1. Home - Main dashboard with "On The Menu" recipes
+ * 2. Pantry - Pantry inventory management
+ * 3. [FAB] - Center floating action button for quick add
+ * 4. Shopping - Shopping/grocery list (replaces Planner)
+ * 5. Recipes - Recipe library/collections
  */
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeStack from './HomeStack';
-import MealPlanningStack from './MealPlanningStack';
+import ShoppingStack from './ShoppingStack';
 import RecipeLibraryStack from './RecipeLibraryStack';
 import PantryStack from './PantryStack';
 import { CustomTabBar } from '../components/navigation';
@@ -33,9 +40,9 @@ export default function TabNavigator() {
         options={{ title: 'Pantry' }}
       />
       <Tab.Screen
-        name="MealPlanner"
-        component={MealPlanningStack}
-        options={{ title: 'Planner' }}
+        name="Shopping"
+        component={ShoppingStack}
+        options={{ title: 'Shopping' }}
       />
       <Tab.Screen
         name="Recipes"

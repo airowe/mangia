@@ -1,3 +1,10 @@
+/**
+ * RecipeLibraryStack
+ *
+ * Navigation stack for the Recipes tab.
+ * Editorial design: screens handle their own headers internally.
+ */
+
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RecipesScreen } from "../screens/RecipesScreen";
@@ -8,12 +15,6 @@ import { SearchResultsScreen } from "../screens/SearchResultsScreen";
 import CollectionsScreen from "../screens/CollectionsScreen";
 import CollectionDetailScreen from "../screens/CollectionDetailScreen";
 import CookbooksScreen from "../screens/CookbooksScreen";
-import { Animated } from "react-native";
-import { NativeStackNavigationOptions } from "@react-navigation/native-stack";
-import { CustomHeader } from "../components/CustomHeader";
-import { useRef, useMemo } from "react";
-
-const Stack = createNativeStackNavigator<RecipeLibraryStackParamList>();
 
 export type RecipeLibraryStackParamList = {
   RecipesScreen: undefined;
@@ -26,27 +27,15 @@ export type RecipeLibraryStackParamList = {
   Cookbooks: undefined;
 };
 
+const Stack = createNativeStackNavigator<RecipeLibraryStackParamList>();
+
 export default function RecipeLibraryStack() {
-  const scrollY = useRef(new Animated.Value(0)).current;
-
-  const screenOptions: NativeStackNavigationOptions = useMemo(() => ({
-    header: ({ route, options }) => {
-      const showBackButton = route.name !== "RecipesScreen";
-      return (
-        <CustomHeader
-          showBackButton={showBackButton}
-          title={options.title as string}
-          scrollY={route.name === "RecipesScreen" ? scrollY : undefined}
-        />
-      );
-    },
-    headerShown: true,
-  }), [scrollY]);
-
   return (
     <Stack.Navigator
       initialRouteName="RecipesScreen"
-      screenOptions={screenOptions}
+      screenOptions={{
+        headerShown: false, // Editorial design: screens handle their own headers
+      }}
     >
       <Stack.Screen name="RecipesScreen" component={RecipesScreen} />
       <Stack.Screen name="RecipeSearch" component={RecipeSearchScreen} />

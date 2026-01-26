@@ -33,8 +33,12 @@ export const borderRadius = {
   lg: 16,
   /** 20px - Extra large for special elements */
   xl: 20,
-  /** 24px - Maximum rounding for pills */
+  /** 24px - Card rounding */
   xxl: 24,
+  /** 32px - Featured cards, hero elements */
+  xxxl: 32,
+  /** 60px - Header image bottom radius */
+  hero: 60,
   /** Full circle/pill */
   full: 9999,
 } as const;

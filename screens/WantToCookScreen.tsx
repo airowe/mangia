@@ -1,128 +1,69 @@
-// screens/WantToCookScreen.tsx
-// Home screen showing the "Want to Cook" recipe queue
+/**
+ * WantToCookScreen (Home Screen)
+ *
+ * Editorial home screen with "On The Menu" featured recipe and queue.
+ * Matches /ui-redesign/screens/home_screen.html
+ */
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
-  FlatList,
+  Text,
+  ScrollView,
   RefreshControl,
   Alert,
   ActivityIndicator,
-} from "react-native";
-import { Text, Button, FAB } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+  StyleSheet,
+  Pressable,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Feather } from '@expo/vector-icons';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Screen } from "../components/Screen";
-import { RecipeQueueCard } from "../components/RecipeQueueCard";
-import { useTheme } from "../theme";
-import { Recipe } from "../models/Recipe";
+import { ScreenHeader } from '../components/editorial/ScreenHeader';
+import { FeaturedRecipeCard } from '../components/editorial/FeaturedRecipeCard';
+import { QueueRecipeItem } from '../components/editorial/QueueRecipeItem';
+import { GroceryTeaser } from '../components/editorial/GroceryTeaser';
+import { useTheme } from '../theme';
+import { mangiaColors } from '../theme/tokens/colors';
+import { fontFamily } from '../theme/tokens/typography';
+import { Recipe } from '../models/Recipe';
 import {
   fetchRecipesByStatus,
   markAsCooked,
   archiveRecipe,
   deleteRecipe,
   RecipeWithIngredients,
-} from "../lib/recipeService";
+} from '../lib/recipeService';
 
 type RootStackParamList = {
   ImportRecipeScreen: undefined;
   RecipeDetailScreen: { recipeId: string };
   GroceryListScreen: { recipeIds: string[] };
+  CookingModeScreen: { recipeId: string };
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 export const WantToCookScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { theme, isDark } = useTheme();
-  const { colors, spacing, borderRadius, typography } = theme;
+  const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const [recipes, setRecipes] = useState<RecipeWithIngredients[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Dynamic styles based on theme
-  const dynamicStyles = useMemo(() => ({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center" as const,
-      alignItems: "center" as const,
-    },
-    loadingText: {
-      marginTop: spacing.lg,
-      color: colors.textSecondary,
-      ...typography.styles.body,
-    },
-    listContent: {
-      paddingTop: spacing.sm,
-      paddingBottom: 140,
-    },
-    emptyList: {
-      flex: 1,
-    },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: "center" as const,
-      alignItems: "center" as const,
-      padding: spacing.xxxl,
-    },
-    emptyTitle: {
-      ...typography.styles.title2,
-      color: colors.text,
-      marginTop: spacing.lg,
-      marginBottom: spacing.sm,
-    },
-    emptySubtitle: {
-      ...typography.styles.body,
-      color: colors.textSecondary,
-      textAlign: "center" as const,
-      marginBottom: spacing.xl,
-      lineHeight: 22,
-    },
-    emptyButton: {
-      paddingHorizontal: spacing.lg,
-    },
-    bottomButtonContainer: {
-      position: "absolute" as const,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: spacing.lg,
-      backgroundColor: isDark
-        ? 'rgba(26, 26, 26, 0.95)'
-        : 'rgba(253, 246, 240, 0.95)',
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    groceryButton: {
-      borderRadius: borderRadius.md,
-    },
-    groceryButtonContent: {
-      paddingVertical: spacing.sm,
-    },
-    fab: {
-      position: "absolute" as const,
-      right: spacing.lg,
-      bottom: 90,
-      backgroundColor: colors.primary,
-    },
-  }), [colors, spacing, borderRadius, typography, isDark]);
-
   // Load recipes with status = 'want_to_cook'
   const loadRecipes = useCallback(async () => {
     try {
-      const data = await fetchRecipesByStatus("want_to_cook");
+      const data = await fetchRecipesByStatus('want_to_cook');
       setRecipes(data);
     } catch (error) {
-      console.error("Error loading recipes:", error);
-      Alert.alert("Error", "Failed to load recipes");
+      console.error('Error loading recipes:', error);
+      Alert.alert('Error', 'Failed to load recipes');
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -133,185 +74,290 @@ export const WantToCookScreen: React.FC = () => {
     loadRecipes();
   }, [loadRecipes]);
 
-  // Handle pull to refresh
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
     loadRecipes();
   }, [loadRecipes]);
 
-  // Navigate to recipe detail
   const handleRecipePress = useCallback(
     (recipe: Recipe) => {
-      navigation.navigate("RecipeDetailScreen", { recipeId: recipe.id });
+      navigation.navigate('RecipeDetailScreen', { recipeId: recipe.id });
     },
-    [navigation],
+    [navigation]
   );
 
-  // Mark recipe as cooked
-  const handleMarkCooked = useCallback(async (recipe: Recipe) => {
-    Alert.alert("Mark as Cooked", `Did you make "${recipe.title}"?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Yes, I made it!",
-        onPress: async () => {
-          try {
-            await markAsCooked(recipe.id);
-            setRecipes((prev) => prev.filter((r) => r.id !== recipe.id));
-          } catch (error) {
-            Alert.alert("Error", "Failed to update recipe");
-          }
-        },
-      },
-    ]);
-  }, []);
+  const handleStartCooking = useCallback(
+    (recipe: Recipe) => {
+      navigation.navigate('CookingModeScreen', { recipeId: recipe.id });
+    },
+    [navigation]
+  );
 
-  // Archive recipe
-  const handleArchive = useCallback(async (recipe: Recipe) => {
-    try {
-      await archiveRecipe(recipe.id);
-      setRecipes((prev) => prev.filter((r) => r.id !== recipe.id));
-    } catch (error) {
-      Alert.alert("Error", "Failed to archive recipe");
-    }
-  }, []);
-
-  // Delete recipe
-  const handleDelete = useCallback((recipe: Recipe) => {
-    Alert.alert(
-      "Delete Recipe",
-      `Are you sure you want to delete "${recipe.title}"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteRecipe(recipe.id);
-              setRecipes((prev) => prev.filter((r) => r.id !== recipe.id));
-            } catch (error) {
-              Alert.alert("Error", "Failed to delete recipe");
-            }
-          },
-        },
-      ],
-    );
-  }, []);
-
-  // Navigate to add recipe
   const handleAddRecipe = useCallback(() => {
-    navigation.navigate("ImportRecipeScreen");
+    navigation.navigate('ImportRecipeScreen');
   }, [navigation]);
 
-  // Generate grocery list from queued recipes
-  const handleGenerateGroceryList = useCallback(() => {
+  const handleViewGroceryList = useCallback(() => {
     if (recipes.length === 0) {
-      Alert.alert("No Recipes", "Add some recipes to your queue first!");
+      Alert.alert('No Recipes', 'Add some recipes to your queue first!');
       return;
     }
-
     const recipeIds = recipes.map((r) => r.id);
-    navigation.navigate("GroceryListScreen", { recipeIds });
+    navigation.navigate('GroceryListScreen', { recipeIds });
   }, [recipes, navigation]);
 
-  // Render empty state
-  const renderEmptyState = useCallback(() => (
-    <Animated.View entering={FadeIn.duration(400)} style={dynamicStyles.emptyContainer}>
-      <MaterialCommunityIcons
-        name="chef-hat"
-        size={80}
-        color={colors.textTertiary}
-      />
-      <Text style={dynamicStyles.emptyTitle}>No recipes yet</Text>
-      <Text style={dynamicStyles.emptySubtitle}>
-        Import a recipe from TikTok, YouTube, or your favorite blog
-      </Text>
-      <Button
-        mode="contained"
-        onPress={handleAddRecipe}
-        style={dynamicStyles.emptyButton}
-        icon="plus"
-      >
-        Add Your First Recipe
-      </Button>
-    </Animated.View>
-  ), [dynamicStyles, colors.textTertiary, handleAddRecipe]);
+  const handleAvatarPress = useCallback(() => {
+    // Navigate to account screen
+    (navigation as any).navigate('Account');
+  }, [navigation]);
 
-  // Render list item with animation
-  const renderItem = useCallback(({ item, index }: { item: RecipeWithIngredients; index: number }) => (
-    <Animated.View entering={FadeInDown.delay(index * 80).duration(300)}>
-      <RecipeQueueCard
-        recipe={item}
-        onPress={handleRecipePress}
-        onMarkCooked={handleMarkCooked}
-        onArchive={handleArchive}
-        onDelete={handleDelete}
-      />
-    </Animated.View>
-  ), [handleRecipePress, handleMarkCooked, handleArchive, handleDelete]);
+  // Get featured recipe (first one) and queue (rest)
+  const featuredRecipe = recipes[0];
+  const queueRecipes = recipes.slice(1);
+
+  // Placeholder missing items count (would come from pantry/shopping service)
+  const missingItemsCount = recipes.length > 0 ? 4 : 0;
 
   // Render loading state
   if (isLoading) {
     return (
-      <Screen style={dynamicStyles.container}>
-        <View style={dynamicStyles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={dynamicStyles.loadingText}>Loading recipes...</Text>
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={mangiaColors.terracotta} />
+        <Text style={styles.loadingText}>Loading recipes...</Text>
+      </View>
+    );
+  }
+
+  // Render empty state
+  if (recipes.length === 0) {
+    return (
+      <View style={styles.container}>
+        <ScreenHeader onAvatarPress={handleAvatarPress} />
+        <View style={styles.emptyContainer}>
+          <Animated.View entering={FadeIn.duration(400)} style={styles.emptyContent}>
+            <Feather name="book-open" size={80} color={mangiaColors.taupe} />
+            <Text style={styles.emptyTitle}>Your cooking queue is empty</Text>
+            <Text style={styles.emptySubtitle}>
+              Import recipes from TikTok, YouTube, or your favorite blog to get
+              started
+            </Text>
+            <Pressable onPress={handleAddRecipe} style={styles.emptyButton}>
+              <Feather name="plus" size={20} color={mangiaColors.white} />
+              <Text style={styles.emptyButtonText}>Import Your First Recipe</Text>
+            </Pressable>
+          </Animated.View>
         </View>
-      </Screen>
+      </View>
     );
   }
 
   return (
-    <Screen style={dynamicStyles.container}>
-      {/* Recipe List */}
-      <FlatList
-        data={recipes}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
+    <View style={styles.container}>
+      {/* Header */}
+      <ScreenHeader onAvatarPress={handleAvatarPress} />
+
+      {/* Scrollable Content */}
+      <ScrollView
         contentContainerStyle={[
-          dynamicStyles.listContent,
-          recipes.length === 0 && dynamicStyles.emptyList,
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 120 },
         ]}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            tintColor={mangiaColors.terracotta}
           />
         }
-        ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
-      />
+      >
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          {/* Title Row */}
+          <View style={styles.titleRow}>
+            <Text style={styles.sectionTitle}>{'On The\nMenu'}</Text>
+            <View style={styles.recipeBadge}>
+              <Text style={styles.recipeBadgeText}>
+                {recipes.length} Recipe{recipes.length !== 1 ? 's' : ''}
+              </Text>
+            </View>
+          </View>
 
-      {/* Generate Grocery List Button */}
-      {recipes.length > 0 && (
-        <Animated.View entering={FadeInDown.delay(200).duration(300)} style={dynamicStyles.bottomButtonContainer}>
-          <Button
-            mode="contained"
-            onPress={handleGenerateGroceryList}
-            style={dynamicStyles.groceryButton}
-            contentStyle={dynamicStyles.groceryButtonContent}
-            icon="cart"
-          >
-            Generate Grocery List ({recipes.length} recipe
-            {recipes.length !== 1 ? "s" : ""})
-          </Button>
-        </Animated.View>
-      )}
+          {/* Featured Card */}
+          {featuredRecipe && (
+            <FeaturedRecipeCard
+              recipe={featuredRecipe}
+              onPress={handleRecipePress}
+            />
+          )}
+        </View>
 
-      {/* FAB for adding recipes */}
-      {recipes.length > 0 && (
-        <FAB
-          icon="plus"
-          style={dynamicStyles.fab}
-          onPress={handleAddRecipe}
-          color={colors.textOnPrimary}
-        />
-      )}
-    </Screen>
+        {/* Queue Section */}
+        {queueRecipes.length > 0 && (
+          <View style={styles.queueSection}>
+            {/* Section Header */}
+            <View style={styles.queueHeader}>
+              <Text style={styles.queueTitle}>Up Next</Text>
+              <View style={styles.queueDivider} />
+            </View>
+
+            {/* Queue Items */}
+            <View style={styles.queueList}>
+              {queueRecipes.map((recipe, index) => (
+                <View key={recipe.id} style={styles.queueItem}>
+                  <QueueRecipeItem
+                    recipe={recipe}
+                    index={index}
+                    onPress={handleRecipePress}
+                    onStartCooking={handleStartCooking}
+                  />
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Grocery Teaser */}
+        <View style={styles.grocerySection}>
+          <GroceryTeaser
+            missingItemsCount={missingItemsCount}
+            onPress={handleViewGroceryList}
+          />
+        </View>
+      </ScrollView>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: mangiaColors.cream,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontFamily: fontFamily.regular,
+    fontSize: 16,
+    color: mangiaColors.brown,
+  },
+  scrollContent: {
+    paddingBottom: 120,
+  },
+  // Hero Section
+  heroSection: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontFamily: fontFamily.serif,
+    fontSize: 32,
+    fontWeight: '400',
+    color: mangiaColors.dark,
+    lineHeight: 34,
+  },
+  recipeBadge: {
+    backgroundColor: mangiaColors.dark,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  recipeBadgeText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+    fontWeight: '700',
+    color: mangiaColors.cream,
+  },
+  // Queue Section
+  queueSection: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
+  },
+  queueHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  queueTitle: {
+    fontFamily: fontFamily.serif,
+    fontSize: 20,
+    fontWeight: '400',
+    color: mangiaColors.dark,
+  },
+  queueDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: mangiaColors.dark,
+    opacity: 0.2,
+  },
+  queueList: {
+    gap: 16,
+  },
+  queueItem: {
+    marginBottom: 0,
+  },
+  // Grocery Section
+  grocerySection: {
+    paddingHorizontal: 24,
+  },
+  // Empty State
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 48,
+  },
+  emptyContent: {
+    alignItems: 'center',
+  },
+  emptyTitle: {
+    fontFamily: fontFamily.serif,
+    fontSize: 24,
+    fontWeight: '400',
+    color: mangiaColors.dark,
+    textAlign: 'center',
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontFamily: fontFamily.regular,
+    fontSize: 16,
+    color: mangiaColors.brown,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: mangiaColors.terracotta,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 9999,
+    // Shadow
+    shadowColor: mangiaColors.terracotta,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  emptyButtonText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 16,
+    fontWeight: '700',
+    color: mangiaColors.white,
+  },
+});
 
 export default WantToCookScreen;
