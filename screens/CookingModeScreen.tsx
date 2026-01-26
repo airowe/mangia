@@ -1,11 +1,11 @@
 // screens/CookingModeScreen.tsx
 // Step-by-step cooking mode with large text and swipe navigation
+// Warm editorial design with serif typography for hands-free readability
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   Dimensions,
   TouchableOpacity,
   FlatList,
@@ -15,15 +15,15 @@ import {
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Button, IconButton, ProgressBar } from 'react-native-paper';
+import { IconButton, ProgressBar } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
-// Note: Install expo-keep-awake and add useKeepAwake() to keep screen on during cooking
+import Animated, { FadeIn, FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 
 import { Screen } from '../components/Screen';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme';
 import { fetchRecipeById, RecipeWithIngredients } from '../lib/recipeService';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type RouteParams = {
   params: { recipeId: string };
@@ -46,8 +46,13 @@ export default function CookingModeScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { recipeId } = route.params;
   const flatListRef = useRef<FlatList>(null);
+  const { theme } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
 
-  // TODO: Add useKeepAwake() from expo-keep-awake to keep screen on during cooking
+  // Warm cooking mode colors from theme
+  const cookingBg = colors.cookingBackground;
+  const cookingAccent = colors.cookingAccent;
+  const cookingText = colors.cookingText;
 
   const [recipe, setRecipe] = useState<RecipeWithIngredients | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
@@ -84,7 +89,6 @@ export default function CookingModeScreen() {
       interval = setInterval(() => {
         setTimer((prev) => {
           if (prev.seconds <= 1) {
-            // Timer finished
             Alert.alert('Timer Done!', 'Your timer has finished.', [
               { text: 'OK', onPress: () => {} },
             ]);
@@ -103,7 +107,6 @@ export default function CookingModeScreen() {
   const totalSteps = recipe?.instructions?.length || 0;
   const progress = totalSteps > 0 ? (currentStep + 1) / totalSteps : 0;
 
-  // Navigate to next step
   const goToNextStep = useCallback(() => {
     if (currentStep < totalSteps - 1) {
       const nextStep = currentStep + 1;
@@ -112,7 +115,6 @@ export default function CookingModeScreen() {
     }
   }, [currentStep, totalSteps]);
 
-  // Navigate to previous step
   const goToPrevStep = useCallback(() => {
     if (currentStep > 0) {
       const prevStep = currentStep - 1;
@@ -121,7 +123,6 @@ export default function CookingModeScreen() {
     }
   }, [currentStep]);
 
-  // Handle swipe to change step
   const handleScrollEnd = useCallback(
     (event: { nativeEvent: { contentOffset: { x: number } } }) => {
       const offsetX = event.nativeEvent.contentOffset.x;
@@ -133,7 +134,6 @@ export default function CookingModeScreen() {
     [currentStep, totalSteps]
   );
 
-  // Start a quick timer (in minutes)
   const startTimer = useCallback((minutes: number) => {
     const seconds = minutes * 60;
     setTimer({
@@ -143,12 +143,10 @@ export default function CookingModeScreen() {
     });
   }, []);
 
-  // Pause/resume timer
   const toggleTimer = useCallback(() => {
     setTimer((prev) => ({ ...prev, isRunning: !prev.isRunning }));
   }, []);
 
-  // Reset timer
   const resetTimer = useCallback(() => {
     setTimer({
       isRunning: false,
@@ -157,14 +155,12 @@ export default function CookingModeScreen() {
     });
   }, []);
 
-  // Format timer display
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Exit cooking mode
   const handleExit = useCallback(() => {
     Alert.alert(
       'Exit Cooking Mode',
@@ -176,7 +172,6 @@ export default function CookingModeScreen() {
     );
   }, [navigation]);
 
-  // Complete cooking
   const handleComplete = useCallback(() => {
     Alert.alert(
       'Cooking Complete!',
@@ -186,7 +181,6 @@ export default function CookingModeScreen() {
         {
           text: 'Mark as Cooked',
           onPress: () => {
-            // Navigate back to recipe detail which can handle marking as cooked
             navigation.goBack();
           },
         },
@@ -194,25 +188,227 @@ export default function CookingModeScreen() {
     );
   }, [navigation]);
 
-  // Render a single step
+  const styles = useMemo(
+    () => ({
+      container: {
+        flex: 1,
+        backgroundColor: cookingBg,
+      },
+      loadingContainer: {
+        flex: 1,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        backgroundColor: cookingBg,
+      },
+      loadingText: {
+        color: cookingText,
+        ...typography.editorialStyles.sectionHeading,
+      },
+      header: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        paddingTop: Platform.OS === 'ios' ? 50 : 20,
+        paddingHorizontal: spacing.sm,
+        paddingBottom: spacing.sm,
+        backgroundColor: cookingBg,
+      },
+      headerCenter: {
+        flex: 1,
+        alignItems: 'center' as const,
+      },
+      headerTitle: {
+        color: cookingText,
+        ...typography.editorialStyles.cardTitle,
+      },
+      headerProgress: {
+        color: 'rgba(255,255,255,0.6)',
+        ...typography.editorialStyles.byline,
+        marginTop: 4,
+      },
+      progressBar: {
+        height: 3,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 2,
+      },
+      stepContainer: {
+        width: SCREEN_WIDTH,
+        flex: 1,
+        justifyContent: 'center' as const,
+        padding: spacing.xl,
+      },
+      stepContent: {
+        flex: 1,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+      },
+      // Editorial-style step badge: "STEP 1 OF 8"
+      stepNumberBadge: {
+        backgroundColor: cookingAccent,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.sm,
+        borderRadius: borderRadius.full,
+        marginBottom: spacing.xl,
+      },
+      stepNumberText: {
+        ...typography.editorialStyles.cookingStepLabel,
+        color: cookingBg,
+      },
+      // Large serif text for hands-free reading
+      stepText: {
+        ...typography.editorialStyles.cookingStep,
+        color: cookingText,
+        textAlign: 'center' as const,
+        paddingHorizontal: spacing.md,
+      },
+      swipeHints: {
+        flexDirection: 'row' as const,
+        justifyContent: 'space-between' as const,
+        paddingHorizontal: spacing.md,
+        paddingBottom: spacing.md,
+      },
+      swipeHint: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        opacity: 0.7,
+      },
+      swipeHintRight: {
+        marginLeft: 'auto' as const,
+      },
+      swipeHintText: {
+        color: cookingText,
+        ...typography.editorialStyles.byline,
+        textTransform: 'uppercase' as const,
+      },
+      ingredientsContainer: {
+        flex: 1,
+        padding: spacing.lg,
+      },
+      ingredientsTitle: {
+        color: cookingText,
+        ...typography.editorialStyles.sectionHeading,
+        marginBottom: spacing.xl,
+        textAlign: 'center' as const,
+      },
+      ingredientRow: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        marginBottom: spacing.md,
+        paddingVertical: spacing.xs,
+      },
+      ingredientText: {
+        ...typography.editorialStyles.ingredient,
+        color: cookingText,
+        flex: 1,
+      },
+      // Timer section with warm styling
+      timerSection: {
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        padding: spacing.lg,
+        marginHorizontal: spacing.lg,
+        borderRadius: borderRadius.lg,
+        marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+      },
+      timerActive: {
+        alignItems: 'center' as const,
+      },
+      timerDisplay: {
+        color: cookingAccent,
+        fontSize: 56,
+        fontWeight: '300' as const,
+        fontVariant: ['tabular-nums'] as ['tabular-nums'],
+        letterSpacing: 2,
+      },
+      timerControls: {
+        flexDirection: 'row' as const,
+        marginTop: spacing.md,
+        gap: spacing.sm,
+      },
+      timerButton: {
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        marginHorizontal: spacing.xs,
+      },
+      quickTimers: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+        flexWrap: 'wrap' as const,
+        gap: spacing.sm,
+      },
+      quickTimerLabel: {
+        color: 'rgba(255,255,255,0.6)',
+        ...typography.editorialStyles.byline,
+        marginRight: spacing.sm,
+      },
+      quickTimerButton: {
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        borderRadius: borderRadius.full,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.15)',
+      },
+      quickTimerText: {
+        color: cookingText,
+        ...typography.editorialStyles.byline,
+        fontWeight: '600' as const,
+      },
+      // Progress dots with spring animation on active
+      dotsContainer: {
+        flexDirection: 'row' as const,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+        gap: spacing.sm,
+      },
+      dot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: 'rgba(255,255,255,0.25)',
+      },
+      dotActive: {
+        backgroundColor: cookingAccent,
+        width: 24,
+      },
+      dotCompleted: {
+        backgroundColor: 'rgba(255,255,255,0.5)',
+      },
+    }),
+    [cookingBg, cookingAccent, cookingText, spacing, borderRadius, typography]
+  );
+
   const renderStep = useCallback(
     ({ item, index }: { item: string; index: number }) => (
       <View style={styles.stepContainer}>
         <View style={styles.stepContent}>
-          <View style={styles.stepNumberBadge}>
-            <Text style={styles.stepNumberText}>Step {index + 1}</Text>
-          </View>
-          <Text style={styles.stepText}>{item}</Text>
+          {/* Editorial-style badge: "STEP 1 OF 8" */}
+          <Animated.View
+            entering={FadeIn.delay(100).duration(300)}
+            style={styles.stepNumberBadge}
+          >
+            <Text style={styles.stepNumberText}>
+              STEP {index + 1} OF {totalSteps}
+            </Text>
+          </Animated.View>
+
+          {/* Large serif text for hands-free reading */}
+          <Animated.Text
+            entering={FadeIn.delay(200).duration(400)}
+            style={styles.stepText}
+          >
+            {item}
+          </Animated.Text>
         </View>
 
-        {/* Navigation hints */}
         <View style={styles.swipeHints}>
           {index > 0 && (
             <TouchableOpacity style={styles.swipeHint} onPress={goToPrevStep}>
               <MaterialCommunityIcons
                 name="chevron-left"
-                size={32}
-                color={colors.textTertiary}
+                size={28}
+                color={cookingText}
               />
               <Text style={styles.swipeHintText}>Previous</Text>
             </TouchableOpacity>
@@ -225,8 +421,8 @@ export default function CookingModeScreen() {
               <Text style={styles.swipeHintText}>Next</Text>
               <MaterialCommunityIcons
                 name="chevron-right"
-                size={32}
-                color={colors.textTertiary}
+                size={28}
+                color={cookingText}
               />
             </TouchableOpacity>
           ) : (
@@ -234,20 +430,20 @@ export default function CookingModeScreen() {
               style={[styles.swipeHint, styles.swipeHintRight]}
               onPress={handleComplete}
             >
-              <Text style={[styles.swipeHintText, { color: colors.success }]}>
+              <Text style={[styles.swipeHintText, { color: cookingAccent }]}>
                 Done
               </Text>
               <MaterialCommunityIcons
                 name="check-circle"
-                size={32}
-                color={colors.success}
+                size={28}
+                color={cookingAccent}
               />
             </TouchableOpacity>
           )}
         </View>
       </View>
     ),
-    [totalSteps, goToPrevStep, goToNextStep, handleComplete]
+    [styles, totalSteps, goToPrevStep, goToNextStep, handleComplete, cookingText, cookingAccent]
   );
 
   if (loading || !recipe) {
@@ -263,10 +459,10 @@ export default function CookingModeScreen() {
       <StatusBar style="light" />
 
       {/* Header */}
-      <View style={styles.header}>
+      <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
         <IconButton
           icon="close"
-          iconColor={colors.white}
+          iconColor={cookingText}
           size={24}
           onPress={handleExit}
         />
@@ -275,39 +471,43 @@ export default function CookingModeScreen() {
             {recipe.title}
           </Text>
           <Text style={styles.headerProgress}>
-            Step {currentStep + 1} of {totalSteps}
+            {currentStep + 1} of {totalSteps} steps
           </Text>
         </View>
         <IconButton
           icon={showIngredients ? 'format-list-bulleted' : 'food-variant'}
-          iconColor={colors.white}
+          iconColor={cookingAccent}
           size={24}
           onPress={() => setShowIngredients(!showIngredients)}
         />
-      </View>
+      </Animated.View>
 
       {/* Progress Bar */}
-      <ProgressBar progress={progress} color={colors.primary} style={styles.progressBar} />
+      <ProgressBar progress={progress} color={cookingAccent} style={styles.progressBar} />
 
       {/* Main Content - Steps or Ingredients */}
       {showIngredients ? (
-        <View style={styles.ingredientsContainer}>
+        <Animated.View entering={FadeInDown.duration(300)} style={styles.ingredientsContainer}>
           <Text style={styles.ingredientsTitle}>Ingredients</Text>
           {recipe.ingredients?.map((ing, idx) => (
-            <View key={idx} style={styles.ingredientRow}>
+            <Animated.View
+              key={idx}
+              entering={FadeInDown.delay(idx * 50).duration(300)}
+              style={styles.ingredientRow}
+            >
               <MaterialCommunityIcons
                 name="circle-small"
                 size={24}
-                color={colors.white}
+                color={cookingAccent}
               />
               <Text style={styles.ingredientText}>
                 {ing.quantity ? `${ing.quantity} ` : ''}
                 {ing.unit ? `${ing.unit} ` : ''}
                 {ing.name}
               </Text>
-            </View>
+            </Animated.View>
           ))}
-        </View>
+        </Animated.View>
       ) : (
         <FlatList
           ref={flatListRef}
@@ -328,22 +528,22 @@ export default function CookingModeScreen() {
       )}
 
       {/* Timer Section */}
-      <View style={styles.timerSection}>
+      <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.timerSection}>
         {timer.seconds > 0 ? (
           <View style={styles.timerActive}>
             <Text style={styles.timerDisplay}>{formatTime(timer.seconds)}</Text>
             <View style={styles.timerControls}>
               <IconButton
                 icon={timer.isRunning ? 'pause' : 'play'}
-                iconColor={colors.white}
-                size={28}
+                iconColor={cookingText}
+                size={32}
                 onPress={toggleTimer}
                 style={styles.timerButton}
               />
               <IconButton
                 icon="stop"
-                iconColor={colors.white}
-                size={28}
+                iconColor={cookingText}
+                size={32}
                 onPress={resetTimer}
                 style={styles.timerButton}
               />
@@ -363,191 +563,21 @@ export default function CookingModeScreen() {
             ))}
           </View>
         )}
-      </View>
+      </Animated.View>
 
-      {/* Step Dots */}
+      {/* Step Dots - show progress with completed states */}
       <View style={styles.dotsContainer}>
         {recipe.instructions?.map((_, idx) => (
           <View
             key={idx}
-            style={[styles.dot, idx === currentStep && styles.dotActive]}
+            style={[
+              styles.dot,
+              idx === currentStep && styles.dotActive,
+              idx < currentStep && styles.dotCompleted,
+            ]}
           />
         ))}
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#1a1a2e',
-  },
-  loadingText: {
-    color: colors.white,
-    fontSize: 18,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 50 : 20,
-    paddingHorizontal: 8,
-    paddingBottom: 8,
-    backgroundColor: '#1a1a2e',
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    color: colors.white,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  headerProgress: {
-    color: colors.textTertiary,
-    fontSize: 14,
-    marginTop: 2,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: '#2a2a4e',
-  },
-  stepContainer: {
-    width: SCREEN_WIDTH,
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  stepContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepNumberBadge: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 24,
-  },
-  stepNumberText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  stepText: {
-    color: colors.white,
-    fontSize: 28,
-    lineHeight: 40,
-    textAlign: 'center',
-    fontWeight: '400',
-  },
-  swipeHints: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  swipeHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  swipeHintRight: {
-    marginLeft: 'auto',
-  },
-  swipeHintText: {
-    color: colors.textTertiary,
-    fontSize: 16,
-  },
-  ingredientsContainer: {
-    flex: 1,
-    padding: 24,
-  },
-  ingredientsTitle: {
-    color: colors.white,
-    fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  ingredientRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  ingredientText: {
-    color: colors.white,
-    fontSize: 20,
-    flex: 1,
-  },
-  timerSection: {
-    backgroundColor: '#2a2a4e',
-    padding: 16,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  timerActive: {
-    alignItems: 'center',
-  },
-  timerDisplay: {
-    color: colors.white,
-    fontSize: 48,
-    fontWeight: '300',
-    fontVariant: ['tabular-nums'],
-  },
-  timerControls: {
-    flexDirection: 'row',
-    marginTop: 8,
-  },
-  timerButton: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginHorizontal: 8,
-  },
-  quickTimers: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  quickTimerLabel: {
-    color: colors.textTertiary,
-    fontSize: 14,
-    marginRight: 8,
-  },
-  quickTimerButton: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  quickTimerText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  dotsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
-    gap: 8,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  dotActive: {
-    backgroundColor: colors.primary,
-    width: 24,
-  },
-});

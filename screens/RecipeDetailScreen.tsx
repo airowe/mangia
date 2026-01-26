@@ -4,13 +4,13 @@ import {
   Text,
   Image,
   ScrollView,
-  StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
   Share,
   Linking,
   Alert,
   FlatList,
+  Dimensions,
 } from "react-native";
 import {
   useRoute,
@@ -20,8 +20,13 @@ import {
 import { StackNavigationProp } from "@react-navigation/stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button, Portal, Modal, RadioButton } from "react-native-paper";
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Screen } from "../components/Screen";
-import { colors } from "../theme/colors";
+import { useTheme } from "../theme";
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const HERO_HEIGHT = 320;
 import { Recipe, RecipeSourceType, RecipeNote } from "../models/Recipe";
 import { RecipeRatingNotes } from "../components/RecipeRatingNotes";
 import {
@@ -55,32 +60,39 @@ type RootStackParamList = {
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-// Platform icons and colors
-const PLATFORM_CONFIG: Record<
-  RecipeSourceType,
-  {
-    icon: keyof typeof MaterialCommunityIcons.glyphMap;
-    color: string;
-    label: string;
-  }
-> = {
-  tiktok: { icon: "music-note", color: "#000000", label: "TikTok" },
-  youtube: { icon: "youtube", color: "#FF0000", label: "YouTube" },
-  instagram: { icon: "instagram", color: "#E4405F", label: "Instagram" },
-  blog: { icon: "web", color: "#4CAF50", label: "Blog" },
-  manual: { icon: "pencil", color: colors.primary, label: "Manual" },
-};
-
 export default function RecipeDetailScreen() {
   const route = useRoute<RecipeDetailScreenRouteProp>();
   const navigation = useNavigation<NavigationProp>();
   const { recipeId } = route.params;
+  const { theme, isDark } = useTheme();
+  const { colors, spacing, borderRadius, typography } = theme;
+
+  // Platform icons and colors - using dynamic primary color
+  const PLATFORM_CONFIG: Record<
+    RecipeSourceType,
+    {
+      icon: keyof typeof MaterialCommunityIcons.glyphMap;
+      color: string;
+      label: string;
+    }
+  > = useMemo(() => ({
+    tiktok: { icon: "music-note", color: isDark ? "#FFFFFF" : "#000000", label: "TikTok" },
+    youtube: { icon: "youtube", color: "#FF0000", label: "YouTube" },
+    instagram: { icon: "instagram", color: "#E4405F", label: "Instagram" },
+    blog: { icon: "web", color: "#4CAF50", label: "Blog" },
+    manual: { icon: "pencil", color: colors.primary, label: "Manual" },
+  }), [colors.primary, isDark]);
 
   const [recipe, setRecipe] = useState<RecipeWithIngredients | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [currentServings, setCurrentServings] = useState<number>(0);
+  const [collectionModalVisible, setCollectionModalVisible] = useState(false);
+  const [collections, setCollections] = useState<CollectionWithCount[]>([]);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [recipeCollections, setRecipeCollections] = useState<string[]>([]);
+  const [isAddingToCollection, setIsAddingToCollection] = useState(false);
 
   const loadRecipe = useCallback(async () => {
     try {
@@ -298,10 +310,376 @@ export default function RecipeDetailScreen() {
   const sourceType = recipe?.source_type || "manual";
   const platform = PLATFORM_CONFIG[sourceType] || PLATFORM_CONFIG.manual;
 
+  // Dynamic styles based on theme - Editorial magazine design
+  const dynamicStyles = useMemo(() => ({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+      padding: spacing.xl,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+      padding: spacing.xl,
+    },
+    errorText: {
+      ...typography.styles.body,
+      color: colors.error,
+      marginBottom: spacing.lg,
+      textAlign: "center" as const,
+    },
+    retryButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.full,
+    },
+    retryButtonText: {
+      color: colors.textOnPrimary,
+      fontWeight: "600" as const,
+    },
+    // Hero image section - editorial magazine style
+    heroContainer: {
+      position: 'relative' as const,
+      height: HERO_HEIGHT,
+      width: '100%' as const,
+    },
+    heroImage: {
+      width: '100%' as const,
+      height: '100%' as const,
+    },
+    heroGradient: {
+      position: 'absolute' as const,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: HERO_HEIGHT * 0.7,
+    },
+    heroContent: {
+      position: 'absolute' as const,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: spacing.xl,
+    },
+    heroTitle: {
+      ...typography.editorialStyles.recipeTitle,
+      color: '#FFFFFF',
+      marginBottom: spacing.sm,
+      textShadowColor: 'rgba(0,0,0,0.3)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 4,
+    },
+    heroShareButton: {
+      position: 'absolute' as const,
+      top: 50,
+      right: spacing.md,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      borderRadius: borderRadius.full,
+      padding: spacing.sm,
+    },
+    placeholderImage: {
+      width: "100%" as const,
+      height: 200,
+      backgroundColor: colors.surfaceElevated,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+    },
+    // Quick info bar - horizontal pills
+    quickInfoBar: {
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      gap: spacing.sm,
+      padding: spacing.lg,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    quickInfoPill: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: spacing.xs,
+      backgroundColor: colors.surfaceElevated,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+    },
+    quickInfoText: {
+      ...typography.editorialStyles.byline,
+      color: colors.textSecondary,
+    },
+    header: {
+      padding: spacing.xl,
+      backgroundColor: colors.card,
+    },
+    titleRow: {
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      alignItems: "flex-start" as const,
+    },
+    title: {
+      flex: 1,
+      ...typography.editorialStyles.recipeTitle,
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    shareButton: {
+      padding: spacing.sm,
+      marginLeft: spacing.sm,
+    },
+    platformBadge: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: spacing.xs,
+      marginBottom: spacing.md,
+    },
+    platformLabel: {
+      ...typography.editorialStyles.byline,
+      fontWeight: "500" as const,
+    },
+    viewOriginal: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: spacing.xs,
+      marginLeft: spacing.md,
+    },
+    viewOriginalText: {
+      ...typography.editorialStyles.byline,
+      color: colors.primary,
+    },
+    description: {
+      ...typography.editorialStyles.recipeBody,
+      color: colors.textSecondary,
+      marginBottom: spacing.lg,
+    },
+    metaContainer: {
+      flexDirection: "row" as const,
+      flexWrap: "wrap" as const,
+      gap: spacing.lg,
+      marginBottom: spacing.sm,
+    },
+    metaItem: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: spacing.xs,
+    },
+    metaText: {
+      ...typography.styles.subheadline,
+      color: colors.textSecondary,
+    },
+    statusBadge: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: spacing.xs,
+      marginTop: spacing.md,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: borderRadius.full,
+      alignSelf: "flex-start" as const,
+    },
+    statusText: {
+      ...typography.editorialStyles.byline,
+      fontWeight: "600" as const,
+    },
+    // Sections - editorial spacing, no borders
+    section: {
+      padding: spacing.xl,
+      backgroundColor: colors.card,
+      marginTop: spacing.xs,
+    },
+    sectionTitle: {
+      ...typography.editorialStyles.sectionHeading,
+      color: colors.text,
+      marginBottom: spacing.xl,
+    },
+    ingredientsHeader: {
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      alignItems: "center" as const,
+      marginBottom: spacing.xl,
+    },
+    scaledBadge: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      backgroundColor: `${colors.info}15`,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+      gap: spacing.xs,
+    },
+    scaledBadgeText: {
+      ...typography.editorialStyles.byline,
+      color: colors.info,
+      fontWeight: "600" as const,
+    },
+    ingredientsList: {
+      marginLeft: spacing.xs,
+    },
+    ingredientItem: {
+      flexDirection: "row" as const,
+      alignItems: "flex-start" as const,
+      marginBottom: spacing.lg,
+    },
+    bulletPoint: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.primary,
+      marginTop: 7,
+      marginRight: spacing.lg,
+    },
+    ingredientText: {
+      flex: 1,
+      ...typography.editorialStyles.ingredient,
+      color: colors.text,
+    },
+    instructionsContainer: {
+      gap: spacing.xl,
+    },
+    instructionStep: {
+      flexDirection: "row" as const,
+      gap: spacing.lg,
+    },
+    stepNumber: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.primary,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+    },
+    stepNumberText: {
+      ...typography.editorialStyles.byline,
+      color: colors.textOnPrimary,
+      fontWeight: "700" as const,
+      fontSize: 14,
+    },
+    instructionText: {
+      flex: 1,
+      ...typography.editorialStyles.recipeBody,
+      color: colors.text,
+    },
+    noContent: {
+      fontStyle: "italic" as const,
+      color: colors.textSecondary,
+    },
+    // CTA section - prominent Start Cooking button
+    actionsSection: {
+      padding: spacing.xl,
+      backgroundColor: colors.card,
+      marginTop: spacing.xs,
+      gap: spacing.md,
+    },
+    cookingButton: {
+      borderRadius: borderRadius.full,
+      marginBottom: spacing.md,
+    },
+    cookingButtonContent: {
+      paddingVertical: spacing.md,
+    },
+    primaryButton: {
+      borderRadius: borderRadius.full,
+    },
+    secondaryButton: {
+      borderRadius: borderRadius.full,
+      borderColor: colors.primary,
+    },
+    buttonContent: {
+      paddingVertical: spacing.sm,
+    },
+    textButton: {
+      alignSelf: "center" as const,
+    },
+    deleteButton: {
+      alignSelf: "center" as const,
+      marginTop: spacing.sm,
+    },
+    footer: {
+      height: 40,
+    },
+    collectionModal: {
+      backgroundColor: colors.card,
+      margin: spacing.xl,
+      padding: spacing.xl,
+      borderRadius: borderRadius.lg,
+      maxHeight: '70%' as const,
+    },
+    collectionModalTitle: {
+      ...typography.editorialStyles.sectionHeading,
+      color: colors.text,
+      marginBottom: spacing.lg,
+    },
+    collectionList: {
+      maxHeight: 300,
+    },
+    collectionOption: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      marginBottom: spacing.sm,
+      backgroundColor: colors.background,
+    },
+    collectionOptionSelected: {
+      backgroundColor: colors.primaryLight,
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+    collectionOptionDisabled: {
+      opacity: 0.6,
+    },
+    collectionOptionIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: borderRadius.md,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+    },
+    collectionOptionInfo: {
+      flex: 1,
+      marginLeft: spacing.md,
+    },
+    collectionOptionName: {
+      ...typography.styles.body,
+      fontWeight: '500' as const,
+      color: colors.text,
+    },
+    collectionOptionCount: {
+      ...typography.styles.caption1,
+      color: colors.textSecondary,
+    },
+    collectionModalActions: {
+      flexDirection: 'row' as const,
+      justifyContent: 'flex-end' as const,
+      gap: spacing.md,
+      marginTop: spacing.lg,
+    },
+    collectionModalButton: {
+      minWidth: 80,
+    },
+    noCollectionsContainer: {
+      alignItems: 'center' as const,
+      padding: spacing.xxxl,
+    },
+    noCollectionsText: {
+      ...typography.styles.subheadline,
+      color: colors.textSecondary,
+      textAlign: 'center' as const,
+      marginTop: spacing.md,
+    },
+  }), [colors, spacing, borderRadius, typography]);
+
   if (loading) {
     return (
       <Screen>
-        <View style={styles.loadingContainer}>
+        <View style={dynamicStyles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </Screen>
@@ -311,10 +689,10 @@ export default function RecipeDetailScreen() {
   if (error || !recipe) {
     return (
       <Screen>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error || "Recipe not found"}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadRecipe}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+        <View style={dynamicStyles.errorContainer}>
+          <Text style={dynamicStyles.errorText}>{error || "Recipe not found"}</Text>
+          <TouchableOpacity style={dynamicStyles.retryButton} onPress={loadRecipe}>
+            <Text style={dynamicStyles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
       </Screen>
@@ -325,18 +703,47 @@ export default function RecipeDetailScreen() {
   const isCooked = recipe.status === "cooked";
   const isArchived = recipe.status === "archived";
 
+  // Calculate total time for quick info bar
+  const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
+
   return (
     <Screen noPadding>
-      <ScrollView style={styles.container}>
-        {/* Recipe Image */}
+      <ScrollView style={dynamicStyles.container}>
+        {/* Hero Image with Gradient Overlay */}
         {recipe.image_url ? (
-          <Image
-            source={{ uri: recipe.image_url }}
-            style={styles.image}
-            resizeMode="cover"
-          />
+          <Animated.View entering={FadeIn.duration(400)} style={dynamicStyles.heroContainer}>
+            <Image
+              source={{ uri: recipe.image_url }}
+              style={dynamicStyles.heroImage}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.8)']}
+              style={dynamicStyles.heroGradient}
+            />
+            <View style={dynamicStyles.heroContent}>
+              {recipe.meal_type && (
+                <Animated.Text
+                  entering={FadeInDown.delay(100).duration(300)}
+                  style={[dynamicStyles.platformLabel, { color: colors.accent, marginBottom: spacing.xs }]}
+                >
+                  {recipe.meal_type.toUpperCase()}
+                </Animated.Text>
+              )}
+              <Animated.Text
+                entering={FadeInDown.delay(200).duration(300)}
+                style={dynamicStyles.heroTitle}
+                numberOfLines={3}
+              >
+                {recipe.title}
+              </Animated.Text>
+            </View>
+            <TouchableOpacity onPress={handleShare} style={dynamicStyles.heroShareButton}>
+              <Ionicons name="share-social-outline" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+          </Animated.View>
         ) : (
-          <View style={styles.placeholderImage}>
+          <View style={dynamicStyles.placeholderImage}>
             <MaterialCommunityIcons
               name="food"
               size={80}
@@ -345,118 +752,119 @@ export default function RecipeDetailScreen() {
           </View>
         )}
 
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>{recipe.title}</Text>
-            <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
-              <Ionicons
-                name="share-social-outline"
-                size={24}
-                color={colors.primary}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Platform Badge */}
-          <View style={styles.platformBadge}>
-            <MaterialCommunityIcons
-              name={platform.icon}
-              size={16}
-              color={platform.color}
-            />
-            <Text style={[styles.platformLabel, { color: platform.color }]}>
+        {/* Quick Info Bar - Horizontal Pills */}
+        <Animated.View entering={FadeInDown.delay(100).duration(300)} style={dynamicStyles.quickInfoBar}>
+          {totalTime > 0 && (
+            <View style={dynamicStyles.quickInfoPill}>
+              <MaterialCommunityIcons name="clock-outline" size={16} color={colors.primary} />
+              <Text style={dynamicStyles.quickInfoText}>{totalTime} min</Text>
+            </View>
+          )}
+          {recipe.servings && recipe.servings > 0 && (
+            <View style={dynamicStyles.quickInfoPill}>
+              <MaterialCommunityIcons name="account-group-outline" size={16} color={colors.primary} />
+              <Text style={dynamicStyles.quickInfoText}>{recipe.servings} servings</Text>
+            </View>
+          )}
+          {/* Platform source */}
+          <TouchableOpacity
+            style={dynamicStyles.quickInfoPill}
+            onPress={recipe.source_url ? openSourceLink : undefined}
+            disabled={!recipe.source_url}
+          >
+            <MaterialCommunityIcons name={platform.icon} size={16} color={platform.color} />
+            <Text style={[dynamicStyles.quickInfoText, { color: platform.color }]}>
               {platform.label}
             </Text>
             {recipe.source_url && (
-              <TouchableOpacity
-                onPress={openSourceLink}
-                style={styles.viewOriginal}
-              >
-                <Text style={styles.viewOriginalText}>View Original</Text>
+              <Ionicons name="open-outline" size={12} color={platform.color} />
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Header - Only shown if no hero image */}
+        {!recipe.image_url && (
+          <View style={dynamicStyles.header}>
+            <View style={dynamicStyles.titleRow}>
+              <Text style={dynamicStyles.title}>{recipe.title}</Text>
+              <TouchableOpacity onPress={handleShare} style={dynamicStyles.shareButton}>
                 <Ionicons
-                  name="open-outline"
-                  size={14}
+                  name="share-social-outline"
+                  size={24}
                   color={colors.primary}
                 />
               </TouchableOpacity>
-            )}
+            </View>
+
+            {/* Platform Badge */}
+            <View style={dynamicStyles.platformBadge}>
+              <MaterialCommunityIcons
+                name={platform.icon}
+                size={16}
+                color={platform.color}
+              />
+              <Text style={[dynamicStyles.platformLabel, { color: platform.color }]}>
+                {platform.label}
+              </Text>
+              {recipe.source_url && (
+                <TouchableOpacity
+                  onPress={openSourceLink}
+                  style={dynamicStyles.viewOriginal}
+                >
+                  <Text style={dynamicStyles.viewOriginalText}>View Original</Text>
+                  <Ionicons
+                    name="open-outline"
+                    size={14}
+                    color={colors.primary}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
+        )}
 
-          {recipe.description && (
-            <Text style={styles.description}>{recipe.description}</Text>
-          )}
+        {/* Description Section */}
+        {recipe.description && (
+          <Animated.View entering={FadeInDown.delay(200).duration(300)} style={dynamicStyles.section}>
+            <Text style={dynamicStyles.description}>{recipe.description}</Text>
+          </Animated.View>
+        )}
 
-          {/* Meta Info */}
-          <View style={styles.metaContainer}>
-            {recipe.prep_time && recipe.prep_time > 0 && (
-              <View style={styles.metaItem}>
-                <Ionicons
-                  name="timer-outline"
+        {/* Status Badge */}
+        {(isCooked || isArchived) && (
+          <View style={[dynamicStyles.section, { paddingVertical: spacing.md }]}>
+            {isCooked && (
+              <View style={dynamicStyles.statusBadge}>
+                <MaterialCommunityIcons
+                  name="check-circle"
                   size={16}
-                  color={colors.textSecondary}
+                  color={colors.success}
                 />
-                <Text style={styles.metaText}>
-                  Prep: {recipe.prep_time} min
+                <Text style={[dynamicStyles.statusText, { color: colors.success }]}>
+                  COOKED
                 </Text>
               </View>
             )}
-            {recipe.cook_time && recipe.cook_time > 0 && (
-              <View style={styles.metaItem}>
-                <Ionicons
-                  name="flame-outline"
+            {isArchived && (
+              <View style={dynamicStyles.statusBadge}>
+                <MaterialCommunityIcons
+                  name="archive"
                   size={16}
                   color={colors.textSecondary}
                 />
-                <Text style={styles.metaText}>
-                  Cook: {recipe.cook_time} min
+                <Text
+                  style={[dynamicStyles.statusText, { color: colors.textSecondary }]}
+                >
+                  ARCHIVED
                 </Text>
               </View>
             )}
-            {recipe.servings && recipe.servings > 0 && (
-              <View style={styles.metaItem}>
-                <Ionicons
-                  name="people-outline"
-                  size={16}
-                  color={colors.textSecondary}
-                />
-                <Text style={styles.metaText}>{recipe.servings} servings</Text>
-              </View>
-            )}
           </View>
-
-          {/* Status Badge */}
-          {isCooked && (
-            <View style={styles.statusBadge}>
-              <MaterialCommunityIcons
-                name="check-circle"
-                size={16}
-                color={colors.success}
-              />
-              <Text style={[styles.statusText, { color: colors.success }]}>
-                Cooked
-              </Text>
-            </View>
-          )}
-          {isArchived && (
-            <View style={styles.statusBadge}>
-              <MaterialCommunityIcons
-                name="archive"
-                size={16}
-                color={colors.textSecondary}
-              />
-              <Text
-                style={[styles.statusText, { color: colors.textSecondary }]}
-              >
-                Archived
-              </Text>
-            </View>
-          )}
-        </View>
+        )}
 
         {/* Serving Adjuster */}
         {recipe.servings && recipe.servings > 0 && (
-          <View style={styles.section}>
+          <View style={dynamicStyles.section}>
             <ServingAdjuster
               originalServings={recipe.servings}
               currentServings={currentServings || recipe.servings}
@@ -465,53 +873,61 @@ export default function RecipeDetailScreen() {
           </View>
         )}
 
-        {/* Ingredients */}
-        <View style={styles.section}>
-          <View style={styles.ingredientsHeader}>
-            <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
-              Ingredients ({recipe.ingredients?.length || 0})
+        {/* Ingredients - Editorial list style */}
+        <Animated.View entering={FadeInDown.delay(300).duration(300)} style={dynamicStyles.section}>
+          <View style={dynamicStyles.ingredientsHeader}>
+            <Text style={[dynamicStyles.sectionTitle, { marginBottom: 0 }]}>
+              Ingredients
             </Text>
             {scaleFactor !== 1 && (
-              <View style={styles.scaledBadge}>
+              <View style={dynamicStyles.scaledBadge}>
                 <MaterialCommunityIcons name="scale" size={14} color={colors.info} />
-                <Text style={styles.scaledBadgeText}>Scaled</Text>
+                <Text style={dynamicStyles.scaledBadgeText}>SCALED</Text>
               </View>
             )}
           </View>
-          <View style={styles.ingredientsList}>
+          <View style={dynamicStyles.ingredientsList}>
             {recipe.ingredients && recipe.ingredients.length > 0 ? (
               recipe.ingredients.map((ing, idx) => (
-                <View key={idx} style={styles.ingredientItem}>
-                  <View style={styles.bulletPoint} />
-                  <Text style={styles.ingredientText}>
+                <Animated.View
+                  key={idx}
+                  entering={FadeInDown.delay(350 + idx * 30).duration(300)}
+                  style={dynamicStyles.ingredientItem}
+                >
+                  <View style={dynamicStyles.bulletPoint} />
+                  <Text style={dynamicStyles.ingredientText}>
                     {getScaledIngredientDisplay(ing, scaleFactor)}
                   </Text>
-                </View>
+                </Animated.View>
               ))
             ) : (
-              <Text style={styles.noContent}>No ingredients listed</Text>
+              <Text style={dynamicStyles.noContent}>No ingredients listed</Text>
             )}
           </View>
-        </View>
+        </Animated.View>
 
-        {/* Instructions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Instructions</Text>
-          <View style={styles.instructionsContainer}>
+        {/* Instructions - Editorial step layout */}
+        <Animated.View entering={FadeInDown.delay(400).duration(300)} style={dynamicStyles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Instructions</Text>
+          <View style={dynamicStyles.instructionsContainer}>
             {recipe.instructions && recipe.instructions.length > 0 ? (
               recipe.instructions.map((step, idx) => (
-                <View key={idx} style={styles.instructionStep}>
-                  <View style={styles.stepNumber}>
-                    <Text style={styles.stepNumberText}>{idx + 1}</Text>
+                <Animated.View
+                  key={idx}
+                  entering={FadeInDown.delay(450 + idx * 50).duration(300)}
+                  style={dynamicStyles.instructionStep}
+                >
+                  <View style={dynamicStyles.stepNumber}>
+                    <Text style={dynamicStyles.stepNumberText}>{idx + 1}</Text>
                   </View>
-                  <Text style={styles.instructionText}>{step}</Text>
-                </View>
+                  <Text style={dynamicStyles.instructionText}>{step}</Text>
+                </Animated.View>
               ))
             ) : (
-              <Text style={styles.noContent}>No instructions provided</Text>
+              <Text style={dynamicStyles.noContent}>No instructions provided</Text>
             )}
           </View>
-        </View>
+        </Animated.View>
 
         {/* Rating & Notes */}
         <RecipeRatingNotes
@@ -522,18 +938,20 @@ export default function RecipeDetailScreen() {
           }}
         />
 
-        {/* Action Buttons */}
-        <View style={styles.actionsSection}>
+        {/* Action Buttons - Prominent Start Cooking CTA */}
+        <Animated.View entering={FadeInDown.delay(500).duration(300)} style={dynamicStyles.actionsSection}>
           {isWantToCook && (
             <>
+              {/* Primary CTA - Start Cooking */}
               <Button
                 mode="contained"
                 onPress={handleStartCooking}
                 disabled={isUpdating}
                 icon="chef-hat"
-                style={styles.cookingButton}
-                contentStyle={styles.buttonContent}
-                buttonColor={colors.success}
+                style={dynamicStyles.cookingButton}
+                contentStyle={dynamicStyles.cookingButtonContent}
+                buttonColor={colors.primary}
+                labelStyle={{ fontSize: 16, fontWeight: '600' }}
               >
                 Start Cooking
               </Button>
@@ -544,8 +962,9 @@ export default function RecipeDetailScreen() {
                 loading={isUpdating}
                 disabled={isUpdating}
                 icon="check"
-                style={styles.primaryButton}
-                contentStyle={styles.buttonContent}
+                style={dynamicStyles.primaryButton}
+                contentStyle={dynamicStyles.buttonContent}
+                buttonColor={colors.success}
               >
                 Mark as Cooked
               </Button>
@@ -555,8 +974,8 @@ export default function RecipeDetailScreen() {
                 onPress={handleAddToGroceryList}
                 disabled={isUpdating}
                 icon="cart"
-                style={styles.secondaryButton}
-                contentStyle={styles.buttonContent}
+                style={dynamicStyles.secondaryButton}
+                contentStyle={dynamicStyles.buttonContent}
               >
                 Add to Grocery List
               </Button>
@@ -566,8 +985,8 @@ export default function RecipeDetailScreen() {
                 onPress={handleOpenCollectionModal}
                 disabled={isUpdating}
                 icon="folder-plus"
-                style={styles.secondaryButton}
-                contentStyle={styles.buttonContent}
+                style={dynamicStyles.secondaryButton}
+                contentStyle={dynamicStyles.buttonContent}
               >
                 Add to Collection
               </Button>
@@ -578,7 +997,7 @@ export default function RecipeDetailScreen() {
                 disabled={isUpdating}
                 icon="archive"
                 textColor={colors.textSecondary}
-                style={styles.textButton}
+                style={dynamicStyles.textButton}
               >
                 Archive
               </Button>
@@ -592,8 +1011,8 @@ export default function RecipeDetailScreen() {
               loading={isUpdating}
               disabled={isUpdating}
               icon="restore"
-              style={styles.secondaryButton}
-              contentStyle={styles.buttonContent}
+              style={dynamicStyles.secondaryButton}
+              contentStyle={dynamicStyles.buttonContent}
             >
               Add Back to Queue
             </Button>
@@ -605,13 +1024,13 @@ export default function RecipeDetailScreen() {
             disabled={isUpdating}
             icon="delete"
             textColor={colors.error}
-            style={styles.deleteButton}
+            style={dynamicStyles.deleteButton}
           >
             Delete Recipe
           </Button>
-        </View>
+        </Animated.View>
 
-        <View style={styles.footer} />
+        <View style={dynamicStyles.footer} />
       </ScrollView>
 
       {/* Add to Collection Modal */}
@@ -619,18 +1038,18 @@ export default function RecipeDetailScreen() {
         <Modal
           visible={collectionModalVisible}
           onDismiss={() => setCollectionModalVisible(false)}
-          contentContainerStyle={styles.collectionModal}
+          contentContainerStyle={dynamicStyles.collectionModal}
         >
-          <Text style={styles.collectionModalTitle}>Add to Collection</Text>
+          <Text style={dynamicStyles.collectionModalTitle}>Add to Collection</Text>
 
           {collections.length === 0 ? (
-            <View style={styles.noCollectionsContainer}>
+            <View style={dynamicStyles.noCollectionsContainer}>
               <MaterialCommunityIcons
                 name="folder-plus"
                 size={48}
                 color={colors.textTertiary}
               />
-              <Text style={styles.noCollectionsText}>
+              <Text style={dynamicStyles.noCollectionsText}>
                 No collections yet. Create one from the Recipes tab.
               </Text>
             </View>
@@ -639,29 +1058,29 @@ export default function RecipeDetailScreen() {
               <FlatList
                 data={collections}
                 keyExtractor={(item) => item.id}
-                style={styles.collectionList}
+                style={dynamicStyles.collectionList}
                 renderItem={({ item }) => {
                   const isInCollection = recipeCollections.includes(item.id);
                   return (
                     <TouchableOpacity
                       style={[
-                        styles.collectionOption,
-                        selectedCollectionId === item.id && styles.collectionOptionSelected,
-                        isInCollection && styles.collectionOptionDisabled,
+                        dynamicStyles.collectionOption,
+                        selectedCollectionId === item.id && dynamicStyles.collectionOptionSelected,
+                        isInCollection && dynamicStyles.collectionOptionDisabled,
                       ]}
                       onPress={() => !isInCollection && setSelectedCollectionId(item.id)}
                       disabled={isInCollection}
                     >
-                      <View style={[styles.collectionOptionIcon, { backgroundColor: item.color + '20' }]}>
+                      <View style={[dynamicStyles.collectionOptionIcon, { backgroundColor: item.color + '20' }]}>
                         <MaterialCommunityIcons
                           name={item.icon as any}
                           size={20}
                           color={item.color}
                         />
                       </View>
-                      <View style={styles.collectionOptionInfo}>
-                        <Text style={styles.collectionOptionName}>{item.name}</Text>
-                        <Text style={styles.collectionOptionCount}>
+                      <View style={dynamicStyles.collectionOptionInfo}>
+                        <Text style={dynamicStyles.collectionOptionName}>{item.name}</Text>
+                        <Text style={dynamicStyles.collectionOptionCount}>
                           {item.recipe_count} recipe{item.recipe_count !== 1 ? 's' : ''}
                         </Text>
                       </View>
@@ -683,11 +1102,11 @@ export default function RecipeDetailScreen() {
                 }}
               />
 
-              <View style={styles.collectionModalActions}>
+              <View style={dynamicStyles.collectionModalActions}>
                 <Button
                   mode="outlined"
                   onPress={() => setCollectionModalVisible(false)}
-                  style={styles.collectionModalButton}
+                  style={dynamicStyles.collectionModalButton}
                 >
                   Cancel
                 </Button>
@@ -696,7 +1115,7 @@ export default function RecipeDetailScreen() {
                   onPress={handleAddToCollection}
                   loading={isAddingToCollection}
                   disabled={!selectedCollectionId || isAddingToCollection}
-                  style={styles.collectionModalButton}
+                  style={dynamicStyles.collectionModalButton}
                 >
                   Add
                 </Button>
@@ -708,313 +1127,3 @@ export default function RecipeDetailScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    color: colors.error,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  retryButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  image: {
-    width: "100%",
-    height: 250,
-  },
-  placeholderImage: {
-    width: "100%",
-    height: 200,
-    backgroundColor: colors.lightGray,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.card,
-  },
-  titleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  title: {
-    flex: 1,
-    fontSize: 24,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: 8,
-  },
-  shareButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  platformBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 12,
-  },
-  platformLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  viewOriginal: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginLeft: 12,
-  },
-  viewOriginalText: {
-    fontSize: 14,
-    color: colors.primary,
-  },
-  description: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    lineHeight: 22,
-    marginBottom: 16,
-  },
-  metaContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 16,
-    marginBottom: 8,
-  },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  metaText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 12,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: colors.lightGray,
-    borderRadius: 16,
-    alignSelf: "flex-start",
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  section: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.card,
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: 16,
-  },
-  ingredientsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  scaledBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.info + "15",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  scaledBadgeText: {
-    fontSize: 12,
-    color: colors.info,
-    fontWeight: "500",
-  },
-  ingredientsList: {
-    marginLeft: 4,
-  },
-  ingredientItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 10,
-  },
-  bulletPoint: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.primary,
-    marginTop: 8,
-    marginRight: 12,
-  },
-  ingredientText: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.text,
-    lineHeight: 24,
-  },
-  instructionsContainer: {
-    gap: 16,
-  },
-  instructionStep: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  stepNumber: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  stepNumberText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  instructionText: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.text,
-    lineHeight: 24,
-  },
-  noContent: {
-    fontStyle: "italic",
-    color: colors.textSecondary,
-  },
-  actionsSection: {
-    padding: 20,
-    backgroundColor: colors.card,
-    marginTop: 8,
-    gap: 12,
-  },
-  cookingButton: {
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  primaryButton: {
-    borderRadius: 8,
-  },
-  secondaryButton: {
-    borderRadius: 8,
-    borderColor: colors.primary,
-  },
-  buttonContent: {
-    paddingVertical: 8,
-  },
-  textButton: {
-    alignSelf: "center",
-  },
-  deleteButton: {
-    alignSelf: "center",
-    marginTop: 8,
-  },
-  footer: {
-    height: 40,
-  },
-  collectionModal: {
-    backgroundColor: colors.card,
-    margin: 20,
-    padding: 20,
-    borderRadius: 12,
-    maxHeight: '70%',
-  },
-  collectionModalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 16,
-  },
-  collectionList: {
-    maxHeight: 300,
-  },
-  collectionOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: colors.background,
-  },
-  collectionOptionSelected: {
-    backgroundColor: colors.primaryLight,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  collectionOptionDisabled: {
-    opacity: 0.6,
-  },
-  collectionOptionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  collectionOptionInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  collectionOptionName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: colors.text,
-  },
-  collectionOptionCount: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  collectionModalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-    marginTop: 16,
-  },
-  collectionModalButton: {
-    minWidth: 80,
-  },
-  noCollectionsContainer: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  noCollectionsText: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 12,
-  },
-});
