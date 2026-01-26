@@ -42,3 +42,6 @@ yarn-error.*
 
 # builds
 build-*
+
+#ui-redesign
+.ui-redesign/
