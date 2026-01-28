@@ -49,6 +49,7 @@ import {
   updatePantryItemQuantity,
   removeFromPantry,
 } from "../lib/pantry";
+import { DEV_BYPASS_AUTH } from "../lib/devConfig";
 
 // Storage locations / categories
 const CATEGORIES = ["All", "Dry Goods", "Spices", "Refrigerated", "Produce"] as const;
@@ -476,6 +477,12 @@ export default function PantryScreen() {
             <Text style={styles.subtitle}>
               Your curated collection of essentials.
             </Text>
+            {/* Debug: show bypass status */}
+            {__DEV__ || DEV_BYPASS_AUTH ? (
+              <Text style={{ fontSize: 10, color: mangiaColors.taupe, marginTop: 4 }}>
+                Mode: {DEV_BYPASS_AUTH ? 'Mock Data' : 'API'} | Items: {items.length}
+              </Text>
+            ) : null}
           </View>
         </ReanimatedAnimated.View>
 
