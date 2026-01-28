@@ -81,12 +81,25 @@ function extractYouTubeId(url: string): string | null {
 
 /**
  * Extracts transcript/description from TikTok video
+ * Combines spoken transcript (instructions) with caption (ingredients) for best results
  */
 async function getTikTokTranscript(url: string): Promise<string> {
   if (!RAPIDAPI_KEY) {
     throw new Error('TikTok transcript extraction requires API configuration. Try pasting the video caption instead.');
   }
 
+  let spokenTranscript = '';
+  let caption = '';
+
+  // Try to get spoken transcript (contains actual instructions)
+  try {
+    spokenTranscript = await getTikTokSpokenTranscript(url);
+    console.log('Got spoken transcript from TikTok:', spokenTranscript.length, 'chars');
+  } catch (error) {
+    console.log('Spoken transcript not available:', error);
+  }
+
+  // Get video caption (usually contains ingredients list)
   try {
     const response = await fetch(
       `https://tiktok-video-no-watermark2.p.rapidapi.com/?url=${encodeURIComponent(url)}`,
@@ -98,27 +111,62 @@ async function getTikTokTranscript(url: string): Promise<string> {
       }
     );
 
-    if (!response.ok) {
-      throw new Error('Failed to get TikTok video info');
+    if (response.ok) {
+      const data = await response.json();
+      caption = data.data?.title || data.data?.desc || '';
+      console.log('Got caption from TikTok:', caption.length, 'chars');
     }
-
-    const data = await response.json();
-
-    // Try to get caption/description
-    if (data.data?.title) {
-      return data.data.title;
-    }
-
-    // Some TikTok APIs return description differently
-    if (data.data?.desc) {
-      return data.data.desc;
-    }
-
-    throw new Error('TikTok video has no available caption');
   } catch (error) {
-    console.error('TikTok transcript error:', error);
-    throw new Error('Could not get TikTok caption. Try pasting the video description instead.');
+    console.log('Caption not available:', error);
   }
+
+  // Combine both sources for best recipe extraction
+  if (spokenTranscript && caption) {
+    return `VIDEO CAPTION (ingredients):\n${caption}\n\nSPOKEN INSTRUCTIONS:\n${spokenTranscript}`;
+  }
+
+  if (spokenTranscript) {
+    return spokenTranscript;
+  }
+
+  if (caption) {
+    return caption;
+  }
+
+  throw new Error('Could not get TikTok content. Try pasting the video description instead.');
+}
+
+/**
+ * Gets the spoken transcript from a TikTok video using speech-to-text
+ */
+async function getTikTokSpokenTranscript(url: string): Promise<string> {
+  // Use TikTok Video Transcript API on RapidAPI (GET /transcribe endpoint)
+  const response = await fetch(
+    `https://tiktok-video-transcript.p.rapidapi.com/transcribe?url=${encodeURIComponent(url)}`,
+    {
+      headers: {
+        'X-RapidAPI-Key': RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'tiktok-video-transcript.p.rapidapi.com',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Transcript API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.error || 'Transcript extraction failed');
+  }
+
+  // API returns { success: true, source: "subtitle", text: "..." }
+  if (data.text) {
+    return data.text;
+  }
+
+  throw new Error('No transcript in response');
 }
 
 /**

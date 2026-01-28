@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": 1738016400,
+  "generated": 1738098000,
   "concepts": {
     "authentication": [
       "lib/clerk.ts:1",
@@ -103,6 +103,27 @@
       "components/editorial/FeaturedRecipeCard.tsx:1",
       "components/editorial/ScreenHeader.tsx:1",
       "components/editorial/QueueRecipeItem.tsx:1"
+    ],
+    "video transcript extraction": [
+      "lib/videoTranscript.ts:1",
+      "lib/recipeParser.ts:74"
+    ],
+    "ai ingredient parsing": [
+      "lib/ingredientParser.ts:1",
+      "lib/recipeParser.ts:121"
+    ],
+    "meal planning": [
+      "screens/MealPlannerScreen.tsx:1",
+      "lib/mealPlanner.ts:1",
+      "lib/mealPlanService.ts:1",
+      "navigation/MealPlanningStack.tsx:1"
+    ],
+    "cookbooks": [
+      "screens/CookbooksScreen.tsx:1",
+      "lib/cookbookService.ts:1"
+    ],
+    "dev mode": [
+      "lib/devConfig.ts:1"
     ]
   },
   "entry_points": {

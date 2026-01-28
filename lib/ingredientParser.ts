@@ -1,17 +1,14 @@
 // lib/ingredientParser.ts
-// Use Claude API to extract structured recipe from transcript/description
+// Use Cloudflare Workers AI to extract structured recipe from transcript/description
+// Falls back to Gemini if Cloudflare is not configured
 
 import { ParsedRecipe } from "../models/Recipe";
 
-const CLAUDE_API_KEY = process.env.EXPO_PUBLIC_CLAUDE_API_KEY!;
+const CLOUDFLARE_ACCOUNT_ID = process.env.EXPO_PUBLIC_CLOUDFLARE_ACCOUNT_ID;
+const CLOUDFLARE_API_TOKEN = process.env.EXPO_PUBLIC_CLOUDFLARE_API_TOKEN;
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
-/**
- * Extract structured recipe data from text content using Claude
- */
-export async function extractIngredientsWithClaude(
-  content: string,
-): Promise<ParsedRecipe> {
-  const prompt = `Extract the recipe from this video transcript, description, or recipe text. Return ONLY valid JSON with no additional text.
+const RECIPE_PROMPT = `Extract the recipe from this video transcript, description, or recipe text. Return ONLY valid JSON with no additional text.
 
 The JSON should have this exact structure:
 {
@@ -35,45 +32,129 @@ Rules:
 - Extract as much useful information as possible
 
 Content to extract from:
-${content}`;
+`;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": CLAUDE_API_KEY,
-      "anthropic-version": "2023-06-01",
+/**
+ * Extract structured recipe data from text content using Cloudflare Workers AI
+ * Falls back to Gemini if Cloudflare is not configured
+ */
+export async function extractIngredientsWithClaude(
+  content: string,
+): Promise<ParsedRecipe> {
+  // Use Cloudflare Workers AI if configured (free tier)
+  if (CLOUDFLARE_ACCOUNT_ID && CLOUDFLARE_API_TOKEN) {
+    return extractWithCloudflare(content);
+  }
+
+  // Fall back to Gemini if Cloudflare not configured
+  if (GEMINI_API_KEY) {
+    return extractWithGemini(content);
+  }
+
+  throw new Error(
+    "No AI service configured. Please set up Cloudflare Workers AI or Gemini API.",
+  );
+}
+
+/**
+ * Extract recipe using Cloudflare Workers AI (Llama 3.3 70B)
+ */
+async function extractWithCloudflare(content: string): Promise<ParsedRecipe> {
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/run/@cf/meta/llama-3.3-70b-instruct-fp8-fast`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a helpful recipe extraction assistant. Always respond with valid JSON only, no additional text.",
+          },
+          {
+            role: "user",
+            content: RECIPE_PROMPT + content,
+          },
+        ],
+        max_tokens: 2048,
+      }),
     },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2048,
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    }),
-  });
+  );
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    console.error("Claude API error:", error);
+    console.error("Cloudflare AI error:", error);
     throw new Error("Failed to parse recipe with AI. Please try again.");
   }
 
   const data = await response.json();
 
-  if (!data.content || !data.content[0] || !data.content[0].text) {
+  if (!data.success || !data.result?.response) {
+    console.error("Invalid Cloudflare response:", data);
     throw new Error("Invalid response from AI service");
   }
 
-  const text = data.content[0].text;
+  const text = data.result.response;
+  return parseAIResponse(text);
+}
 
+/**
+ * Extract recipe using Gemini API (fallback)
+ */
+async function extractWithGemini(content: string): Promise<ParsedRecipe> {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: RECIPE_PROMPT + content,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          maxOutputTokens: 2048,
+          temperature: 0.1,
+        },
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    console.error("Gemini API error:", error);
+    throw new Error("Failed to parse recipe with AI. Please try again.");
+  }
+
+  const data = await response.json();
+
+  if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+    console.error("Invalid Gemini response:", data);
+    throw new Error("Invalid response from AI service");
+  }
+
+  return parseAIResponse(data.candidates[0].content.parts[0].text);
+}
+
+/**
+ * Parse AI response text and extract JSON recipe
+ */
+function parseAIResponse(text: string): ParsedRecipe {
   // Extract JSON from response (in case there's extra text)
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    console.error("Could not find JSON in Claude response:", text);
+    console.error("Could not find JSON in AI response:", text);
     throw new Error("Could not parse recipe from AI response");
   }
 

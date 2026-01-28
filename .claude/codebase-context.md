@@ -13,7 +13,7 @@ A recipe management iOS app that helps users import recipes from any URL (blogs,
 | Name | Mangia |
 | Type | React Native / Expo mobile app |
 | Platform | iOS (primary), Android |
-| Package Manager | npm |
+| Package Manager | pnpm |
 | Bundle ID | `com.airowe.mangia` |
 | EAS Project ID | `e4128852-4b78-49d1-b720-3a746267e2e4` |
 
@@ -225,8 +225,12 @@ EXPO_PUBLIC_API_URL=https://mangia-api.vercel.app
 EXPO_PUBLIC_REVENUECAT_API_KEY_IOS=appl_...
 EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID=goog_...
 
-# Optional: Firecrawl for recipe URL scraping
-EXPO_PUBLIC_FIRECRAWL_API_KEY=...
+# Recipe Extraction (at least one AI provider required)
+EXPO_PUBLIC_FIRECRAWL_API_KEY=...        # Blog scraping
+EXPO_PUBLIC_CLOUDFLARE_ACCOUNT_ID=...    # AI extraction (free tier)
+EXPO_PUBLIC_CLOUDFLARE_API_TOKEN=...
+EXPO_PUBLIC_GEMINI_API_KEY=...           # AI fallback
+EXPO_PUBLIC_RAPIDAPI_KEY=...             # TikTok/YouTube transcripts
 ```
 
 ## App Store / Fastlane
@@ -264,9 +268,9 @@ URLs configured in `fastlane/metadata/en-US/`:
 
 ```bash
 # Development
-npm start               # Start Expo dev server
-npm run ios             # Run on iOS simulator
-npm run android         # Run on Android emulator
+pnpm start              # Start Expo dev server
+pnpm ios                # Run on iOS simulator
+pnpm android            # Run on Android emulator
 
 # Native builds
 npx expo prebuild --platform ios --clean  # Generate Xcode project

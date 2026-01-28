@@ -11,7 +11,7 @@
  * Set to `__DEV__ && true` to enable in development only.
  * Set to `__DEV__ && false` to disable (use real auth in dev).
  */
-export const DEV_BYPASS_AUTH = __DEV__ && true;
+export const DEV_BYPASS_AUTH = __DEV__ && false;
 
 /**
  * Mock user ID used when DEV_BYPASS_AUTH is enabled.

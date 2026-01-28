@@ -88,3 +88,14 @@ graph LR
     models/GroceryList.ts
     models/Collection.ts
   end
+
+  subgraph RecipeImport["Recipe Import Flow"]
+    ImportRecipeScreen.tsx --> lib/recipeParser.ts
+    lib/recipeParser.ts --> lib/firecrawl.ts
+    lib/recipeParser.ts --> lib/videoTranscript.ts
+    lib/recipeParser.ts --> lib/ingredientParser.ts
+    lib/videoTranscript.ts --> RapidAPI
+    lib/ingredientParser.ts --> Cloudflare["Cloudflare AI"]
+    lib/ingredientParser.ts --> Gemini["Gemini API"]
+    lib/firecrawl.ts --> Firecrawl["Firecrawl API"]
+  end
