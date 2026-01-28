@@ -1,0 +1,217 @@
+{
+  "version": "1.0",
+  "generated": 1738016400,
+  "concepts": {
+    "authentication": [
+      "lib/clerk.ts:1",
+      "contexts/ClerkTokenProvider.tsx:1",
+      "screens/AuthScreen.tsx:1",
+      "lib/api/client.ts:95"
+    ],
+    "subscription": [
+      "lib/revenuecat.ts:1",
+      "contexts/SubscriptionContext.tsx:1",
+      "screens/SubscriptionScreen.tsx:1",
+      "hooks/usePremiumFeature.ts:1"
+    ],
+    "recipe import": [
+      "screens/ImportRecipeScreen.tsx:1",
+      "screens/RecipeImportProgressScreen.tsx:1",
+      "lib/recipeParser.ts:1",
+      "lib/firecrawl.ts:1"
+    ],
+    "recipe management": [
+      "screens/RecipesScreen.tsx:1",
+      "screens/RecipeDetailScreen.tsx:1",
+      "lib/recipeService.ts:1",
+      "lib/recipes.ts:1",
+      "models/Recipe.ts:1"
+    ],
+    "cooking mode": [
+      "screens/CookingModeScreen.tsx:1",
+      "components/cooking/CookingTimer.tsx:1",
+      "components/cooking/CookingStepContent.tsx:1",
+      "components/cooking/CookingControls.tsx:1",
+      "components/cooking/MiseEnPlaceView.tsx:1",
+      "hooks/useSpeech.ts:1",
+      "hooks/useVoiceControl.ts:1"
+    ],
+    "pantry": [
+      "screens/PantryScreen.tsx:1",
+      "screens/AIPantryScannerScreen.tsx:1",
+      "screens/ConfirmScannedItemsScreen.tsx:1",
+      "screens/ManualItemEntryScreen.tsx:1",
+      "screens/KitchenAlertsScreen.tsx:1",
+      "lib/pantry.ts:1",
+      "services/pantryService.ts:1",
+      "models/Product.ts:1",
+      "components/pantry/EmptyPantryState.tsx:1",
+      "components/pantry/ExpiringNotificationCard.tsx:1"
+    ],
+    "grocery list": [
+      "screens/GroceryListScreen.tsx:1",
+      "lib/groceryList.ts:1",
+      "models/GroceryList.ts:1",
+      "utils/categorizeIngredient.ts:1"
+    ],
+    "what can i make": [
+      "screens/WhatCanIMakeScreen.tsx:1",
+      "lib/whatCanIMake.ts:1"
+    ],
+    "collections": [
+      "screens/CollectionsScreen.tsx:1",
+      "screens/CollectionDetailScreen.tsx:1",
+      "lib/collectionService.ts:1",
+      "models/Collection.ts:1"
+    ],
+    "theme": [
+      "theme/index.ts:1",
+      "theme/tokens/colors.ts:1",
+      "theme/tokens/typography.ts:1",
+      "theme/tokens/spacing.ts:1",
+      "theme/hooks/useTheme.ts:1",
+      "theme/variants/light.ts:1",
+      "theme/variants/dark.ts:1"
+    ],
+    "navigation": [
+      "navigation/TabNavigator.tsx:1",
+      "navigation/HomeStack.tsx:1",
+      "navigation/PantryStack.tsx:1",
+      "navigation/ShoppingStack.tsx:1",
+      "navigation/RecipeLibraryStack.tsx:1",
+      "components/navigation/CustomTabBar.tsx:1",
+      "components/navigation/QuickAddMenu.tsx:1"
+    ],
+    "onboarding": [
+      "screens/OnboardingScreen.tsx:1",
+      "components/onboarding/FeatureCard.tsx:1",
+      "components/onboarding/PaginationDots.tsx:1"
+    ],
+    "api client": [
+      "lib/api/client.ts:1",
+      "lib/api/index.ts:1"
+    ],
+    "glassmorphism": [
+      "components/glass/GlassCard.tsx:1",
+      "components/glass/GlassButton.tsx:1",
+      "components/glass/GlassHeader.tsx:1",
+      "components/glass/GlassSheet.tsx:1"
+    ],
+    "editorial design": [
+      "components/editorial/EditorialCard.tsx:1",
+      "components/editorial/EditorialText.tsx:1",
+      "components/editorial/FeaturedRecipeCard.tsx:1",
+      "components/editorial/ScreenHeader.tsx:1",
+      "components/editorial/QueueRecipeItem.tsx:1"
+    ]
+  },
+  "entry_points": {
+    "App entry": "index.tsx:1",
+    "Root component": "App.tsx:1",
+    "Tab Navigator": "navigation/TabNavigator.tsx:24"
+  },
+  "exports": {
+    "lib/revenuecat.ts": [
+      "PREMIUM_ENTITLEMENT",
+      "PRODUCT_IDS",
+      "initializeRevenueCat",
+      "loginUser",
+      "logoutUser",
+      "getCustomerInfo",
+      "isPremiumUser",
+      "hasPremiumEntitlement",
+      "getOfferings",
+      "purchasePackage",
+      "restorePurchases",
+      "getExpirationDate",
+      "isInTrialPeriod",
+      "formatPrice",
+      "getSubscriptionPeriod",
+      "isRevenueCatConfigured"
+    ],
+    "lib/api/client.ts": [
+      "apiClient",
+      "ApiResponse",
+      "PaginationParams",
+      "PaginatedResponse"
+    ],
+    "lib/clerk.ts": [
+      "tokenCache"
+    ],
+    "models/Recipe.ts": [
+      "Recipe",
+      "RecipeIngredient",
+      "RecipeSourceType",
+      "RecipeStatus",
+      "IngredientCategory",
+      "RecipeNote",
+      "ParsedRecipe",
+      "FirecrawlRecipe"
+    ],
+    "models/Product.ts": [
+      "Product",
+      "PantryItem"
+    ],
+    "theme/tokens/colors.ts": [
+      "mangiaColors",
+      "editorialPalette",
+      "palette",
+      "lightColors",
+      "darkColors",
+      "SemanticColors"
+    ],
+    "theme/index.ts": [
+      "ThemeProvider",
+      "useTheme"
+    ]
+  },
+  "types": {
+    "Recipe": "models/Recipe.ts:28",
+    "RecipeIngredient": "models/Recipe.ts:18",
+    "RecipeSourceType": "models/Recipe.ts:2",
+    "RecipeStatus": "models/Recipe.ts:5",
+    "IngredientCategory": "models/Recipe.ts:8",
+    "RecipeNote": "models/Recipe.ts:55",
+    "ParsedRecipe": "models/Recipe.ts:66",
+    "Product": "models/Product.ts:4",
+    "PantryItem": "models/Product.ts:19",
+    "SemanticColors": "theme/tokens/colors.ts:149",
+    "ApiResponse": "lib/api/client.ts:16",
+    "PaginatedResponse": "lib/api/client.ts:27",
+    "CustomerInfo": "lib/revenuecat.ts:5"
+  },
+  "screens": {
+    "HomeScreen": "screens/HomeScreen.tsx",
+    "RecipeDetailScreen": "screens/RecipeDetailScreen.tsx",
+    "CookingModeScreen": "screens/CookingModeScreen.tsx",
+    "ImportRecipeScreen": "screens/ImportRecipeScreen.tsx",
+    "RecipeImportProgressScreen": "screens/RecipeImportProgressScreen.tsx",
+    "PantryScreen": "screens/PantryScreen.tsx",
+    "AIPantryScannerScreen": "screens/AIPantryScannerScreen.tsx",
+    "ConfirmScannedItemsScreen": "screens/ConfirmScannedItemsScreen.tsx",
+    "ManualItemEntryScreen": "screens/ManualItemEntryScreen.tsx",
+    "KitchenAlertsScreen": "screens/KitchenAlertsScreen.tsx",
+    "GroceryListScreen": "screens/GroceryListScreen.tsx",
+    "WhatCanIMakeScreen": "screens/WhatCanIMakeScreen.tsx",
+    "RecipesScreen": "screens/RecipesScreen.tsx",
+    "CollectionsScreen": "screens/CollectionsScreen.tsx",
+    "CollectionDetailScreen": "screens/CollectionDetailScreen.tsx",
+    "SubscriptionScreen": "screens/SubscriptionScreen.tsx",
+    "AccountScreen": "screens/AccountScreen.tsx",
+    "AuthScreen": "screens/AuthScreen.tsx",
+    "OnboardingScreen": "screens/OnboardingScreen.tsx"
+  },
+  "brand": {
+    "colors": {
+      "terracotta": "#D97742",
+      "sage": "#A8BCA0",
+      "cream": "#FBF9F5",
+      "creamDark": "#F5E3C1",
+      "dark": "#3A322C",
+      "brown": "#7A716A",
+      "deepBrown": "#2A1F18"
+    },
+    "bundleId": "com.airowe.mangia",
+    "appName": "Mangia"
+  }
+}

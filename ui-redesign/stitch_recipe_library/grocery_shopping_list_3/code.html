@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Grocery Shopping List - Mangia</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d9753f",
+                        "primary-dark": "#b05d2e",
+                        "background-light": "#fbf9f6",
+                        "background-dark": "#201712",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2a221d",
+                        "text-main": "#2a221d",
+                        "text-secondary": "#857166",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'card': '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .custom-checkbox:checked + div .check-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .custom-checkbox:checked + div {
+            background-color: #d9753f;
+            border-color: #d9753f;
+        }.custom-checkbox:checked ~ div span {
+            text-decoration: line-through;
+            text-decoration-color: #d9753f;
+            color: #9ca3af;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white transition-colors duration-200">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-hidden max-w-md mx-auto bg-background-light dark:bg-background-dark">
+<header class="flex items-center px-6 pt-12 pb-4 justify-between sticky top-0 z-20 transition-colors">
+<h1 class="font-display text-[40px] font-medium leading-none tracking-tight text-text-main dark:text-white">
+                Shopping<br/>List
+            </h1>
+<div class="flex items-center gap-2">
+<button class="flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors border border-transparent active:scale-95">
+<span class="material-symbols-outlined text-text-main dark:text-white" style="font-size: 22px;">share</span>
+</button>
+<button class="flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors border border-transparent active:scale-95">
+<span class="material-symbols-outlined text-text-main dark:text-white" style="font-size: 22px;">print</span>
+</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto no-scrollbar pb-32 px-6">
+<div class="mt-4 mb-8">
+<h3 class="font-display text-xl font-medium text-text-main dark:text-white mb-4 pl-1">
+                    Heirloom Tomato Galette
+                </h3>
+<div class="space-y-3">
+<label class="group flex items-center gap-4 p-4 bg-white dark:bg-surface-dark rounded-2xl shadow-card cursor-pointer select-none transition-all hover:shadow-md active:scale-[0.99] border border-transparent hover:border-primary/20">
+<input checked="" class="custom-checkbox peer sr-only" type="checkbox"/>
+<div class="h-6 w-6 rounded border-2 border-[#e4dfdc] dark:border-gray-600 bg-transparent flex items-center justify-center transition-all duration-200 shrink-0">
+<span class="material-symbols-outlined text-white text-[16px] opacity-0 check-icon transition-transform duration-200 transform scale-50 font-bold">check</span>
+</div>
+<div class="flex-1">
+<span class="font-body text-[15px] font-medium text-text-main dark:text-gray-100 leading-tight transition-colors">1 sheet puff pastry</span>
+</div>
+</label>
+<label class="group flex items-center gap-4 p-4 bg-white dark:bg-surface-dark rounded-2xl shadow-card cursor-pointer select-none transition-all hover:shadow-md active:scale-[0.99] border border-transparent hover:border-primary/20">
+<input class="custom-checkbox peer sr-only" type="checkbox"/>
+<div class="h-6 w-6 rounded border-2 border-[#e4dfdc] dark:border-gray-600 bg-transparent flex items-center justify-center transition-all duration-200 shrink-0 group-hover:border-primary/50">
+<span class="material-symbols-outlined text-white text-[16px] opacity-0 check-icon transition-transform duration-200 transform scale-50 font-bold">check</span>
+</div>
+<div class="flex-1">
+<span class="font-body text-[15px] font-medium text-text-main dark:text-gray-100 leading-tight transition-colors">2 large heirloom tomatoes</span>
+</div>
+</label>
+<label class="group flex items-center gap-4 p-4 bg-white dark:bg-surface-dark rounded-2xl shadow-card cursor-pointer select-none transition-all hover:shadow-md active:scale-[0.99] border border-transparent hover:border-primary/20">
+<input class="custom-checkbox peer sr-only" type="checkbox"/>
+<div class="h-6 w-6 rounded border-2 border-[#e4dfdc] dark:border-gray-600 bg-transparent flex items-center justify-center transition-all duration-200 shrink-0 group-hover:border-primary/50">
+<span class="material-symbols-outlined text-white text-[16px] opacity-0 check-icon transition-transform duration-200 transform scale-50 font-bold">check</span>
+</div>
+<div class="flex-1">
+<span class="font-body text-[15px] font-medium text-text-main dark:text-gray-100 leading-tight transition-colors">1/4 cup goat cheese</span>
+</div>
+</label>
+</div>
+</div>
+<div class="mb-8">
+<h3 class="font-display text-xl font-medium text-text-main dark:text-white mb-4 pl-1">
+                    Spring Lemon Risotto
+                </h3>
+<div class="space-y-3">
+<label class="group flex items-center gap-4 p-4 bg-white dark:bg-surface-dark rounded-2xl shadow-card cursor-pointer select-none transition-all hover:shadow-md active:scale-[0.99] border border-transparent hover:border-primary/20">
+<input class="custom-checkbox peer sr-only" type="checkbox"/>
+<div class="h-6 w-6 rounded border-2 border-[#e4dfdc] dark:border-gray-600 bg-transparent flex items-center justify-center transition-all duration-200 shrink-0 group-hover:border-primary/50">
+<span class="material-symbols-outlined text-white text-[16px] opacity-0 check-icon transition-transform duration-200 transform scale-50 font-bold">check</span>
+</div>
+<div class="flex-1">
+<span class="font-body text-[15px] font-medium text-text-main dark:text-gray-100 leading-tight transition-colors">1 cup Arborio rice</span>
+</div>
+</label>
+<label class="group flex items-center gap-4 p-4 bg-white dark:bg-surface-dark rounded-2xl shadow-card cursor-pointer select-none transition-all hover:shadow-md active:scale-[0.99] border border-transparent hover:border-primary/20">
+<input class="custom-checkbox peer sr-only" type="checkbox"/>
+<div class="h-6 w-6 rounded border-2 border-[#e4dfdc] dark:border-gray-600 bg-transparent flex items-center justify-center transition-all duration-200 shrink-0 group-hover:border-primary/50">
+<span class="material-symbols-outlined text-white text-[16px] opacity-0 check-icon transition-transform duration-200 transform scale-50 font-bold">check</span>
+</div>
+<div class="flex-1">
+<span class="font-body text-[15px] font-medium text-text-main dark:text-gray-100 leading-tight transition-colors">1 bunch asparagus, trimmed</span>
+</div>
+</label>
+</div>
+</div>
+<div class="h-20"></div>
+</main>
+<div class="absolute bottom-0 w-full z-30 pointer-events-none">
+<div class="absolute bottom-0 w-full h-32 bg-gradient-to-t from-background-light via-background-light/95 to-transparent dark:from-background-dark dark:via-background-dark/95 pointer-events-none"></div>
+<div class="relative w-full pb-8 px-6 flex flex-col items-center pointer-events-auto">
+<nav class="relative h-[72px] w-full max-w-[360px] rounded-full bg-[#fcfbf9]/90 dark:bg-[#2a221d]/90 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white/40 dark:border-white/10 flex items-center justify-between px-6">
+<div class="flex items-center gap-7">
+<a class="flex flex-col items-center justify-center gap-1 group text-text-secondary/80 dark:text-gray-400 hover:text-text-main dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">home</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 group text-text-secondary/80 dark:text-gray-400 hover:text-text-main dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">inventory_2</span>
+</a>
+</div>
+<div class="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 z-10">
+<button class="flex size-14 items-center justify-center rounded-full bg-text-main dark:bg-primary text-white shadow-xl shadow-black/20 ring-4 ring-transparent transition-transform active:scale-95 hover:bg-black">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</button>
+</div>
+<div class="flex items-center gap-7">
+<a class="flex flex-col items-center justify-center gap-1 group text-primary relative" href="#">
+<span class="material-symbols-outlined text-[24px]">shopping_basket</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 group text-text-secondary/80 dark:text-gray-400 hover:text-text-main dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">menu_book</span>
+</a>
+</div>
+</nav>
+</div>
+</div>
+</div>
+
+</body></html>

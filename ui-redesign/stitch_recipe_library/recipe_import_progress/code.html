@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Recipe Import Progress</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d9753f",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#201712",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>/* Custom subtle paper texture effect for the background */
+.paper-texture {
+    background-color: #f8f7f6;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCC2eh2OihGc0Eau-L0s4xU5naa0gjJCGCckF9LmzkuO2DtBXI2lKCijLuYKOVnk31jd2ndWtWbS5ddVQnCE3BfyW5ccWcSH3u6hR1iGjGhLM5FUw214g9mE9iwnkczZktxR2sLXdsTS-WD8GAjRx07xNDjyuXxciW7JYm2nfIGmc8rLLLBvmL3iUJsceNAA_I9DWzzogcOW027W74i6i0ihG1sTYVFBiwL5Z6DGYcTBb8XzSvSy7CSJDjJkvA-SZV8nFAFzROFaY8)
+    }
+.dark .paper-texture {
+    background-image: none
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body>
+<div class="relative flex h-screen w-full flex-col paper-texture dark:bg-background-dark group/design-root overflow-hidden font-display transition-colors duration-300">
+<!-- Main Content Wrapper -->
+<div class="flex flex-col flex-grow items-center justify-center w-full max-w-md mx-auto px-6 py-8 relative z-10">
+<!-- Header -->
+<div class="w-full text-center mb-10 animate-fade-in-up">
+<h1 class="text-stone-900 dark:text-stone-100 tracking-tight text-[40px] font-medium leading-tight italic">
+                    Importing...
+                </h1>
+</div>
+<!-- Central Visual (Hero) -->
+<!-- Using aspect-square to keep it focused like an illustration -->
+<div class="w-full max-w-[280px] aspect-square relative mb-12 flex items-center justify-center">
+<!-- Decorative subtle circle behind -->
+<div class="absolute inset-0 bg-primary/5 rounded-full scale-110 blur-xl"></div>
+<div class="w-full h-full relative z-10 overflow-hidden rounded-xl bg-transparent">
+<div class="w-full h-full bg-center bg-contain bg-no-repeat" data-alt="Abstract illustration of ingredients floating into a chef's hat" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA5tt0p8q7tq7q4DFq60DEMz9M-tmNOZZ0-98pDPm1JFX9hR7QblE_7GadG7axTgTaUwsifJhbqnct7Vwz8o4e6CwAiAbIT-8sspXLXV55eJ3eOXUK3LlJSAKc75GLZPVdVRLvFcugFaToRFUvnSl2faKuk_hU4UkQPu7C8hMQ_VOFxRxTIT8thLjH9dm0vZhUL5SLcdTfxTOuSHa66mHhFJ5c9X4A72w651X1nSxQxfKDEytuPNJnkMZgmWOXGm43BEysfDJKp3t4");'></div>
+</div>
+</div>
+<!-- Progress Section -->
+<div class="w-full max-w-xs flex flex-col gap-3">
+<div class="flex justify-between items-end px-1">
+<p class="text-stone-600 dark:text-stone-400 text-lg font-normal leading-normal italic animate-pulse">
+                        Extracting ingredients...
+                    </p>
+<p class="text-primary dark:text-primary text-xl font-bold leading-normal">
+                        65%
+                    </p>
+</div>
+<!-- Progress Bar Track -->
+<div class="w-full h-1.5 rounded-full bg-stone-200 dark:bg-stone-700 overflow-hidden">
+<!-- Progress Bar Fill -->
+<div class="h-full rounded-full bg-primary transition-all duration-1000 ease-out" style="width: 65%;"></div>
+</div>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="w-full pb-8 flex justify-center z-10">
+<button class="group flex items-center gap-2 px-6 py-3 rounded-full bg-transparent hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer">
+<span class="text-stone-500 dark:text-stone-400 group-hover:text-stone-800 dark:group-hover:text-stone-200 text-sm font-semibold tracking-wide uppercase">Cancel Import</span>
+</button>
+</div>
+</div>
+</body></html>

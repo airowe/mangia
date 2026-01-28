@@ -1,0 +1,10 @@
+# Fastlane Appfile for Mangia
+
+# App Store Connect
+app_identifier "com.airowe.mangia"
+apple_id "adaminsley@gmail.com"
+team_id "6743126234"        # Apple Developer Portal Team ID
+itc_team_id "127827179"     # App Store Connect Team ID (Adam Rowe)
+
+# For more information about the Appfile, see:
+# https://docs.fastlane.tools/advanced/#appfile

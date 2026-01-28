@@ -1,0 +1,27 @@
+# Fastlane Deliver configuration for Mangia
+
+# App Information
+app_identifier "com.airowe.mangia"
+username "adaminsley@gmail.com"
+
+# Metadata path
+metadata_path "./fastlane/metadata"
+screenshots_path "./fastlane/screenshots"
+
+# Skip binary upload (we use EAS for builds)
+skip_binary_upload true
+
+# Automatically submit for review after upload (set to false for manual control)
+submit_for_review false
+
+# Pricing (free app)
+price_tier 0
+
+# App Rating Configuration
+app_rating_config_path "./fastlane/rating_config.json"
+
+# Force overwrite
+force true
+
+# Precheck
+precheck_include_in_app_purchases false

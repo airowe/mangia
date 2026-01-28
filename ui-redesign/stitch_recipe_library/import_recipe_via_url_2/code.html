@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Import Recipe - Mangia</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d9753f",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#201712",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }.no-scrollbar {
+            -ms-overflow-style: none;scrollbar-width: none;}
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#171412] dark:text-[#f8f7f6] transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<div class="relative flex items-center justify-center px-6 py-4 z-10">
+<button class="absolute left-6 text-[#171412] dark:text-white flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-3xl">arrow_back</span>
+</button>
+<h1 class="text-2xl font-display font-semibold text-[#171412] dark:text-white tracking-wide">Import Recipe</h1>
+</div>
+<main class="flex-1 flex flex-col px-6 pb-36 pt-4">
+<div class="flex-1 flex flex-col items-center justify-center -mt-16">
+<div class="flex items-center gap-5 mb-10">
+<span class="material-symbols-outlined text-5xl text-primary -rotate-45">link</span>
+<span class="material-symbols-outlined text-2xl text-[#857166] dark:text-[#b0a095]">arrow_forward</span>
+<span class="material-symbols-outlined text-5xl text-[#8da399]">skillet</span>
+</div>
+<h2 class="text-[2rem] leading-tight font-display font-medium text-[#171412] dark:text-white mb-3">Found a recipe?</h2>
+<p class="text-[#5c4d44] dark:text-[#d3c5bc] text-center max-w-xs text-[15px] leading-relaxed mb-10 font-sans">
+                    Paste the link below from any website, blog, or social media to save it to your collection.
+                </p>
+<div class="w-full max-w-sm relative">
+<label class="sr-only" for="url-input">Recipe URL</label>
+<div class="relative flex items-center w-full bg-white dark:bg-[#2c241f] rounded-full border border-[#e4dfdc] dark:border-[#5c4d44] shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all p-2 pl-6 h-14">
+<input class="w-full bg-transparent border-none p-0 text-base placeholder:text-[#d1cdc9] dark:placeholder:text-[#6a5e57] text-[#171412] dark:text-white focus:ring-0 font-sans" id="url-input" placeholder="Paste your link here" type="text"/>
+<button class="shrink-0 bg-[#201712] dark:bg-white text-white dark:text-[#201712] rounded-full px-6 py-2 text-sm font-bold ml-2 hover:opacity-90 transition-opacity h-10">
+                            Paste
+                        </button>
+</div>
+</div>
+</div>
+<div class="mt-auto w-full">
+<button class="w-full bg-primary text-white rounded-full h-14 font-bold text-lg shadow-lg hover:bg-[#c26533] active:scale-[0.98] transition-all">
+                    Import Recipe
+                </button>
+</div>
+</main>
+<div class="fixed bottom-0 left-0 right-0 z-50">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2">
+<button class="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white shadow-xl shadow-primary/30 border-4 border-background-light dark:border-background-dark hover:scale-105 active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-4xl">add</span>
+</button>
+</div>
+<nav class="mx-auto w-full bg-white/80 dark:bg-[#201712]/80 backdrop-blur-xl border-t border-white/20 dark:border-white/5 pb-6 pt-2 px-6 shadow-2xl">
+<div class="flex items-center justify-between max-w-md mx-auto">
+<button class="flex flex-col items-center justify-center gap-1 p-2 text-[#857166] dark:text-[#9ca3af] hover:text-primary dark:hover:text-primary transition-colors group">
+<span class="material-symbols-outlined text-2xl group-hover:-translate-y-0.5 transition-transform">home</span>
+<span class="text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 p-2 text-[#857166] dark:text-[#9ca3af] hover:text-primary dark:hover:text-primary transition-colors group mr-8">
+<span class="material-symbols-outlined text-2xl group-hover:-translate-y-0.5 transition-transform">search</span>
+<span class="text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Search</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 p-2 text-[#857166] dark:text-[#9ca3af] hover:text-primary dark:hover:text-primary transition-colors group ml-8">
+<span class="material-symbols-outlined text-2xl group-hover:-translate-y-0.5 transition-transform">skillet</span>
+<span class="text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Cook</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 p-2 text-[#857166] dark:text-[#9ca3af] hover:text-primary dark:hover:text-primary transition-colors group">
+<div class="h-6 w-6 rounded-full bg-[#e4dfdc] overflow-hidden ring-2 ring-transparent group-hover:ring-primary transition-all">
+<img class="h-full w-full object-cover" data-alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpeVW2t5EiuZaKFyrwwqNBpm-HvX_UMZuiUHxEaM1pCvhsGSx306UaMd_jcGJwio-zD2vU_djLEmriExVKVcL9ZYyx76NzTpF9lJD94wTl_KRFeV8ClWLdX_XLIl_GjI6-HSpSjDMfUT_n_ssW0WbyobaO7eUchY7aTj4wunzMe8uaYhQyDdqIgHksPVETo8UJHArgJWFNMHzC7o-lTcTCvHWxLMImu94aJiVMV3xITfpCNpUTBxcGiRx856Uay-uniyasHkTwrEQ"/>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Profile</span>
+</button>
+</div>
+</nav>
+</div>
+</div>
+
+</body></html>

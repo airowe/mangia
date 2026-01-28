@@ -1,0 +1,82 @@
+# Fastlane configuration for Mangia
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Upload metadata and screenshots to App Store Connect"
+  lane :upload_metadata do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      force: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "Upload only screenshots to App Store Connect"
+  lane :upload_screenshots do
+    deliver(
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: false,
+      force: true
+    )
+  end
+
+  desc "Upload only metadata (no screenshots) to App Store Connect"
+  lane :upload_metadata_only do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true
+    )
+  end
+
+  desc "Download existing metadata from App Store Connect"
+  lane :download_metadata do
+    deliver(
+      download_metadata: true,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true
+    )
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    # Increment build number
+    increment_build_number(
+      xcodeproj: "ios/Mangia.xcodeproj"
+    )
+
+    # Build the app with manual code signing
+    build_app(
+      workspace: "ios/Mangia.xcworkspace",
+      scheme: "Mangia",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "Mangia.ipa",
+      export_options: {
+        provisioningProfiles: {
+          "com.airowe.mangia" => "Mangia App Store"
+        }
+      }
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Upload an existing IPA to TestFlight"
+  lane :upload_testflight do |options|
+    ipa_path = options[:ipa] || "./build/mangia.ipa"
+
+    upload_to_testflight(
+      ipa: ipa_path,
+      skip_waiting_for_build_processing: true,
+      apple_id: "6758270890"
+    )
+  end
+end

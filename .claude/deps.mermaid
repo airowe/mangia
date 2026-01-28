@@ -1,0 +1,90 @@
+graph LR
+  subgraph Entry
+    index.tsx --> App.tsx
+  end
+
+  subgraph Providers["App Providers"]
+    App.tsx --> ClerkProvider
+    App.tsx --> ThemeProvider
+    App.tsx --> SubscriptionProvider
+    App.tsx --> NavigationContainer
+    App.tsx --> ClerkTokenProvider.tsx
+  end
+
+  subgraph Navigation
+    TabNavigator.tsx --> HomeStack.tsx
+    TabNavigator.tsx --> PantryStack.tsx
+    TabNavigator.tsx --> ShoppingStack.tsx
+    TabNavigator.tsx --> RecipeLibraryStack.tsx
+    TabNavigator.tsx --> CustomTabBar.tsx
+  end
+
+  subgraph HomeStack["Home Stack"]
+    HomeStack.tsx --> HomeScreen.tsx
+    HomeStack.tsx --> RecipeDetailScreen.tsx
+    HomeStack.tsx --> CookingModeScreen.tsx
+    HomeStack.tsx --> ImportRecipeScreen.tsx
+  end
+
+  subgraph PantryStack["Pantry Stack"]
+    PantryStack.tsx --> PantryScreen.tsx
+    PantryStack.tsx --> AIPantryScannerScreen.tsx
+    PantryStack.tsx --> ConfirmScannedItemsScreen.tsx
+    PantryStack.tsx --> ManualItemEntryScreen.tsx
+    PantryStack.tsx --> KitchenAlertsScreen.tsx
+  end
+
+  subgraph ShoppingStack["Shopping Stack"]
+    ShoppingStack.tsx --> GroceryListScreen.tsx
+    ShoppingStack.tsx --> WhatCanIMakeScreen.tsx
+  end
+
+  subgraph RecipeStack["Recipe Library Stack"]
+    RecipeLibraryStack.tsx --> RecipesScreen.tsx
+    RecipeLibraryStack.tsx --> CollectionsScreen.tsx
+  end
+
+  subgraph Auth["Authentication"]
+    ClerkTokenProvider.tsx --> lib/clerk.ts
+    ClerkTokenProvider.tsx --> lib/api/client.ts
+    AuthScreen.tsx --> ClerkProvider
+  end
+
+  subgraph Monetization["Monetization"]
+    SubscriptionContext.tsx --> lib/revenuecat.ts
+    SubscriptionScreen.tsx --> lib/revenuecat.ts
+    hooks/usePremiumFeature.ts --> SubscriptionContext.tsx
+  end
+
+  subgraph API["API Layer"]
+    lib/api/client.ts --> axios
+    lib/recipeService.ts --> lib/api/client.ts
+    lib/pantry.ts --> lib/api/client.ts
+    lib/groceryList.ts --> lib/api/client.ts
+    lib/collectionService.ts --> lib/api/client.ts
+  end
+
+  subgraph Theme["Theme System"]
+    theme/index.ts --> theme/tokens/colors.ts
+    theme/index.ts --> theme/tokens/typography.ts
+    theme/index.ts --> theme/tokens/spacing.ts
+    theme/index.ts --> theme/variants/light.ts
+    theme/index.ts --> theme/variants/dark.ts
+    theme/hooks/useTheme.ts --> theme/index.ts
+  end
+
+  subgraph CookingFlow["Cooking Mode"]
+    CookingModeScreen.tsx --> CookingTimer.tsx
+    CookingModeScreen.tsx --> CookingStepContent.tsx
+    CookingModeScreen.tsx --> CookingControls.tsx
+    CookingModeScreen.tsx --> MiseEnPlaceView.tsx
+    CookingModeScreen.tsx --> hooks/useSpeech.ts
+    CookingModeScreen.tsx --> hooks/useVoiceControl.ts
+  end
+
+  subgraph Models["Data Models"]
+    models/Recipe.ts
+    models/Product.ts
+    models/GroceryList.ts
+    models/Collection.ts
+  end

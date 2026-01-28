@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mangia - From Saved Recipe to Dinner Made</title>
+  <meta name="description" content="Import recipes from anywhere, track your pantry, and cook with confidence. Mangia helps you go from saved recipe to dinner made.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            terracotta: {
+              50: '#FDF5F0',
+              100: '#FAEADE',
+              200: '#F5D5BC',
+              300: '#EEBB95',
+              400: '#E49B6A',
+              500: '#D97742',
+              600: '#C65F2E',
+              700: '#A44D25',
+              800: '#843F21',
+              900: '#6B351E',
+            },
+            sage: {
+              50: '#F5F8F4',
+              100: '#E8EFE5',
+              200: '#D3E0CE',
+              300: '#B5CAAC',
+              400: '#A8BCA0',
+              500: '#7A9E6F',
+              600: '#5E8054',
+              700: '#4A6643',
+              800: '#3D5238',
+              900: '#34452F',
+            },
+            cream: {
+              50: '#FEFDFB',
+              100: '#FBF9F5',
+              200: '#F5E3C1',
+              300: '#EED6A8',
+              400: '#E5C68C',
+              500: '#D9B370',
+            },
+            editorial: {
+              dark: '#3A322C',
+              brown: '#7A716A',
+              taupe: '#A9A29A',
+            }
+          },
+          fontFamily: {
+            serif: ['Libre Bodoni', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
+
+    /* Editorial text styles */
+    .text-editorial-headline {
+      font-family: 'Libre Bodoni', Georgia, serif;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    /* Animated gradient background */
+    .gradient-animated {
+      background: linear-gradient(135deg, #FBF9F5 0%, #F5E3C1 50%, #FBF9F5 100%);
+      background-size: 200% 200%;
+      animation: gradient-shift 8s ease infinite;
+    }
+
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Floating phone mockup animation */
+    .float-animation {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    /* Sticker rotation */
+    .sticker {
+      transform: rotate(12deg);
+      transition: transform 0.3s ease;
+    }
+    .sticker:hover {
+      transform: rotate(0deg) scale(1.05);
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .gradient-animated { animation: none; }
+      .float-animation { animation: none; }
+      * { transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body class="bg-cream-100 text-editorial-dark font-sans antialiased">
+
+  <!-- Navigation -->
+  <nav class="fixed top-4 left-4 right-4 z-50">
+    <div class="max-w-6xl mx-auto bg-white/80 backdrop-blur-xl rounded-full px-6 py-4 shadow-lg border border-cream-200">
+      <div class="flex items-center justify-between">
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-2 cursor-pointer">
+          <div class="w-10 h-10 bg-terracotta-500 rounded-full flex items-center justify-center">
+            <span class="text-white font-serif italic text-xl">M</span>
+          </div>
+          <span class="font-serif text-2xl text-editorial-dark">Mangia</span>
+        </a>
+
+        <!-- Nav Links (Desktop) -->
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#features" class="text-editorial-brown hover:text-terracotta-500 transition-colors duration-200 cursor-pointer">Features</a>
+          <a href="#how-it-works" class="text-editorial-brown hover:text-terracotta-500 transition-colors duration-200 cursor-pointer">How It Works</a>
+          <a href="#pricing" class="text-editorial-brown hover:text-terracotta-500 transition-colors duration-200 cursor-pointer">Pricing</a>
+        </div>
+
+        <!-- CTA Button -->
+        <a href="#download" class="bg-editorial-dark text-cream-100 px-6 py-2.5 rounded-full font-semibold text-sm hover:bg-terracotta-500 transition-colors duration-200 cursor-pointer">
+          Download Free
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="gradient-animated min-h-screen pt-32 pb-20 px-6 overflow-hidden">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <!-- Hero Text -->
+        <div class="text-center lg:text-left">
+          <!-- Brand Label -->
+          <p class="text-terracotta-500 font-bold text-xs tracking-[0.2em] uppercase mb-4">
+            Bon Appetit
+          </p>
+
+          <!-- Headline -->
+          <h1 class="text-editorial-headline text-5xl md:text-6xl lg:text-7xl text-editorial-dark leading-[1.1] mb-6">
+            From Saved Recipe<br>
+            <span class="text-terracotta-500">to Dinner Made</span>
+          </h1>
+
+          <!-- Subheadline -->
+          <p class="text-editorial-brown text-lg md:text-xl leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0">
+            Import recipes from TikTok, YouTube, or any blog. Track your pantry.
+            Cook with confidence. Mangia makes home cooking effortless.
+          </p>
+
+          <!-- CTA Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <a href="#download" class="inline-flex items-center justify-center gap-3 bg-editorial-dark text-cream-100 px-8 py-4 rounded-full font-semibold text-lg hover:bg-terracotta-500 transition-colors duration-200 shadow-lg cursor-pointer">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              Download for iOS
+            </a>
+            <a href="#features" class="inline-flex items-center justify-center gap-2 bg-white text-editorial-dark px-8 py-4 rounded-full font-semibold text-lg border-2 border-cream-200 hover:border-terracotta-500 hover:text-terracotta-500 transition-colors duration-200 cursor-pointer">
+              See How It Works
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </a>
+          </div>
+
+          <!-- Social Proof -->
+          <div class="mt-12 flex items-center gap-6 justify-center lg:justify-start">
+            <div class="flex -space-x-2">
+              <div class="w-10 h-10 rounded-full bg-sage-400 border-2 border-white"></div>
+              <div class="w-10 h-10 rounded-full bg-terracotta-400 border-2 border-white"></div>
+              <div class="w-10 h-10 rounded-full bg-cream-300 border-2 border-white"></div>
+              <div class="w-10 h-10 rounded-full bg-editorial-dark border-2 border-white flex items-center justify-center text-white text-xs font-bold">+</div>
+            </div>
+            <p class="text-editorial-brown text-sm">
+              <span class="font-semibold text-editorial-dark">50,000+</span> home cooks<br>
+              cooking smarter
+            </p>
+          </div>
+        </div>
+
+        <!-- Hero Image / Phone Mockup -->
+        <div class="relative flex justify-center lg:justify-end">
+          <!-- Decorative Elements -->
+          <div class="absolute -top-8 -right-8 w-32 h-32 bg-sage-400 rounded-full opacity-30 blur-2xl"></div>
+          <div class="absolute -bottom-12 -left-8 w-40 h-40 bg-terracotta-300 rounded-full opacity-30 blur-2xl"></div>
+
+          <!-- Phone Mockup -->
+          <div class="relative float-animation">
+            <!-- Phone Frame -->
+            <div class="w-[280px] md:w-[320px] bg-editorial-dark rounded-[48px] p-3 shadow-2xl">
+              <div class="bg-cream-100 rounded-[38px] overflow-hidden aspect-[9/19.5]">
+                <!-- Screen Content Preview -->
+                <div class="p-6 h-full flex flex-col">
+                  <!-- App Header -->
+                  <div class="mb-6">
+                    <p class="text-terracotta-500 font-bold text-[10px] tracking-[0.2em] uppercase mb-1">Bon Appetit</p>
+                    <h2 class="font-serif text-xl text-editorial-dark">Good Evening</h2>
+                  </div>
+
+                  <!-- Featured Card -->
+                  <div class="relative flex-1 bg-gradient-to-br from-terracotta-400 to-terracotta-600 rounded-3xl overflow-hidden mb-4">
+                    <div class="absolute inset-0 bg-gradient-to-t from-editorial-dark/80 via-transparent to-transparent"></div>
+                    <div class="absolute bottom-4 left-4 right-4">
+                      <h3 class="font-serif text-white text-lg leading-tight mb-2">Heirloom Tomato Galette</h3>
+                      <div class="flex gap-2">
+                        <span class="bg-white/20 backdrop-blur px-2 py-0.5 rounded text-white text-[10px] font-medium">French</span>
+                        <span class="bg-white/20 backdrop-blur px-2 py-0.5 rounded text-white text-[10px] font-medium">35 min</span>
+                      </div>
+                    </div>
+
+                    <!-- Time Sticker -->
+                    <div class="sticker absolute top-3 right-3 w-12 h-12 bg-terracotta-500 rounded-full flex items-center justify-center text-white border-2 border-white">
+                      <div class="text-center leading-none">
+                        <span class="block font-bold text-sm">35</span>
+                        <span class="text-[8px] uppercase">min</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Queue Item -->
+                  <div class="bg-white rounded-2xl p-3 flex items-center gap-3 shadow-sm border border-cream-200">
+                    <div class="w-14 h-14 bg-sage-200 rounded-xl"></div>
+                    <div class="flex-1">
+                      <p class="font-serif text-sm text-editorial-dark">Spring Lemon Risotto</p>
+                      <p class="text-editorial-taupe text-[10px]">45 min &bull; Italian</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-full border border-cream-200 flex items-center justify-center text-terracotta-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Floating Feature Cards -->
+            <div class="absolute -left-16 top-1/4 bg-white rounded-2xl p-4 shadow-xl border border-cream-200 max-w-[160px] transform -rotate-3">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 bg-sage-400 rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                </div>
+                <span class="text-xs font-semibold text-editorial-dark">Pantry Updated</span>
+              </div>
+              <p class="text-[10px] text-editorial-taupe">Deducted 3 items from your grocery list</p>
+            </div>
+
+            <div class="absolute -right-12 bottom-1/3 bg-terracotta-500 rounded-2xl p-4 shadow-xl max-w-[140px] transform rotate-3">
+              <p class="text-white text-xs font-medium mb-1">Import from any URL</p>
+              <p class="text-terracotta-200 text-[10px]">TikTok, YouTube, blogs...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-24 px-6 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <!-- Section Header -->
+      <div class="text-center mb-16">
+        <p class="text-terracotta-500 font-bold text-xs tracking-[0.2em] uppercase mb-4">Features</p>
+        <h2 class="text-editorial-headline text-4xl md:text-5xl text-editorial-dark mb-6">
+          Everything You Need<br>to Cook Smarter
+        </h2>
+        <p class="text-editorial-brown text-lg max-w-2xl mx-auto">
+          From recipe discovery to plating, Mangia streamlines your entire cooking journey.
+        </p>
+      </div>
+
+      <!-- Features Grid -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Feature 1: Import -->
+        <div class="group bg-cream-100 rounded-3xl p-8 hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+          <div class="w-14 h-14 bg-terracotta-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+            </svg>
+          </div>
+          <h3 class="font-serif text-xl text-editorial-dark mb-3">Import From Anywhere</h3>
+          <p class="text-editorial-brown leading-relaxed">
+            Paste any recipe URL from TikTok, YouTube, Instagram, or food blogs. Our AI extracts ingredients and instructions automatically.
+          </p>
+        </div>
+
+        <!-- Feature 2: Pantry -->
+        <div class="group bg-cream-100 rounded-3xl p-8 hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+          <div class="w-14 h-14 bg-sage-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <h3 class="font-serif text-xl text-editorial-dark mb-3">Smart Pantry Tracking</h3>
+          <p class="text-editorial-brown leading-relaxed">
+            Scan receipts or manually add items. Track expiration dates and get alerts before food goes to waste.
+          </p>
+        </div>
+
+        <!-- Feature 3: Grocery -->
+        <div class="group bg-cream-100 rounded-3xl p-8 hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+          <div class="w-14 h-14 bg-terracotta-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+          </div>
+          <h3 class="font-serif text-xl text-editorial-dark mb-3">Smart Grocery Lists</h3>
+          <p class="text-editorial-brown leading-relaxed">
+            Generate shopping lists that automatically deduct what you already have. No more buying duplicates.
+          </p>
+        </div>
+
+        <!-- Feature 4: What Can I Make -->
+        <div class="group bg-cream-100 rounded-3xl p-8 hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+          <div class="w-14 h-14 bg-sage-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <h3 class="font-serif text-xl text-editorial-dark mb-3">What Can I Make?</h3>
+          <p class="text-editorial-brown leading-relaxed">
+            Discover recipes based on ingredients you already have. Reduce waste and get creative with what's in your kitchen.
+          </p>
+        </div>
+
+        <!-- Feature 5: Cooking Mode -->
+        <div class="group bg-cream-100 rounded-3xl p-8 hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+          <div class="w-14 h-14 bg-editorial-dark rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+            <svg class="w-7 h-7 text-cream-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="font-serif text-xl text-editorial-dark mb-3">Hands-Free Cooking Mode</h3>
+          <p class="text-editorial-brown leading-relaxed">
+            Large, readable steps with voice navigation. Say "next" to advance. Built-in timers for each step.
+          </p>
+        </div>
+
+        <!-- Feature 6: Meal Planning -->
+        <div class="group bg-cream-100 rounded-3xl p-8 hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+          <div class="w-14 h-14 bg-terracotta-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="font-serif text-xl text-editorial-dark mb-3">Weekly Meal Planning</h3>
+          <p class="text-editorial-brown leading-relaxed">
+            Plan your week with a visual calendar. Drag and drop recipes, automatically generate consolidated shopping lists.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section id="how-it-works" class="py-24 px-6 bg-cream-100">
+    <div class="max-w-6xl mx-auto">
+      <!-- Section Header -->
+      <div class="text-center mb-16">
+        <p class="text-terracotta-500 font-bold text-xs tracking-[0.2em] uppercase mb-4">How It Works</p>
+        <h2 class="text-editorial-headline text-4xl md:text-5xl text-editorial-dark">
+          Three Steps to Better Cooking
+        </h2>
+      </div>
+
+      <!-- Steps -->
+      <div class="grid md:grid-cols-3 gap-12">
+        <!-- Step 1 -->
+        <div class="text-center">
+          <div class="relative inline-block mb-8">
+            <div class="w-20 h-20 bg-terracotta-500 rounded-full flex items-center justify-center">
+              <span class="font-serif text-3xl text-white italic">1</span>
+            </div>
+            <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-sage-400 rounded-full"></div>
+          </div>
+          <h3 class="font-serif text-2xl text-editorial-dark mb-4">Save Recipes</h3>
+          <p class="text-editorial-brown leading-relaxed">
+            Found a recipe you love? Paste the URL and Mangia does the rest. Works with TikTok, YouTube, Instagram, and any food blog.
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="text-center">
+          <div class="relative inline-block mb-8">
+            <div class="w-20 h-20 bg-sage-400 rounded-full flex items-center justify-center">
+              <span class="font-serif text-3xl text-white italic">2</span>
+            </div>
+            <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-terracotta-400 rounded-full"></div>
+          </div>
+          <h3 class="font-serif text-2xl text-editorial-dark mb-4">Shop Smart</h3>
+          <p class="text-editorial-brown leading-relaxed">
+            Generate a grocery list that knows what you already have. No duplicates, no waste, no forgetting items.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="text-center">
+          <div class="relative inline-block mb-8">
+            <div class="w-20 h-20 bg-editorial-dark rounded-full flex items-center justify-center">
+              <span class="font-serif text-3xl text-cream-100 italic">3</span>
+            </div>
+            <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-sage-300 rounded-full"></div>
+          </div>
+          <h3 class="font-serif text-2xl text-editorial-dark mb-4">Cook with Confidence</h3>
+          <p class="text-editorial-brown leading-relaxed">
+            Follow step-by-step instructions in cooking mode. Voice control, built-in timers, and large text for easy reading.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="py-24 px-6 bg-white overflow-hidden">
+    <div class="max-w-6xl mx-auto">
+      <!-- Section Header -->
+      <div class="text-center mb-16">
+        <p class="text-terracotta-500 font-bold text-xs tracking-[0.2em] uppercase mb-4">Testimonials</p>
+        <h2 class="text-editorial-headline text-4xl md:text-5xl text-editorial-dark">
+          Loved by Home Cooks
+        </h2>
+      </div>
+
+      <!-- Testimonial Cards -->
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="bg-cream-100 rounded-3xl p-8">
+          <div class="flex items-center gap-1 mb-4">
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="text-editorial-dark mb-6 leading-relaxed">
+            "I used to lose recipes in my screenshots folder. Now everything is organized and I can actually find that TikTok pasta recipe when I need it!"
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-sage-400 rounded-full"></div>
+            <div>
+              <p class="font-semibold text-editorial-dark">Sarah M.</p>
+              <p class="text-sm text-editorial-taupe">Home Cook</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-cream-100 rounded-3xl p-8">
+          <div class="flex items-center gap-1 mb-4">
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="text-editorial-dark mb-6 leading-relaxed">
+            "The pantry tracking feature has cut our food waste in half. We actually use what we buy now instead of letting it expire."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-terracotta-400 rounded-full"></div>
+            <div>
+              <p class="font-semibold text-editorial-dark">Mike & Lisa T.</p>
+              <p class="text-sm text-editorial-taupe">Busy Parents</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-cream-100 rounded-3xl p-8">
+          <div class="flex items-center gap-1 mb-4">
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-5 h-5 text-terracotta-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="text-editorial-dark mb-6 leading-relaxed">
+            "Cooking mode is a game changer. I can follow recipes hands-free while my hands are covered in flour. Voice control actually works!"
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-editorial-dark rounded-full"></div>
+            <div>
+              <p class="font-semibold text-editorial-dark">James K.</p>
+              <p class="text-sm text-editorial-taupe">Weekend Baker</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="py-24 px-6 bg-cream-100">
+    <div class="max-w-4xl mx-auto">
+      <!-- Section Header -->
+      <div class="text-center mb-16">
+        <p class="text-terracotta-500 font-bold text-xs tracking-[0.2em] uppercase mb-4">Pricing</p>
+        <h2 class="text-editorial-headline text-4xl md:text-5xl text-editorial-dark mb-6">
+          Start Free, Upgrade When Ready
+        </h2>
+        <p class="text-editorial-brown text-lg">
+          Try Mangia free with up to 10 recipes. Upgrade for unlimited access.
+        </p>
+      </div>
+
+      <!-- Pricing Cards -->
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- Free Tier -->
+        <div class="bg-white rounded-3xl p-8 border-2 border-cream-200">
+          <p class="text-editorial-taupe font-bold text-xs tracking-[0.2em] uppercase mb-2">Free</p>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="font-serif text-5xl text-editorial-dark">$0</span>
+            <span class="text-editorial-taupe">/forever</span>
+          </div>
+          <ul class="space-y-4 mb-8">
+            <li class="flex items-center gap-3 text-editorial-dark">
+              <svg class="w-5 h-5 text-sage-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Up to 10 saved recipes
+            </li>
+            <li class="flex items-center gap-3 text-editorial-dark">
+              <svg class="w-5 h-5 text-sage-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Basic pantry tracking
+            </li>
+            <li class="flex items-center gap-3 text-editorial-dark">
+              <svg class="w-5 h-5 text-sage-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Grocery list generation
+            </li>
+            <li class="flex items-center gap-3 text-editorial-dark">
+              <svg class="w-5 h-5 text-sage-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Cooking mode
+            </li>
+          </ul>
+          <a href="#download" class="block w-full text-center bg-cream-100 text-editorial-dark px-8 py-4 rounded-full font-semibold hover:bg-cream-200 transition-colors duration-200 cursor-pointer">
+            Get Started Free
+          </a>
+        </div>
+
+        <!-- Premium Tier -->
+        <div class="bg-editorial-dark rounded-3xl p-8 relative overflow-hidden">
+          <!-- Popular Badge -->
+          <div class="sticker absolute top-4 right-4 bg-terracotta-500 text-white px-4 py-1 rounded-full text-xs font-bold">
+            Most Popular
+          </div>
+
+          <p class="text-terracotta-400 font-bold text-xs tracking-[0.2em] uppercase mb-2">Premium</p>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="font-serif text-5xl text-cream-100">$4.99</span>
+            <span class="text-editorial-taupe">/month</span>
+          </div>
+          <ul class="space-y-4 mb-8">
+            <li class="flex items-center gap-3 text-cream-100">
+              <svg class="w-5 h-5 text-terracotta-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              <strong>Unlimited</strong> recipes
+            </li>
+            <li class="flex items-center gap-3 text-cream-100">
+              <svg class="w-5 h-5 text-terracotta-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              AI receipt scanning
+            </li>
+            <li class="flex items-center gap-3 text-cream-100">
+              <svg class="w-5 h-5 text-terracotta-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Voice control in cooking mode
+            </li>
+            <li class="flex items-center gap-3 text-cream-100">
+              <svg class="w-5 h-5 text-terracotta-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Weekly meal planning
+            </li>
+            <li class="flex items-center gap-3 text-cream-100">
+              <svg class="w-5 h-5 text-terracotta-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Priority support
+            </li>
+          </ul>
+          <a href="#download" class="block w-full text-center bg-terracotta-500 text-white px-8 py-4 rounded-full font-semibold hover:bg-terracotta-600 transition-colors duration-200 cursor-pointer">
+            Start 7-Day Free Trial
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download CTA Section -->
+  <section id="download" class="py-24 px-6 bg-terracotta-500 relative overflow-hidden">
+    <!-- Decorative Elements -->
+    <div class="absolute top-0 left-0 w-64 h-64 bg-terracotta-400 rounded-full opacity-50 blur-3xl"></div>
+    <div class="absolute bottom-0 right-0 w-80 h-80 bg-terracotta-600 rounded-full opacity-50 blur-3xl"></div>
+
+    <div class="max-w-4xl mx-auto text-center relative z-10">
+      <p class="text-terracotta-200 font-bold text-xs tracking-[0.2em] uppercase mb-4">Get Started Today</p>
+      <h2 class="text-editorial-headline text-4xl md:text-5xl text-white mb-6">
+        Ready to Cook Smarter?
+      </h2>
+      <p class="text-terracotta-100 text-xl mb-10 max-w-2xl mx-auto">
+        Download Mangia free and transform the way you cook. Your saved recipes deserve better than a screenshot folder.
+      </p>
+
+      <!-- App Store Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#" class="inline-flex items-center justify-center gap-3 bg-white text-editorial-dark px-8 py-4 rounded-full font-semibold text-lg hover:bg-cream-100 transition-colors duration-200 shadow-xl cursor-pointer">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+          Download for iOS
+        </a>
+        <a href="#" class="inline-flex items-center justify-center gap-3 bg-editorial-dark text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-editorial-brown transition-colors duration-200 shadow-xl cursor-pointer">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+          </svg>
+          Coming to Android
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-editorial-dark py-16 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid md:grid-cols-4 gap-12 mb-12">
+        <!-- Brand -->
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-10 h-10 bg-terracotta-500 rounded-full flex items-center justify-center">
+              <span class="text-white font-serif italic text-xl">M</span>
+            </div>
+            <span class="font-serif text-2xl text-cream-100">Mangia</span>
+          </div>
+          <p class="text-editorial-taupe leading-relaxed max-w-sm">
+            From saved recipe to dinner made. Mangia helps home cooks organize recipes, track pantries, and cook with confidence.
+          </p>
+        </div>
+
+        <!-- Links -->
+        <div>
+          <h4 class="font-semibold text-cream-100 mb-4">Product</h4>
+          <ul class="space-y-3">
+            <li><a href="#features" class="text-editorial-taupe hover:text-terracotta-400 transition-colors duration-200 cursor-pointer">Features</a></li>
+            <li><a href="#pricing" class="text-editorial-taupe hover:text-terracotta-400 transition-colors duration-200 cursor-pointer">Pricing</a></li>
+            <li><a href="#" class="text-editorial-taupe hover:text-terracotta-400 transition-colors duration-200 cursor-pointer">FAQ</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-cream-100 mb-4">Company</h4>
+          <ul class="space-y-3">
+            <li><a href="/support" class="text-editorial-taupe hover:text-terracotta-400 transition-colors duration-200 cursor-pointer">Support</a></li>
+            <li><a href="/privacy" class="text-editorial-taupe hover:text-terracotta-400 transition-colors duration-200 cursor-pointer">Privacy Policy</a></li>
+            <li><a href="/terms" class="text-editorial-taupe hover:text-terracotta-400 transition-colors duration-200 cursor-pointer">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="border-t border-editorial-brown/30 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p class="text-editorial-taupe text-sm">
+          &copy; 2025 Mangia. All rights reserved.
+        </p>
+        <div class="flex items-center gap-6">
+          <a href="#" class="text-editorial-taupe hover:text-terracotta-400 transition-colors duration-200 cursor-pointer" aria-label="Twitter">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+          <a href="#" class="text-editorial-taupe hover:text-terracotta-400 transition-colors duration-200 cursor-pointer" aria-label="Instagram">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

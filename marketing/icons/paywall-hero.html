@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 800px;
+      height: 560px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(145deg, #FBF9F5 0%, #F5E3C1 100%);
+      font-family: Georgia, serif;
+    }
+    .hero-container {
+      width: 800px;
+      height: 560px;
+      background: linear-gradient(145deg, #D97742 0%, #C4652E 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Decorative circles */
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.15;
+    }
+    .circle-1 {
+      width: 400px;
+      height: 400px;
+      background: #FBF9F5;
+      top: -100px;
+      right: -100px;
+    }
+    .circle-2 {
+      width: 300px;
+      height: 300px;
+      background: #A8BCA0;
+      bottom: -80px;
+      left: -80px;
+    }
+    .circle-3 {
+      width: 200px;
+      height: 200px;
+      background: #FBF9F5;
+      top: 50%;
+      left: 10%;
+      transform: translateY(-50%);
+    }
+    /* Content */
+    .content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 60px;
+    }
+    /* Pot illustration */
+    .pot-wrapper {
+      margin-bottom: 40px;
+    }
+    .pot {
+      width: 200px;
+      height: 160px;
+      background: #FBF9F5;
+      border-radius: 20px 20px 100px 100px;
+      position: relative;
+      margin: 0 auto;
+      box-shadow: 0 20px 40px rgba(58, 50, 44, 0.3);
+    }
+    .pot::before {
+      content: '';
+      position: absolute;
+      top: -15px;
+      left: -10px;
+      right: -10px;
+      height: 30px;
+      background: #E8E2DC;
+      border-radius: 10px;
+    }
+    /* Handles */
+    .handle-left, .handle-right {
+      position: absolute;
+      top: 30px;
+      width: 30px;
+      height: 50px;
+      border: 10px solid #E8E2DC;
+      border-radius: 15px;
+    }
+    .handle-left {
+      left: -25px;
+      border-right: none;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    .handle-right {
+      right: -25px;
+      border-left: none;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+    /* Steam */
+    .steam {
+      position: absolute;
+      top: -60px;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      width: 100%;
+    }
+    .steam-line {
+      width: 6px;
+      height: 40px;
+      background: rgba(251, 249, 245, 0.6);
+      border-radius: 3px;
+    }
+    .steam-line:nth-child(1) { height: 30px; transform: translateY(10px); }
+    .steam-line:nth-child(2) { height: 40px; }
+    .steam-line:nth-child(3) { height: 30px; transform: translateY(10px); }
+    /* Ingredients in pot */
+    .ingredients {
+      position: absolute;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+    }
+    .ingredient {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+    }
+    .ingredient-1 { background: #A8BCA0; }
+    .ingredient-2 { background: #D97742; width: 25px; height: 25px; }
+    .ingredient-3 { background: #3A322C; width: 20px; height: 20px; }
+    /* Typography */
+    .tagline {
+      color: rgba(251, 249, 245, 0.9);
+      font-size: 18px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .headline {
+      color: #FBF9F5;
+      font-size: 42px;
+      line-height: 1.2;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    /* Recipe cards floating */
+    .recipe-card {
+      position: absolute;
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    .recipe-card-1 {
+      width: 120px;
+      height: 100px;
+      top: 60px;
+      left: 60px;
+      transform: rotate(-12deg);
+    }
+    .recipe-card-2 {
+      width: 100px;
+      height: 80px;
+      bottom: 80px;
+      right: 80px;
+      transform: rotate(8deg);
+    }
+    .card-line {
+      height: 8px;
+      background: #E8E2DC;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    .card-line:first-child {
+      width: 60%;
+      background: #3A322C;
+    }
+    .card-line:nth-child(2) { width: 100%; }
+    .card-line:nth-child(3) { width: 80%; }
+  </style>
+</head>
+<body>
+  <div class="hero-container">
+    <!-- Decorative circles -->
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+    <div class="circle circle-3"></div>
+
+    <!-- Floating recipe cards -->
+    <div class="recipe-card recipe-card-1">
+      <div class="card-line"></div>
+      <div class="card-line"></div>
+      <div class="card-line"></div>
+    </div>
+    <div class="recipe-card recipe-card-2">
+      <div class="card-line"></div>
+      <div class="card-line"></div>
+    </div>
+
+    <!-- Main content -->
+    <div class="content">
+      <div class="pot-wrapper">
+        <div class="pot">
+          <div class="steam">
+            <div class="steam-line"></div>
+            <div class="steam-line"></div>
+            <div class="steam-line"></div>
+          </div>
+          <div class="handle-left"></div>
+          <div class="handle-right"></div>
+          <div class="ingredients">
+            <div class="ingredient ingredient-1"></div>
+            <div class="ingredient ingredient-2"></div>
+            <div class="ingredient ingredient-3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">Mangia Pro</div>
+      <div class="headline">Unlock Your Kitchen's Full Potential</div>
+    </div>
+  </div>
+</body>
+</html>

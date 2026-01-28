@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mangia App Icon - Final Design -->
+<!-- Pot with tilted recipe card peeking out -->
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBF9F5"/>
+      <stop offset="100%" stop-color="#F5E3C1"/>
+    </linearGradient>
+    <linearGradient id="potGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E8855A"/>
+      <stop offset="100%" stop-color="#C65F2E"/>
+    </linearGradient>
+    <linearGradient id="lidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D97742"/>
+      <stop offset="100%" stop-color="#A44D25"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F5F0EB"/>
+    </linearGradient>
+    <linearGradient id="sageGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#B5CAAC"/>
+      <stop offset="100%" stop-color="#A8BCA0"/>
+    </linearGradient>
+    <filter id="potShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#3A322C" flood-opacity="0.22"/>
+    </filter>
+    <filter id="cardShadow" x="-15%" y="-10%" width="130%" height="125%">
+      <feDropShadow dx="4" dy="4" stdDeviation="10" flood-color="#3A322C" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bgGrad)"/>
+
+  <!-- Decorative sage leaf (top left) -->
+  <ellipse cx="240" cy="280" rx="80" ry="50" transform="rotate(-30 240 280)" fill="#A8BCA0" opacity="0.5"/>
+
+  <!-- Steam wisps (darker, from original) -->
+  <g opacity="0.4" fill="none" stroke="#3A322C" stroke-width="16" stroke-linecap="round">
+    <path d="M300,380 Q280,340 300,300 Q320,260 300,220"/>
+    <path d="M724,380 Q704,340 724,300 Q744,260 724,220"/>
+  </g>
+
+  <!-- Recipe card peeking out (tilted) -->
+  <g filter="url(#cardShadow)" transform="rotate(-8 480 400)">
+    <rect x="360" y="200" width="240" height="320" rx="16" fill="url(#cardGrad)"/>
+
+    <!-- Sage accent bar at top of card -->
+    <rect x="360" y="200" width="240" height="40" rx="16" fill="url(#sageGrad)"/>
+    <rect x="360" y="224" width="240" height="16" fill="url(#sageGrad)"/>
+
+    <!-- Card content -->
+    <rect x="395" y="260" width="120" height="14" rx="7" fill="#3A322C" opacity="0.75"/>
+    <rect x="395" y="283" width="75" height="9" rx="4" fill="#3A322C" opacity="0.28"/>
+
+    <!-- Ingredient bullets (sage colored) -->
+    <circle cx="408" cy="325" r="6" fill="#A8BCA0"/>
+    <rect x="426" y="319" width="100" height="10" rx="5" fill="#3A322C" opacity="0.32"/>
+
+    <circle cx="408" cy="355" r="6" fill="#A8BCA0"/>
+    <rect x="426" y="349" width="130" height="10" rx="5" fill="#3A322C" opacity="0.32"/>
+
+    <circle cx="408" cy="385" r="6" fill="#A8BCA0"/>
+    <rect x="426" y="379" width="85" height="10" rx="5" fill="#3A322C" opacity="0.32"/>
+
+    <circle cx="408" cy="415" r="6" fill="#A8BCA0"/>
+    <rect x="426" y="409" width="110" height="10" rx="5" fill="#3A322C" opacity="0.32"/>
+  </g>
+
+  <!-- Pot -->
+  <g filter="url(#potShadow)">
+    <!-- Pot body (darker gradient from original) -->
+    <path d="M220,520
+             L220,760
+             Q220,850 320,850
+             L704,850
+             Q804,850 804,760
+             L804,520
+             Z"
+          fill="url(#potGrad)"/>
+
+    <!-- Pot rim (darker from original) -->
+    <rect x="200" y="490" width="624" height="60" rx="30" fill="url(#lidGrad)"/>
+
+    <!-- Pot handles -->
+    <ellipse cx="140" cy="590" rx="60" ry="45" fill="url(#potGrad)"/>
+    <ellipse cx="140" cy="590" rx="30" ry="22" fill="url(#bgGrad)"/>
+    <ellipse cx="884" cy="590" rx="60" ry="45" fill="url(#potGrad)"/>
+    <ellipse cx="884" cy="590" rx="30" ry="22" fill="url(#bgGrad)"/>
+
+    <!-- Subtle pot reflection -->
+    <ellipse cx="320" cy="680" rx="35" ry="100" fill="white" opacity="0.12"/>
+  </g>
+</svg>

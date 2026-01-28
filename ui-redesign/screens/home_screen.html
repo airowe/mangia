@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><title>home_screen</title><script src="https://cdn.tailwindcss.com"></script><script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script><style>        .iphone-frame {            width: 393px;            height: 852px;            background-color: #ffffff;            position: relative;            border-radius: 0px;            box-shadow: 0 0 20px rgba(0,0,0,0.1);            overflow: hidden;            margin: 2rem auto;        }        :root {            --mangia-terracotta: #D97742;            --mangia-sage: #A8BCA0;            --mangia-cream: #FBF9F5;            --mangia-cream-dark: #F5E3C1;            --mangia-dark: #3A322C;            --mangia-brown: #7A716A;            --mangia-deep-brown: #2A1F18;        }        .font-serif-custom {            font-family: Georgia, 'Times New Roman', Times, serif;        }        .hide-scrollbar::-webkit-scrollbar {            display: none;        }        .hide-scrollbar {            -ms-overflow-style: none;            scrollbar-width: none;        }    </style></head><body class="bg-gray-100 flex items-center justify-center min-h-screen"><!-- .iphone-frame Container --><div class="iphone-frame flex flex-col bg-[var(--mangia-cream)]"><!-- Header --><!-- #header_100 --><header class="flex justify-between items-center px-6 pt-14 pb-4 bg-[var(--mangia-cream)] z-20"><div class="flex flex-col"><span class="text-[var(--mangia-terracotta)] font-bold text-xs tracking-widest uppercase mb-1">Bon Appétit</span><h1 class="font-serif-custom text-2xl text-[var(--mangia-dark)]">Good Evening, Mia</h1></div><!-- #avatar_101 --><div class="w-10 h-10 rounded-full bg-[var(--mangia-sage)] border-2 border-[var(--mangia-dark)] flex items-center justify-center text-[var(--mangia-dark)] font-bold shadow-sm"><img alt="User avatar" class="w-full h-full object-cover rounded-full" src="https://media.screensdesign.com/gasset/08cca652-6bcb-429b-bd2f-16d0dd8feb8f.png"></div><!-- /#avatar_101 --></header><!-- /#header_100 --><!-- Main Scrollable Content --><div class="flex-1 overflow-y-auto pb-24"><!-- Hero Section: Up Next --><!-- #hero-section_102 --><div class="px-6 mb-8"><div class="flex justify-between items-end mb-4"><h2 class="font-serif-custom text-[32px] leading-none text-[var(--mangia-dark)]">On The<br>Menu</h2><!-- #queue-count_103 --><div class="bg-[var(--mangia-dark)] text-[var(--mangia-cream)] text-xs font-bold px-3 py-1 rounded-full">3 Recipes</div><!-- /#queue-count_103 --></div><!-- Featured Card --><!-- #featured-card_104 --><div class="relative w-full aspect-[4/5] bg-[var(--mangia-cream-dark)] rounded-[32px] border-2 border-[var(--mangia-dark)] shadow-xl overflow-hidden group active:scale-[0.98] transition-transform duration-200" data-navigates-to="recipe_detail.html" style="; cursor: pointer;"><!-- Image --><!-- Generation-Info: {"aspectRatio": "4:5", "background": "solid"} --><img alt="Italian Market Poster style, rustic galette with heirloom tomatoes and basil, overhead shot, warm lighting, textured background" class="w-full h-full object-cover" src="https://media.screensdesign.com/gasset/a9f1d1ad-db81-41c9-99dd-182a1b716026.png"><!-- Sticker Tag --><!-- #sticker-tag_105 --><div class="absolute top-4 right-4 bg-[var(--mangia-terracotta)] text-white w-16 h-16 rounded-full flex items-center justify-center transform rotate-12 border-2 border-white shadow-md z-10"><div class="text-center leading-none"><span class="block font-bold text-lg">35</span><span class="text-[10px] uppercase font-bold tracking-wide">Min</span></div></div><!-- /#sticker-tag_105 --><!-- Title Overlay --><div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[var(--mangia-deep-brown)]/90 via-[var(--mangia-deep-brown)]/50 to-transparent pt-20"><h3 class="font-serif-custom text-2xl text-[var(--mangia-cream)] mb-2">Heirloom Tomato Galette</h3><div class="flex items-center gap-3 text-[var(--mangia-cream-dark)] text-xs font-bold uppercase tracking-wider"><span class="bg-white/20 px-2 py-1 rounded-md backdrop-blur-sm">French</span><span class="bg-white/20 px-2 py-1 rounded-md backdrop-blur-sm">Vegetarian</span></div></div></div><!-- /#featured-card_104 --></div><!-- /#hero-section_102 --><!-- Queue List --><!-- #queue-section_106 --><div class="px-6 mb-8"><h3 class="font-serif-custom text-xl text-[var(--mangia-dark)] mb-4 flex items-center gap-2">                Up Next                <span class="h-[1px] flex-1 bg-[var(--mangia-dark)] opacity-20"></span></h3><!-- List Item 1 --><!-- #queue-item-1_107 --><div class="flex items-center gap-4 mb-4 bg-white p-3 rounded-2xl border border-[var(--mangia-cream-dark)] shadow-sm active:bg-[var(--mangia-cream)] transition-colors" data-navigates-to="recipe_detail.html" style="; cursor: pointer;"><!-- Thumbnail --><div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0 border border-[var(--mangia-cream-dark)]"><!-- Generation-Info: {"aspectRatio": "1:1", "background": "solid"} --><img alt="Italian Market Poster style, bowl of lemon risotto with asparagus, high angle, editorial food photography" class="w-full h-full object-cover" src="https://media.screensdesign.com/gasset/e5f4ae21-d377-4a97-8366-d774e826a1ab.png"></div><!-- Info --><div class="flex-1"><h4 class="font-serif-custom text-lg text-[var(--mangia-dark)] leading-tight mb-1">Spring Lemon Risotto</h4><div class="flex items-center gap-2 text-[var(--mangia-brown)] text-xs"><iconify-icon icon="lucide:clock" width="12"></iconify-icon><span>45 min</span><span class="w-1 h-1 rounded-full bg-[var(--mangia-brown)]"></span><span>Italian</span></div></div><!-- Action --><button class="w-10 h-10 rounded-full border border-[var(--mangia-cream-dark)] flex items-center justify-center text-[var(--mangia-terracotta)] active:bg-[var(--mangia-terracotta)] active:text-white transition-colors"><iconify-icon icon="lucide:chef-hat" width="20"></iconify-icon></button></div><!-- /#queue-item-1_107 --><!-- List Item 2 --><!-- #queue-item-2_108 --><div class="flex items-center gap-4 bg-white p-3 rounded-2xl border border-[var(--mangia-cream-dark)] shadow-sm active:bg-[var(--mangia-cream)] transition-colors" data-navigates-to="recipe_detail.html" style="; cursor: pointer;"><!-- Thumbnail --><div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0 border border-[var(--mangia-cream-dark)]"><!-- Generation-Info: {"aspectRatio": "1:1", "background": "solid"} --><img alt="Italian Market Poster style, spicy vodka pasta rigatoni, close up detail, editorial food photography" class="w-full h-full object-cover" src="https://media.screensdesign.com/gasset/f4c2f595-1908-4c4c-818c-40b6686369be.png"></div><!-- Info --><div class="flex-1"><h4 class="font-serif-custom text-lg text-[var(--mangia-dark)] leading-tight mb-1">Spicy Vodka Rigatoni</h4><div class="flex items-center gap-2 text-[var(--mangia-brown)] text-xs"><iconify-icon icon="lucide:clock" width="12"></iconify-icon><span>25 min</span><span class="w-1 h-1 rounded-full bg-[var(--mangia-brown)]"></span><span>Pasta</span></div></div><!-- Action --><button class="w-10 h-10 rounded-full border border-[var(--mangia-cream-dark)] flex items-center justify-center text-[var(--mangia-terracotta)] active:bg-[var(--mangia-terracotta)] active:text-white transition-colors"><iconify-icon icon="lucide:chef-hat" width="20"></iconify-icon></button></div><!-- /#queue-item-2_108 --></div><!-- /#queue-section_106 --><!-- Grocery Teaser --><!-- #grocery-teaser_109 --><div class="px-6"><div class="bg-[var(--mangia-sage)] rounded-2xl p-5 flex justify-between items-center relative overflow-hidden"><!-- Decorative Circle --><div class="absolute -right-6 -top-6 w-24 h-24 bg-white opacity-20 rounded-full"></div><div class="relative z-10 text-[var(--mangia-dark)]"><h4 class="font-serif-custom text-xl font-bold mb-1">Missing 4 items</h4><p class="text-xs opacity-80 font-medium uppercase tracking-wide">For this week's plan</p></div><button class="relative z-10 bg-[var(--mangia-dark)] text-white px-5 py-2.5 rounded-full font-bold text-sm shadow-lg active:scale-95">View List</button></div></div><!-- /#grocery-teaser_109 --></div><!-- Tab Bar --><!-- #tab-bar_110 --><div class="absolute bottom-8 left-6 right-6 h-[72px] bg-white/80 backdrop-blur-xl border border-white/50 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-between px-2 z-50"><!-- Home Tab (Active) --><!-- #tab-home_111 --><button class="flex-1 h-full flex flex-col items-center justify-center gap-1 text-[var(--mangia-terracotta)]"><div class="bg-[var(--mangia-terracotta)]/10 p-2 rounded-full"><iconify-icon icon="lucide:home" width="22"></iconify-icon></div></button><!-- /#tab-home_111 --><!-- Pantry Tab --><!-- #tab-pantry_112 --><button class="flex-1 h-full flex flex-col items-center justify-center gap-1 text-[var(--mangia-brown)] active:text-[var(--mangia-dark)]"><iconify-icon icon="lucide:box" width="22"></iconify-icon></button><!-- /#tab-pantry_112 --><!-- Add FAB --><!-- #tab-add_113 --><button class="w-[56px] h-[56px] bg-[var(--mangia-terracotta)] rounded-full flex items-center justify-center text-white shadow-lg border-4 border-white transform -translate-y-6 active:scale-95 transition-transform"><iconify-icon icon="lucide:plus" width="28"></iconify-icon></button><!-- /#tab-add_113 --><!-- Planner Tab --><!-- #tab-planner_114 --><button class="flex-1 h-full flex flex-col items-center justify-center gap-1 text-[var(--mangia-brown)] active:text-[var(--mangia-dark)]"><iconify-icon icon="lucide:calendar" width="22"></iconify-icon></button><!-- /#tab-planner_114 --><!-- Recipes Tab --><!-- #tab-recipes_115 --><button class="flex-1 h-full flex flex-col items-center justify-center gap-1 text-[var(--mangia-brown)] active:text-[var(--mangia-dark)]"><iconify-icon icon="lucide:book-open" width="22"></iconify-icon></button><!-- /#tab-recipes_115 --></div><!-- /#tab-bar_110 --></div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Collect all navigable elements with their targets
+        const hotspots = [];
+        document.querySelectorAll('[data-navigates-to]').forEach(el => {
+          hotspots.push({
+            element: el,
+            target: el.getAttribute('data-navigates-to'),
+            isScreenTap: el.getAttribute('data-screen-tap') === 'true'
+          });
+        });
+
+        // Document-level capture phase click handler
+        // Checks click position against element bounds - works regardless of z-index stacking
+        document.addEventListener('click', (e) => {
+          const clickX = e.clientX;
+          const clickY = e.clientY;
+
+          // First check screen-tap (tap anywhere) connections
+          const screenTapHotspot = hotspots.find(h => h.isScreenTap);
+          if (screenTapHotspot && screenTapHotspot.target) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.location.href = screenTapHotspot.target;
+            return;
+          }
+
+          // Check each hotspot element's bounds
+          for (const hotspot of hotspots) {
+            if (hotspot.isScreenTap) continue; // Already handled above
+            try {
+              const rect = hotspot.element.getBoundingClientRect();
+              if (clickX >= rect.left && clickX <= rect.right &&
+                  clickY >= rect.top && clickY <= rect.bottom) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (hotspot.target) window.location.href = hotspot.target;
+                return;
+              }
+            } catch (err) {
+              // Element might have issues, skip it
+            }
+          }
+
+          // Prevent default for non-connected interactive elements
+          const clickedInteractive = e.target.closest('a, button, [onclick]');
+          if (clickedInteractive) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }, true); // capture phase
+
+        // Prevent form submissions
+        document.addEventListener('submit', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }, true);
+      });
+    </script></body></html>

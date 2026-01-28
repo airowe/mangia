@@ -1,0 +1,44 @@
+{
+  "cli": {
+    "version": ">= 16.4.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bm9ibGUtbWFuYXRlZS02Ni5jbGVyay5hY2NvdW50cy5kZXYk",
+        "EXPO_PUBLIC_API_URL": "https://mangia-api.vercel.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://tgwxhtocuvlbschnlanj.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnd3hodG9jdXZsYnNjaG5sYW5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4NTA5NzMsImV4cCI6MjA2MzQyNjk3M30.VLGyHnbCmczOS95oLqGM3bESz1hL9RwgHKah9tHM0MU"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bm9ibGUtbWFuYXRlZS02Ni5jbGVyay5hY2NvdW50cy5kZXYk",
+        "EXPO_PUBLIC_API_URL": "https://mangia-api.vercel.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://tgwxhtocuvlbschnlanj.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnd3hodG9jdXZsYnNjaG5sYW5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4NTA5NzMsImV4cCI6MjA2MzQyNjk3M30.VLGyHnbCmczOS95oLqGM3bESz1hL9RwgHKah9tHM0MU"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bm9ibGUtbWFuYXRlZS02Ni5jbGVyay5hY2NvdW50cy5kZXYk",
+        "EXPO_PUBLIC_API_URL": "https://mangia-api.vercel.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://tgwxhtocuvlbschnlanj.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnd3hodG9jdXZsYnNjaG5sYW5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4NTA5NzMsImV4cCI6MjA2MzQyNjk3M30.VLGyHnbCmczOS95oLqGM3bESz1hL9RwgHKah9tHM0MU"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "airowe@me.com",
+        "ascAppId": "6743126234"
+      }
+    }
+  }
+}

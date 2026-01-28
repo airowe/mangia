@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mangia - Pantry Inventory</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d9753f",
+                        "sage": "#A8BCA0",
+                        "sage-light": "#E8EFE6",
+                        "background-light": "#F9F7F2", // Slightly warmer cream as requested
+                        "background-dark": "#201712",
+                        "text-dark": "#171412",
+                        "text-light": "#F9F7F2",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "market": "1.5rem", // 24px
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Italian Market Card Shape Classes */
+        .shape-market-tl { border-radius: 0 1.5rem 1.5rem 1.5rem; }
+        .shape-market-tr { border-radius: 1.5rem 0 1.5rem 1.5rem; }
+        .shape-market-br { border-radius: 1.5rem 1.5rem 0 1.5rem; }
+        .shape-market-bl { border-radius: 1.5rem 1.5rem 1.5rem 0; }
+        
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dark .glass {
+            background: rgba(32, 23, 18, 0.7);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-dark dark:text-text-light font-sans antialiased overflow-x-hidden transition-colors duration-300">
+<!-- Main Container -->
+<div class="relative flex min-h-screen w-full flex-col pb-24 mx-auto max-w-md shadow-2xl bg-background-light dark:bg-background-dark">
+<!-- Top Bar -->
+<div class="flex items-center justify-between p-6 pb-2 pt-8">
+<button class="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-3xl">menu</span>
+</button>
+<div class="flex gap-2">
+<button class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-2xl">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-primary/30">
+<img alt="User profile portrait" class="w-full h-full object-cover" data-alt="User profile portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSRdCRdAVT-RAqREH1KKynZGERrEEPPn3yIfztkNwFSpNcmlc9fRAIpgxHS8oTlAwAKTiSw2lLr6Fteq01YJXacYvPEVCF8p7ZcSj05azdpRtxbc-3G-42Bb9Qjs6Z9WRJChXatllbR9mh3Yh7T_4XfjLHy1BNyMaqAGCMZTJ9dVLY5YbbFWqkk5ykzBh4lbVP60WcgnON1Iti7WpINTvATAatdhmNYOXK4-OdGBqcV7I19ue_5GFE8nTxQp5bFE46dinqB8M_xA8"/>
+</div>
+</div>
+</div>
+<!-- Headline Section -->
+<div class="px-6 pt-4 pb-2">
+<h1 class="font-display text-5xl font-light text-text-dark dark:text-text-light tracking-tight leading-tight">
+                The <span class="text-primary italic font-normal">Pantry</span>
+</h1>
+<p class="font-display italic text-lg text-stone-500 dark:text-stone-400 mt-2">
+                Your curated collection of essentials.
+            </p>
+</div>
+<!-- Search Bar -->
+<div class="px-6 py-4 sticky top-0 z-20 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm transition-all duration-300">
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-stone-400 group-focus-within:text-primary transition-colors">search</span>
+</div>
+<input class="block w-full pl-12 pr-4 py-3.5 bg-white dark:bg-white/5 border border-stone-200 dark:border-stone-700 rounded-full text-base focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder-stone-400 font-sans shadow-sm transition-all" placeholder="Find ingredients..." type="text"/>
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+<button class="p-1.5 rounded-full bg-sage/20 text-sage-800 dark:text-sage hover:bg-sage/30 transition-colors">
+<span class="material-symbols-outlined text-xl">tune</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-3 px-6 pb-6 overflow-x-auto hide-scrollbar snap-x">
+<button class="snap-start shrink-0 px-5 py-2 rounded-xl bg-primary text-white font-medium text-sm shadow-md shadow-primary/20 transition-transform active:scale-95">
+                All
+            </button>
+<button class="snap-start shrink-0 px-5 py-2 rounded-xl bg-white dark:bg-white/5 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 font-medium text-sm hover:border-primary/50 transition-all active:scale-95">
+                Dry Goods
+            </button>
+<button class="snap-start shrink-0 px-5 py-2 rounded-xl bg-white dark:bg-white/5 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 font-medium text-sm hover:border-primary/50 transition-all active:scale-95">
+                Spices
+            </button>
+<button class="snap-start shrink-0 px-5 py-2 rounded-xl bg-white dark:bg-white/5 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 font-medium text-sm hover:border-primary/50 transition-all active:scale-95">
+                Refrigerated
+            </button>
+<button class="snap-start shrink-0 px-5 py-2 rounded-xl bg-white dark:bg-white/5 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 font-medium text-sm hover:border-primary/50 transition-all active:scale-95">
+                Produce
+            </button>
+</div>
+<!-- Content Area -->
+<div class="flex flex-col gap-8 px-6">
+<!-- Category: Dry Goods -->
+<section>
+<div class="flex items-center gap-4 mb-5">
+<h2 class="font-display text-2xl text-text-dark dark:text-text-light">Dry Goods</h2>
+<div class="h-px bg-stone-200 dark:bg-stone-700 flex-grow mt-1"></div>
+<span class="text-xs font-bold text-stone-400 uppercase tracking-wider">12 Items</span>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<!-- Item Card 1 -->
+<div class="group relative flex bg-white dark:bg-stone-800/40 p-1 pr-3 shape-market-tl shadow-sm border border-stone-100 dark:border-stone-800 hover:shadow-md transition-all duration-300">
+<div class="w-24 h-24 shrink-0 rounded-2xl overflow-hidden bg-stone-100 relative">
+<img alt="Uncooked pasta shapes" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Uncooked pasta shapes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkhGuMcLBYX1iOEwRujrx2RVF_To7C_DPMRDENK4j6r4GNFtOI_2-HhQw_XPasbatgBsvVWLF2b-EbpirDMUCgglUCKTFDRHTMa0VZg_SHe-hm5Kr60I4jO8OVBspBpE4V4OaxZwaWCooe-bJzpueRvp3SMJE55fO1lsegSsj839P68ciejywB1Il6wFkYjJNRWjSk2YQbEeWcLZI_ylDx70dqqQM2xl5obQZADwTBkOhulaXJyAYco5YoVqpoGGpbzGg2vn8D1Fg"/>
+</div>
+<div class="flex flex-col flex-grow justify-center pl-4 pr-2 py-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-display text-xl leading-tight text-stone-800 dark:text-stone-100 group-hover:text-primary transition-colors">Penne Rigate</h3>
+<p class="text-xs text-stone-400 mt-1 uppercase tracking-wide font-medium">De Cecco</p>
+</div>
+<button class="w-8 h-8 flex items-center justify-center rounded-full bg-sage/10 text-sage hover:bg-primary hover:text-white transition-all duration-300">
+<span class="material-symbols-outlined text-lg">shopping_basket</span>
+</button>
+</div>
+<div class="mt-auto flex items-center justify-between pt-2">
+<div class="flex items-center gap-2 bg-background-light dark:bg-white/5 rounded-full px-2 py-1 border border-stone-100 dark:border-stone-700">
+<button class="w-5 h-5 flex items-center justify-center text-stone-400 hover:text-primary"><span class="material-symbols-outlined text-sm">remove</span></button>
+<span class="text-sm font-medium w-8 text-center tabular-nums">500g</span>
+<button class="w-5 h-5 flex items-center justify-center text-stone-400 hover:text-primary"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+<div class="h-1.5 w-12 bg-stone-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-3/4"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item Card 2 -->
+<div class="group relative flex bg-white dark:bg-stone-800/40 p-1 pr-3 shape-market-br shadow-sm border border-stone-100 dark:border-stone-800 hover:shadow-md transition-all duration-300">
+<div class="w-24 h-24 shrink-0 rounded-2xl overflow-hidden bg-stone-100 relative">
+<img alt="Pile of white flour" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Pile of white flour" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7plIaHqWdwXVcOGViR99xdUI0IjyqH0Cl8KG1if3PCNvBZgn53Up4hgc-meMWx9l3lCrPTU63E1DqwQm8aRM_ZR7afl3MLnKK0sb4XpOra0PPF-5vhzLcdr4IawyODiPmuhqcaIeraH6n3S_I0OGq_ilil1hiaM_uhgF7aLJ9pPOInjsLUqc17NycJYY0NpWwqrRKX7DJUbgPetTDL0sOr0jATbjezCcpT1m-Bn37Vf0Z86PswqCoXI9ylqlISfxGgvnKNN3e0c8"/>
+</div>
+<div class="flex flex-col flex-grow justify-center pl-4 pr-2 py-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-display text-xl leading-tight text-stone-800 dark:text-stone-100 group-hover:text-primary transition-colors">00 Flour</h3>
+<p class="text-xs text-stone-400 mt-1 uppercase tracking-wide font-medium">Caputo</p>
+</div>
+<button class="w-8 h-8 flex items-center justify-center rounded-full bg-sage/10 text-sage hover:bg-primary hover:text-white transition-all duration-300">
+<span class="material-symbols-outlined text-lg">shopping_basket</span>
+</button>
+</div>
+<div class="mt-auto flex items-center justify-between pt-2">
+<div class="flex items-center gap-2 bg-background-light dark:bg-white/5 rounded-full px-2 py-1 border border-stone-100 dark:border-stone-700">
+<button class="w-5 h-5 flex items-center justify-center text-stone-400 hover:text-primary"><span class="material-symbols-outlined text-sm">remove</span></button>
+<span class="text-sm font-medium w-8 text-center tabular-nums">1kg</span>
+<button class="w-5 h-5 flex items-center justify-center text-stone-400 hover:text-primary"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+<span class="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-md">Low Stock</span>
+</div>
+</div>
+</div>
+<!-- Item Card 3 -->
+<div class="group relative flex bg-white dark:bg-stone-800/40 p-1 pr-3 shape-market-tr shadow-sm border border-stone-100 dark:border-stone-800 hover:shadow-md transition-all duration-300">
+<div class="w-24 h-24 shrink-0 rounded-2xl overflow-hidden bg-stone-100 relative">
+<img alt="Close up of arborio rice grains" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Close up of arborio rice grains" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGxoqh5zqddBc3CS-K5W1sbwwFOpgOEhDw4rQA6jrz_4VlCD49O8VCsHAwP8UNBmXwd9nTzjhsJoscdykMYkUm3Ieq8q_MI2LOHJeWyBeXFe4qUhmNX4gJjwYV4btaZuWesY9A81GZ6h6p_UpynaEB1UQmg7x4hDn6Wug1MEgbD2Jc4amqxPqk3EbfykDlLgWVmCivO3wVOonsCyvWmWX0IybBOddA_jhnGxFFY4W69gVh91LDdbgAmf8ogM6V7gE1XAwt7Mhy64E"/>
+</div>
+<div class="flex flex-col flex-grow justify-center pl-4 pr-2 py-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-display text-xl leading-tight text-stone-800 dark:text-stone-100 group-hover:text-primary transition-colors">Arborio Rice</h3>
+<p class="text-xs text-stone-400 mt-1 uppercase tracking-wide font-medium">Risotto</p>
+</div>
+<button class="w-8 h-8 flex items-center justify-center rounded-full bg-sage/10 text-sage hover:bg-primary hover:text-white transition-all duration-300">
+<span class="material-symbols-outlined text-lg">shopping_basket</span>
+</button>
+</div>
+<div class="mt-auto flex items-center justify-between pt-2">
+<div class="flex items-center gap-2 bg-background-light dark:bg-white/5 rounded-full px-2 py-1 border border-stone-100 dark:border-stone-700">
+<button class="w-5 h-5 flex items-center justify-center text-stone-400 hover:text-primary"><span class="material-symbols-outlined text-sm">remove</span></button>
+<span class="text-sm font-medium w-8 text-center tabular-nums">750g</span>
+<button class="w-5 h-5 flex items-center justify-center text-stone-400 hover:text-primary"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+<div class="h-1.5 w-12 bg-stone-100 rounded-full overflow-hidden">
+<div class="h-full bg-sage w-1/2"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Category: Spices -->
+<section>
+<div class="flex items-center gap-4 mb-5">
+<h2 class="font-display text-2xl text-text-dark dark:text-text-light">Spices</h2>
+<div class="h-px bg-stone-200 dark:bg-stone-700 flex-grow mt-1"></div>
+<span class="text-xs font-bold text-stone-400 uppercase tracking-wider">24 Items</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<!-- Spice Card 1 -->
+<div class="group flex flex-col bg-white dark:bg-stone-800/40 p-3 shape-market-bl shadow-sm border border-stone-100 dark:border-stone-800 hover:shadow-md transition-all duration-300">
+<div class="flex justify-between items-start mb-2">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-stone-50 border border-stone-100 dark:border-stone-700">
+<img alt="Red saffron strands" class="w-full h-full object-cover" data-alt="Red saffron strands" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsph51Q5uN0H99pWpr0BpJVY7DnZS1J7rRZyOVtf3-Z76NXM7txh-atrkisKgWktDhQ6NrQw5TwFsI2fdc4FEulbvHUfPmLTR-4LGtBRxhCCY0oyJTXnq-gMLuROJ9TjzEaIuCbgnePGqJJXnrNNzAcvB2ADlmkcs_J6M6TnZcbls6H-qb1-9rn5cxPKQGWI4Fipi3fxEZ3UtTIORfQkVSY9kk4Azep1188NlQlL9U4RTjpfvaQTUOPijQIKrF4yYgeQOBKl1Q6z0"/>
+</div>
+<button class="w-7 h-7 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined text-base">add</span>
+</button>
+</div>
+<h3 class="font-display text-lg text-stone-800 dark:text-stone-100">Saffron</h3>
+<div class="flex items-center gap-1 mt-1">
+<span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span>
+<span class="text-xs text-stone-500 font-medium">Running Low</span>
+</div>
+</div>
+<!-- Spice Card 2 -->
+<div class="group flex flex-col bg-white dark:bg-stone-800/40 p-3 shape-market-tr shadow-sm border border-stone-100 dark:border-stone-800 hover:shadow-md transition-all duration-300">
+<div class="flex justify-between items-start mb-2">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-stone-50 border border-stone-100 dark:border-stone-700">
+<img alt="Coarse sea salt" class="w-full h-full object-cover" data-alt="Coarse sea salt" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKlaSxe_u4CNZTs2GmkgVwbqgHsNAEDy4PcHCV6SUkRlNwk_14Ak3C8AC7yrUpshFynnB9pWjJDblajcI6O5Cd5S4fna27nszl9XeOrAfay-T6L6LDv65V8t8RjRyJ4S8j1sIup3GfkGuFKuGczKzrB_947EccbB1NpO5c0fwIL6PbrdT-RCxVj-V-aQBFOk5Kl68U9AmhnlDEvvjo6iYj2lEqt4rntvpkaIGjQ-jHZvglo45HE5wnjarSAGqM1X_KwljD0uEbYhY"/>
+</div>
+<button class="w-7 h-7 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined text-base">add</span>
+</button>
+</div>
+<h3 class="font-display text-lg text-stone-800 dark:text-stone-100">Maldon Salt</h3>
+<div class="flex items-center gap-1 mt-1">
+<span class="w-2 h-2 rounded-full bg-sage"></span>
+<span class="text-xs text-stone-500 font-medium">In Stock</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Category: Fridge -->
+<section>
+<div class="flex items-center gap-4 mb-5">
+<h2 class="font-display text-2xl text-text-dark dark:text-text-light">Refrigerated</h2>
+<div class="h-px bg-stone-200 dark:bg-stone-700 flex-grow mt-1"></div>
+<span class="text-xs font-bold text-stone-400 uppercase tracking-wider">8 Items</span>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<!-- Item Card 1 -->
+<div class="group relative flex bg-sage/10 dark:bg-sage/5 p-1 pr-3 shape-market-br shadow-none border border-sage/20 dark:border-sage/10 hover:shadow-sm transition-all duration-300">
+<div class="w-24 h-24 shrink-0 rounded-2xl overflow-hidden bg-white relative">
+<img alt="Wedge of parmesan cheese" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Wedge of parmesan cheese" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZNF5CWw5X54XBI2lPtFVkznzVL1sFR0ordJBti7mELkmyth185xDjbfDnp6f8eqqLyCRpKNZm85XRWIfAvY00YqoliMjvvbaglzHvgKppSyHIHF4OvbM8jSq2U4r4kmZiaCb6GXS1NN7q3gQgX1lrKA3KdBORzCofTe9yANT5Go1f9m5Z986NwsS2FRl8tVmHZmMiZJD2FChfQGrg9i77IcBqiGPhqla3HGvgV373Z_OVVFzJuPlyl-9nZqDVGfVy1YZoFuZKNhQ"/>
+</div>
+<div class="flex flex-col flex-grow justify-center pl-4 pr-2 py-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-display text-xl leading-tight text-stone-800 dark:text-stone-100 group-hover:text-primary transition-colors">Parmigiano Reggiano</h3>
+<p class="text-xs text-stone-500 mt-1 uppercase tracking-wide font-medium">DOP 24 Month</p>
+</div>
+<button class="w-8 h-8 flex items-center justify-center rounded-full bg-white text-sage hover:bg-primary hover:text-white transition-all duration-300 shadow-sm">
+<span class="material-symbols-outlined text-lg">shopping_basket</span>
+</button>
+</div>
+<div class="mt-auto flex items-center justify-between pt-2">
+<span class="text-sm font-medium text-stone-600 dark:text-stone-400">~200g remaining</span>
+<div class="flex -space-x-1">
+<div class="w-2 h-2 rounded-full bg-primary opacity-50"></div>
+<div class="w-2 h-2 rounded-full bg-primary opacity-50"></div>
+<div class="w-2 h-2 rounded-full bg-stone-300 opacity-50"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<div class="h-12"></div> <!-- Spacing for bottom nav -->
+</div>
+<!-- Floating Navigation -->
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm glass rounded-full shadow-xl shadow-stone-300/30 dark:shadow-black/30 border border-white/20 dark:border-white/5 z-50">
+<div class="flex justify-between items-center px-6 py-3">
+<button class="flex flex-col items-center gap-1 group">
+<span class="material-symbols-outlined text-stone-400 group-hover:text-primary transition-colors">home</span>
+<span class="text-[10px] font-medium text-stone-400 group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all absolute -bottom-1">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<span class="material-symbols-outlined text-stone-400 group-hover:text-primary transition-colors">menu_book</span>
+<span class="text-[10px] font-medium text-stone-400 group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all absolute -bottom-1">Recipes</span>
+</button>
+<button class="flex flex-col items-center gap-1 group relative">
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 w-10 h-1 bg-primary rounded-full"></div>
+<span class="material-symbols-outlined text-primary font-bold">kitchen</span>
+<span class="text-[10px] font-medium text-primary absolute -bottom-1">Pantry</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<span class="material-symbols-outlined text-stone-400 group-hover:text-primary transition-colors">shopping_bag</span>
+<span class="text-[10px] font-medium text-stone-400 group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all absolute -bottom-1">Shop</span>
+</button>
+</div>
+</nav>
+<!-- Floating Action Button (Optional, for quick add) -->
+<button class="fixed bottom-28 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40 group">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform">add</span>
+</button>
+</div>
+</body></html>

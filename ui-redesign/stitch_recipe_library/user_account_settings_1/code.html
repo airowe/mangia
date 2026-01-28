@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mangia - Account Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#D97742", // Updated Terracotta
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#201712",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#171412] dark:text-[#f4f2f1] font-display antialiased min-h-screen flex flex-col relative">
+<header class="sticky top-0 z-20 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-black/5 dark:border-white/5 px-4 h-14 flex items-center justify-center">
+<h2 class="text-lg font-bold tracking-tight">Account</h2>
+</header>
+<main class="flex-1 w-full max-w-lg mx-auto pb-40">
+<section class="flex flex-col items-center pt-8 pb-8 px-6">
+<div class="relative mb-5 group">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-32 w-32 shadow-md border-[3px] border-white dark:border-[#2c221c]" data-alt="Portrait of Isabella Rossi smiling warm lighting" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC9JgFWnalY1p6riP_OnKlcA-ezJVZOoZWVLPvG7Wfe3jHEdH4Y9jQM7Ev7Lb803CofzxWMM2wFILSavFNzOTHXcT0l-im2tVO8MasXQifEfkUxgSWMSeQJ5JWvieABPv4mefupNlCBvHkkC8tqq5QPMj2qdWGraCCcRQQUSflcSs0qpaihljBHxGINmtYPUrzGAfwPm6j6xq71k4xr3NTDpLWulDA2VNdjhE0E-gkHX9iJ-kn6mmmSneV8jN-d6C3w3SOGIegqZtE");'>
+</div>
+<div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-200 border border-amber-200 dark:border-amber-700/50 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">local_dining</span>
+<span class="text-xs font-sans font-bold uppercase tracking-wider">Mangia Pro</span>
+</div>
+</div>
+<div class="text-center space-y-1 mt-2">
+<h1 class="text-[28px] leading-tight font-medium italic">Isabella Rossi</h1>
+<p class="text-[#857166] dark:text-[#a89890] text-sm font-sans tracking-wide uppercase font-medium">Member since 2023</p>
+</div>
+</section>
+<section class="px-6">
+<div class="bg-white dark:bg-[#2c221c] rounded-2xl shadow-sm border border-black/5 dark:border-white/5 overflow-hidden divide-y divide-black/5 dark:divide-white/5">
+<button class="w-full flex items-center gap-4 px-5 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left group">
+<div class="text-[#171412] dark:text-[#f4f2f1] flex items-center justify-center rounded-lg bg-background-light dark:bg-white/10 shrink-0 size-10 text-primary">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div class="flex-1">
+<p class="text-[17px] font-medium leading-normal">Profile Settings</p>
+</div>
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors text-[20px]">arrow_forward_ios</span>
+</button>
+<button class="w-full flex items-center gap-4 px-5 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left group">
+<div class="text-[#171412] dark:text-[#f4f2f1] flex items-center justify-center rounded-lg bg-background-light dark:bg-white/10 shrink-0 size-10 text-primary">
+<span class="material-symbols-outlined">restaurant_menu</span>
+</div>
+<div class="flex-1 pr-2">
+<div class="flex flex-col md:flex-row md:items-center md:justify-between w-full">
+<p class="text-[17px] font-medium leading-normal">Dietary Preferences</p>
+<p class="text-sm font-sans text-[#857166] dark:text-[#a89890] mt-0.5 md:mt-0">Vegetarian, Gluten-Free</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors text-[20px]">arrow_forward_ios</span>
+</button>
+<div class="w-full flex items-center gap-4 px-5 py-4 bg-white dark:bg-[#2c221c]">
+<div class="text-[#171412] dark:text-[#f4f2f1] flex items-center justify-center rounded-lg bg-background-light dark:bg-white/10 shrink-0 size-10 text-primary">
+<span class="material-symbols-outlined">card_membership</span>
+</div>
+<div class="flex-1">
+<p class="text-[17px] font-medium leading-normal">Subscription</p>
+<p class="text-sm font-sans text-[#857166] dark:text-[#a89890] mt-0.5">Pro Annual</p>
+</div>
+<button class="px-4 py-1.5 rounded-lg bg-background-light dark:bg-white/10 text-primary text-sm font-sans font-semibold hover:bg-primary hover:text-white transition-all active:scale-95">
+                    Manage
+                </button>
+</div>
+<button class="w-full flex items-center gap-4 px-5 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left group">
+<div class="text-[#171412] dark:text-[#f4f2f1] flex items-center justify-center rounded-lg bg-background-light dark:bg-white/10 shrink-0 size-10 text-primary">
+<span class="material-symbols-outlined">help</span>
+</div>
+<div class="flex-1">
+<p class="text-[17px] font-medium leading-normal">Help &amp; Support</p>
+</div>
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors text-[20px]">arrow_forward_ios</span>
+</button>
+</div>
+<div class="mt-8 flex flex-col items-center gap-3">
+<button class="text-primary font-sans font-medium text-sm tracking-wide hover:text-primary/80 transition-colors py-2 px-4 rounded hover:bg-primary/5">
+                Log Out
+            </button>
+<p class="text-xs font-sans text-gray-400 dark:text-gray-600">Mangia for iOS v2.4.0</p>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-6 left-5 right-5 z-50">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 z-20">
+<button class="flex items-center justify-center w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-105 active:scale-95 transition-all duration-300">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+</div>
+<div class="bg-white/85 dark:bg-[#201712]/85 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl shadow-black/10 flex items-center justify-between px-2 h-[72px]">
+<div class="flex flex-1 justify-evenly items-center pr-6">
+<button class="flex flex-col items-center gap-1 group w-14">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors text-[26px]">home</span>
+<span class="text-[10px] font-sans font-medium text-gray-400 group-hover:text-primary transition-colors">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 group w-14">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors text-[24px]">collections_bookmark</span>
+<span class="text-[10px] font-sans font-medium text-gray-400 group-hover:text-primary transition-colors">Collections</span>
+</button>
+</div>
+<div class="w-8 shrink-0"></div>
+<div class="flex flex-1 justify-evenly items-center pl-6">
+<button class="flex flex-col items-center gap-1 group w-14">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors text-[24px]">kitchen</span>
+<span class="text-[10px] font-sans font-medium text-gray-400 group-hover:text-primary transition-colors">Pantry</span>
+</button>
+<button class="flex flex-col items-center gap-1 group w-14 text-primary">
+<span class="material-symbols-outlined text-[26px] fill-current" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="text-[10px] font-sans font-medium">Account</span>
+</button>
+</div>
+</div>
+</nav>
+
+</body></html>

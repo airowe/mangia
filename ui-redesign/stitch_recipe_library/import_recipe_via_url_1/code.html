@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Import Recipe - Mangia</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d9753f",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#201712",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#171412] dark:text-[#f8f7f6] transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Header -->
+<div class="flex items-center px-6 py-4 justify-between z-10">
+<button class="text-[#171412] dark:text-white flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-3xl">arrow_back</span>
+</button>
+<button class="flex items-center justify-end">
+<p class="text-[#857166] dark:text-[#b0a095] text-lg font-bold leading-normal tracking-wide hover:text-primary transition-colors">Cancel</p>
+</button>
+</div>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col px-6 pb-32 pt-2">
+<!-- Headline Section -->
+<div class="mb-8">
+<h1 class="text-[#171412] dark:text-white text-5xl font-light italic leading-tight mb-3 tracking-tight">Import a Recipe</h1>
+<p class="text-[#5c4d44] dark:text-[#d3c5bc] text-lg font-normal leading-relaxed max-w-sm">Save recipes instantly from your favorite creators on TikTok, YouTube, or food blogs.</p>
+</div>
+<!-- Input Section -->
+<div class="mb-8 relative group">
+<label class="sr-only" for="url-input">Recipe URL</label>
+<div class="relative">
+<input class="block w-full border-0 border-b-2 border-[#e4dfdc] dark:border-[#5c4d44] bg-transparent py-4 text-2xl sm:text-3xl text-[#171412] dark:text-white placeholder:text-[#d1cdc9] dark:placeholder:text-[#5c4d44] placeholder:italic focus:border-primary dark:focus:border-primary focus:ring-0 transition-colors duration-300 font-sans" id="url-input" placeholder="https://..." type="text"/>
+<!-- Input Active Indicator / Icon -->
+<div class="absolute right-0 top-1/2 -translate-y-1/2 text-[#d1cdc9] group-focus-within:text-primary transition-colors duration-300">
+<span class="material-symbols-outlined text-3xl">link</span>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<div class="mb-12">
+<button class="relative flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-full h-14 bg-primary text-white shadow-lg hover:bg-[#c26533] active:scale-[0.98] transition-all duration-200 group">
+<div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<span class="material-symbols-outlined mr-2 text-[24px]">content_paste</span>
+<span class="text-lg font-bold tracking-wide">Paste from Clipboard</span>
+</button>
+</div>
+<!-- Recently Imported Section -->
+<div class="flex-1">
+<div class="flex items-center justify-between mb-5">
+<h2 class="text-[#857166] dark:text-[#b0a095] text-xs font-bold uppercase tracking-[0.15em]">Recently Added</h2>
+<button class="text-primary text-sm font-medium hover:underline">View all</button>
+</div>
+<!-- Horizontal Scroll Container -->
+<div class="flex gap-5 overflow-x-auto no-scrollbar pb-4 -mx-6 px-6 scroll-smooth">
+<!-- Item 1 -->
+<div class="flex flex-col gap-3 min-w-[160px] cursor-pointer group">
+<div class="relative w-full aspect-[3/4] overflow-hidden rounded-2xl bg-[#e4dfdc]">
+<img alt="Spicy vodka pasta in a ceramic bowl" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Spicy vodka pasta in a ceramic bowl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDPi7ig_rx3zMp8ScC79oXZoCr8EPkPblsRK5vxSCzHA7HqEgrQ9B9FAzuRwVG7YiOhTdldjIHR4EwV9-f7D-LuHepfeF8_0hkL6DA4Y6h0QxIgnSIHLOhkZyk4Gpa0OBP5YN6rOGjj6yGDwgjf2gSlUtAPKIOuoXi6ulgQHAwsoIxTthkPCxQbURvHW508zYF3sntdRyW2yRKSpb-S9do4n2AjmR8TQ752Q7pUvcT2cmiCKFOLp1TIQWOkCxLNPMixIRfuvkHjfQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
+<div class="absolute bottom-3 right-3 bg-white/90 dark:bg-black/70 backdrop-blur-sm rounded-full p-1.5 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[18px] block">favorite</span>
+</div>
+</div>
+<h3 class="text-[#171412] dark:text-white text-lg font-medium italic leading-tight group-hover:text-primary transition-colors">Spicy Vodka Rigatoni</h3>
+</div>
+<!-- Item 2 -->
+<div class="flex flex-col gap-3 min-w-[160px] cursor-pointer group">
+<div class="relative w-full aspect-[3/4] overflow-hidden rounded-2xl bg-[#e4dfdc]">
+<img alt="Avocado toast with poached egg and seeds" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Avocado toast with poached egg and seeds" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAChUloO0p0HGoiGBVmXJmjmbFqzKvr8shCSrlkDgwmEBPEdUT8iW5yCXoWX5Qp6_JDAd_OVAYB8X1xyjXKoV7kY6DNtS4ebFc677R8q_SiXO2fh9mJWs_5QZQZCVg6T8IwSDKqRxNXSu6JwC1lWpV-Av26MQ6YW2lAezp9YWZDdMEgQnh31ujXJsUxIA_ktARSs2JxmJ2zatTbvM3jQc-mJK6RMczaEwfWO612WO5cyIATAuh9WdVfp-g-6Pvhx6BtcmFgr8mZ7Ec"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
+</div>
+<h3 class="text-[#171412] dark:text-white text-lg font-medium italic leading-tight group-hover:text-primary transition-colors">Morning Avo Toast</h3>
+</div>
+<!-- Item 3 -->
+<div class="flex flex-col gap-3 min-w-[160px] cursor-pointer group">
+<div class="relative w-full aspect-[3/4] overflow-hidden rounded-2xl bg-[#e4dfdc]">
+<img alt="Fresh Matcha latte with foam art" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Fresh Matcha latte with foam art" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCepmexJh5Z0TWUTgb9GwYXa6kPumssDx8c3YNBXhVyuTY3sE0oW3x5_6kyThhz_JFeh8OD4dDML_DVHmJ2mkUnce0YW_-W7ak3SIFLzXAzLacBLZv3zAofHWLwoctjygv_7v6xIbdTQVMYThICv7bn4gnhKQU91IaMigRSK2vxgqkUZ1bvF8j_pLyBV3ZuE1O9zjugB-fQVgreelt1g8p67buX2TBVWOYwkwLIGED6q5Vhh3c4GffbDsnkMNkK9AizSfYaLWGXSO4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
+</div>
+<h3 class="text-[#171412] dark:text-white text-lg font-medium italic leading-tight group-hover:text-primary transition-colors">Iced Matcha Latte</h3>
+</div>
+<!-- Item 4 (Placeholder style) -->
+<div class="flex flex-col gap-3 min-w-[160px] cursor-pointer group">
+<div class="relative w-full aspect-[3/4] overflow-hidden rounded-2xl bg-white dark:bg-[#2c241f] border-2 border-dashed border-[#e4dfdc] dark:border-[#5c4d44] flex items-center justify-center">
+<div class="text-center p-4">
+<span class="material-symbols-outlined text-[#857166] text-4xl mb-2">add_photo_alternate</span>
+<p class="text-xs text-[#857166] font-bold uppercase">Browse Gallery</p>
+</div>
+</div>
+<h3 class="text-[#171412] dark:text-white text-lg font-medium italic leading-tight opacity-50">Upload Image</h3>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Glass Tab Bar -->
+<div class="fixed bottom-0 left-0 right-0 z-50">
+<!-- Disconnected Floating Action Button -->
+<div class="absolute -top-8 left-1/2 -translate-x-1/2">
+<button class="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white shadow-xl shadow-primary/30 border-4 border-background-light dark:border-background-dark hover:scale-105 active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-4xl">add</span>
+</button>
+</div>
+<!-- Glass Bar -->
+<nav class="mx-auto w-full bg-white/80 dark:bg-[#201712]/80 backdrop-blur-xl border-t border-white/20 dark:border-white/5 pb-6 pt-2 px-6 shadow-2xl">
+<div class="flex items-center justify-between max-w-md mx-auto">
+<button class="flex flex-col items-center justify-center gap-1 p-2 text-[#857166] dark:text-[#9ca3af] hover:text-primary dark:hover:text-primary transition-colors group">
+<span class="material-symbols-outlined text-2xl group-hover:-translate-y-0.5 transition-transform">home</span>
+<span class="text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 p-2 text-[#857166] dark:text-[#9ca3af] hover:text-primary dark:hover:text-primary transition-colors group mr-8">
+<span class="material-symbols-outlined text-2xl group-hover:-translate-y-0.5 transition-transform">search</span>
+<span class="text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Search</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 p-2 text-[#857166] dark:text-[#9ca3af] hover:text-primary dark:hover:text-primary transition-colors group ml-8">
+<span class="material-symbols-outlined text-2xl group-hover:-translate-y-0.5 transition-transform">skillet</span>
+<span class="text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Cook</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 p-2 text-[#857166] dark:text-[#9ca3af] hover:text-primary dark:hover:text-primary transition-colors group">
+<div class="h-6 w-6 rounded-full bg-[#e4dfdc] overflow-hidden ring-2 ring-transparent group-hover:ring-primary transition-all">
+<img class="h-full w-full object-cover" data-alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpeVW2t5EiuZaKFyrwwqNBpm-HvX_UMZuiUHxEaM1pCvhsGSx306UaMd_jcGJwio-zD2vU_djLEmriExVKVcL9ZYyx76NzTpF9lJD94wTl_KRFeV8ClWLdX_XLIl_GjI6-HSpSjDMfUT_n_ssW0WbyobaO7eUchY7aTj4wunzMe8uaYhQyDdqIgHksPVETo8UJHArgJWFNMHzC7o-lTcTCvHWxLMImu94aJiVMV3xITfpCNpUTBxcGiRx856Uay-uniyasHkTwrEQ"/>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Profile</span>
+</button>
+</div>
+</nav>
+</div>
+</div>
+</body></html>

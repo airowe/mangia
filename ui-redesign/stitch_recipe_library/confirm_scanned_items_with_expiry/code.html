@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mangia - Confirm Scanned Items</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d9753f",
+                        "sage": "#A8BCA0",
+                        "background-light": "#FAFAF8",
+                        "background-dark": "#201712",
+                        "paper-white": "#FFFFFF",
+                        "text-primary": "#171412",
+                        "text-secondary": "#857166",
+                    },
+                    fontFamily: {
+                        "display": ["Noto Serif", "serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.04)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-panel {
+            background: rgba(32, 23, 18, 0.85);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-body min-h-screen flex flex-col antialiased selection:bg-primary/30">
+<!-- Top Navigation -->
+<header class="sticky top-0 z-50 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm transition-colors duration-300">
+<div class="flex items-center justify-between p-4 pb-2">
+<button class="text-text-primary dark:text-white flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<div class="flex-1"></div> <!-- Spacer for centering if needed, currently left aligning title below -->
+<button class="flex items-center justify-center px-3 py-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="text-text-secondary dark:text-gray-400 text-sm font-bold tracking-wide uppercase">Help</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 px-5 pb-32 flex flex-col gap-6 w-full max-w-md mx-auto">
+<!-- Headers -->
+<div class="pt-2">
+<h1 class="font-display text-text-primary dark:text-white text-4xl font-bold leading-[1.1] tracking-tight mb-3">
+                Review <br/>Scanned Items
+            </h1>
+<p class="text-text-secondary dark:text-gray-400 text-base font-normal leading-relaxed">
+                3 items detected from receipt. Please verify expiration dates before adding to your pantry.
+            </p>
+</div>
+<!-- Scanned Item List -->
+<div class="flex flex-col gap-4">
+<!-- Card 1: Greek Yogurt -->
+<div class="group relative overflow-hidden rounded-2xl bg-white dark:bg-[#2C241F] shadow-card hover:shadow-soft transition-all duration-300 border border-transparent hover:border-primary/10">
+<div class="flex p-4 gap-4">
+<!-- Image -->
+<div class="w-20 h-20 shrink-0 rounded-xl bg-gray-100 dark:bg-white/5 bg-cover bg-center shadow-inner" data-alt="Close up of greek yogurt with berries" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCw-XRKj6wDJrUU_JNxThmD2mGdRwWj_hkuEJkJskz8jcdhMpmuOzSBfetGFHWS2F_gRWZ-3mOExXRZhcuvdX4XQYf4kZRxloq1U7_UZMihpgtTvlYOPsMXALp4PUVeD7k0-u4N9fM9jqR9e7fsc7ULLFsl_wrYtNzdiS7fPOs2BE1uK1bnkgnWi1QCVIuH2JvSeE0cjzkKTY20grfRfMNRDrD9ExUmppMX7szL8lBNKgamf-6WRJm_oLVTWjbk0pWWrJ8HdeaCPwQ');">
+</div>
+<!-- Content -->
+<div class="flex flex-col flex-1 justify-between py-0.5">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="font-display text-text-primary dark:text-white text-xl font-bold leading-tight">Greek Yogurt</h3>
+<button class="text-text-secondary/50 hover:text-red-500 transition-colors -mr-1 -mt-1 p-1">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<p class="text-text-secondary dark:text-gray-400 text-sm mt-0.5">1 Tub (32oz)</p>
+</div>
+<!-- Date Badge -->
+<div class="flex items-center justify-between mt-3">
+<button class="flex items-center gap-2 bg-sage/20 hover:bg-sage/30 dark:bg-sage/10 dark:hover:bg-sage/20 text-[#5c6e55] dark:text-[#A8BCA0] px-3 py-1.5 rounded-lg transition-colors group/date">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+<span class="text-sm font-semibold">Exp: Oct 24</span>
+<span class="material-symbols-outlined text-[16px] opacity-0 group-hover/date:opacity-100 transition-opacity -ml-1">edit</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2: Fresh Basil -->
+<div class="group relative overflow-hidden rounded-2xl bg-white dark:bg-[#2C241F] shadow-card hover:shadow-soft transition-all duration-300 border border-transparent hover:border-primary/10">
+<div class="flex p-4 gap-4">
+<!-- Image -->
+<div class="w-20 h-20 shrink-0 rounded-xl bg-gray-100 dark:bg-white/5 bg-cover bg-center shadow-inner" data-alt="Fresh green basil leaves bunch" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBWWZbrM0jBKc0_Jx2H3W3AD506wLTRqnW-tgsEAK8JfhE2bmjniXnhfOKYbNhBlh3hs4UMkaiFy7uDX4JDSDB7ZRea-HOX7djMSwrkodezyVuIFmNvb9LckMZ1qDial20JSKHSAN6a1AtuhDQe8aaneghGKYhse0CruHKGE3naQJpprncqDY5IHNLevSzGtOLjXvyQ7bpYXjoSBhXuvFrtekvD1tcyoBYB1vK5AiWDMZuNhWcFoAAAiGfeh7Sb7X3VqbrR6A0Ld4A');">
+</div>
+<!-- Content -->
+<div class="flex flex-col flex-1 justify-between py-0.5">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="font-display text-text-primary dark:text-white text-xl font-bold leading-tight">Fresh Basil</h3>
+<button class="text-text-secondary/50 hover:text-red-500 transition-colors -mr-1 -mt-1 p-1">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<p class="text-text-secondary dark:text-gray-400 text-sm mt-0.5">1 Bunch</p>
+</div>
+<!-- Date Badge -->
+<div class="flex items-center justify-between mt-3">
+<button class="flex items-center gap-2 bg-sage/20 hover:bg-sage/30 dark:bg-sage/10 dark:hover:bg-sage/20 text-[#5c6e55] dark:text-[#A8BCA0] px-3 py-1.5 rounded-lg transition-colors group/date">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+<span class="text-sm font-semibold">Est: 5 Days</span>
+<span class="material-symbols-outlined text-[16px] opacity-0 group-hover/date:opacity-100 transition-opacity -ml-1">edit</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3: Cherry Tomatoes (Added for completeness) -->
+<div class="group relative overflow-hidden rounded-2xl bg-white dark:bg-[#2C241F] shadow-card hover:shadow-soft transition-all duration-300 border border-transparent hover:border-primary/10">
+<div class="flex p-4 gap-4">
+<!-- Image -->
+<div class="w-20 h-20 shrink-0 rounded-xl bg-gray-100 dark:bg-white/5 bg-cover bg-center shadow-inner" data-alt="Red ripe cherry tomatoes" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCj0pH5L-HY8aqW0eZq0_cYxSFBoCrjPzbaPWoJNgb-hyrw8L2qulHaxUAGFz1pJsbItTFh2rKhw2iiRSS18PNW79dR0uMZ_v6i3aSfERZk6sH3VZKpmA-lRSaomUB0Tf-iJt6SbjBZ2i17ptkOg9r-o8D8rsymtfowRJ_zDe-UlzJW6hXV1kds4NlwNjZhJu4C48nlZEBQjhmOuSDLSxPhuzTvVUvD6zZiQ4OuIPkxiJVMccDiMdSICTafMyy1BlVBOe863t2FZkc');">
+</div>
+<!-- Content -->
+<div class="flex flex-col flex-1 justify-between py-0.5">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="font-display text-text-primary dark:text-white text-xl font-bold leading-tight">Cherry Tomatoes</h3>
+<button class="text-text-secondary/50 hover:text-red-500 transition-colors -mr-1 -mt-1 p-1">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<p class="text-text-secondary dark:text-gray-400 text-sm mt-0.5">1 Pint</p>
+</div>
+<!-- Date Badge -->
+<div class="flex items-center justify-between mt-3">
+<button class="flex items-center gap-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/40 text-red-700 dark:text-red-300 px-3 py-1.5 rounded-lg transition-colors group/date">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+<span class="text-sm font-semibold">Exp: Tomorrow</span>
+<span class="material-symbols-outlined text-[16px] opacity-0 group-hover/date:opacity-100 transition-opacity -ml-1">edit</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Add New Item Ghost Button -->
+<button class="w-full py-4 border-2 border-dashed border-black/10 dark:border-white/10 rounded-2xl flex items-center justify-center gap-2 text-text-secondary hover:border-primary/50 hover:text-primary transition-all group">
+<span class="material-symbols-outlined transition-transform group-hover:scale-110">add_circle</span>
+<span class="font-medium">Manually Add Item</span>
+</button>
+</div>
+</main>
+<!-- Bottom Fixed Area -->
+<div class="fixed bottom-0 left-0 w-full z-40">
+<!-- Floating Primary Button -->
+<div class="w-full px-5 pb-4 max-w-md mx-auto">
+<button class="w-full bg-primary hover:bg-[#c26535] text-white font-medium text-lg h-14 rounded-2xl shadow-lg shadow-primary/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+<span>Confirm &amp; Add to Pantry</span>
+<span class="material-symbols-outlined">check</span>
+</button>
+</div>
+<!-- Glassmorphic Tab Bar -->
+<nav class="glass-panel w-full pb-safe pt-2 px-6 h-[88px]"> <!-- 88px standard iOS height area -->
+<div class="flex items-center justify-between max-w-md mx-auto relative h-12">
+<!-- Left Tabs -->
+<button class="flex flex-col items-center justify-center w-12 gap-1 text-primary">
+<span class="material-symbols-outlined font-variation-settings-fill">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center w-12 gap-1 text-text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+<span class="text-[10px] font-medium">Explore</span>
+</button>
+<!-- Center Floating Action Button (Disconnected) -->
+<div class="absolute -top-10 left-1/2 -translate-x-1/2">
+<button class="size-16 bg-background-dark dark:bg-white text-white dark:text-background-dark rounded-full shadow-xl flex items-center justify-center hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+<!-- Right Tabs -->
+<button class="flex flex-col items-center justify-center w-12 gap-1 text-text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">kitchen</span>
+<span class="text-[10px] font-medium">Pantry</span>
+</button>
+<button class="flex flex-col items-center justify-center w-12 gap-1 text-text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</div>
+<!-- Safe Area Spacer for iPhone home bar -->
+<div class="h-5 w-full"></div>
+</nav>
+</div>
+<!-- Font variation settings helper for filled icons -->
+<style>
+        .font-variation-settings-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</body></html>

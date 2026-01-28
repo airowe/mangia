@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "name": "Mangia",
+    "slug": "mangia",
+    "owner": "airowe",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F8F7F6"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.airowe.mangia",
+      "appleTeamId": "7WWYCV9VT8",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "This app uses the camera to scan recipes and ingredients.",
+        "NSPhotoLibraryUsageDescription": "This app accesses your photos to import recipe images."
+      },
+      "icon": "./assets/icon.png"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#F8F7F6"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.airowe.mangia",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          },
+          "android": {
+            "minSdkVersion": 25
+          }
+        }
+      ],
+      [
+        "@logrocket/react-native"
+      ],
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Mangia to access your camera to scan recipes and ingredients."
+        }
+      ]
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e4128852-4b78-49d1-b720-3a746267e2e4"
+      }
+    }
+  }
+}

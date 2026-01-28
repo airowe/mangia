@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mangia - Confirm Scanned Items</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#a7bba0",
+                        "background-light": "#FAFAF8",
+                        "background-dark": "#181b17",
+                        "text-main": "#141514",
+                        "text-muted": "#747972",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>/* Custom mixed radius class for that signature look */
+.mixed-radius {
+    border-radius: 2px 16px 2px 16px
+    }
+.mixed-radius-lg {
+    border-radius: 4px 24px 4px 24px
+    }
+/* Custom checkbox style to match theme */
+.custom-checkbox:checked {
+    background-color: #a7bba0;
+    border-color: #a7bba0;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBvOQRoUTDF6ZnjGgMwMnytiHCWkd9B-J2rRlXoWSuEO8NR0-l7furx9hVeIj3SrL-CJ4vt0KUNyPYSrka-q63kwW4VnGF88HdjShduBGdZR6P-pVmf4rQc2ugxaq43cKbfbczJskSKzSeHO4UEeQWkxaqSET2mjr4Z5b0gkK0Z4Ywhk2XW6s8ZVStdnIZeABPzUCvNd0Jk6H3LwfdV9xfO_eAqXfkXxXLwaS8gbgUVAb0bWgwywTepJlczZY8LCRRuvc6Etg7bxzg)
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden max-w-md mx-auto shadow-xl">
+<!-- Top App Bar -->
+<header class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-50 bg-opacity-95 backdrop-blur-sm">
+<button class="text-text-main dark:text-white flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">arrow_back</span>
+</button>
+<h2 class="text-text-main dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center font-sans uppercase text-xs tracking-widest opacity-60">Scan Result</h2>
+<button class="flex w-12 items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-text-main dark:text-white" style="font-size: 24px;">more_horiz</span>
+</button>
+</header>
+<!-- Main Content Scroll Area -->
+<main class="flex-1 flex flex-col pb-24">
+<!-- Hero Image Section -->
+<div class="@container">
+<div class="px-4 py-2">
+<div class="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden shadow-sm mixed-radius-lg min-h-[240px] relative group" data-alt="Top down view of groceries on a kitchen counter" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAlvFX1W2M0nTZWcWRFt6m4TaUGycRRaDG5zr3dNPHby9Fcy8r7AjNmFl_C7KO8a_rkW7ZW1i5kShIeUNcJD46T75tUy8Ydexuk50bTpFWXK-63YUgBFRUhEXCo1At17E5quKnfk26lsf2nykUQ5b9vZ6f_mPiHMV-KWV4DBV_lDWuuyDRh_vQQSTFuyuC5hKw3GbXbM2LiT8LoofVh1Nsl6e-FaCTrvSl3ZARZK5nhUz_v0zIEWXHbzQMRR4NsgtPkgjt5KbkofLA");'>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="relative p-6 z-10">
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center rounded-full bg-white/20 backdrop-blur-md px-3 py-1 text-xs font-medium text-white ring-1 ring-inset ring-white/30">
+<span class="material-symbols-outlined mr-1 text-sm">photo_camera</span> Original Scan
+                            </span>
+<button class="text-white text-xs font-bold uppercase tracking-wider hover:text-primary transition-colors">Retake</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Headline -->
+<div class="px-6 pt-6 pb-2">
+<h1 class="text-text-main dark:text-white text-4xl italic font-medium leading-tight">Review Scan</h1>
+<p class="text-text-muted dark:text-gray-400 text-lg font-normal leading-normal mt-2">We identified <span class="text-primary font-bold">5 items</span> from your photo.</p>
+</div>
+<!-- List Items -->
+<div class="flex flex-col gap-4 px-4 py-4">
+<!-- Item 1 -->
+<div class="mixed-radius bg-white dark:bg-[#232622] p-4 flex items-center gap-4 shadow-sm border border-gray-100 dark:border-[#2f332e] group hover:border-primary/30 transition-all">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-md size-16 shadow-inner" data-alt="Bottle of premium olive oil" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA3bSn80Vg7R6Jj8Sw6LgyH5J6Kxy9p7b_R48IPc7sYGR7U6TUVe4VLGGcKInu_3gcseHWOXqh_lXEq557_NIModvK0TMOoSqCSs6nwLxiK28tzXZzZ0Cl_neaf5pC5DvhiIZ5_yiTi5bqgNBKF6VzXRqggkLGZezq75ge1eRCFwqsb4jemJDGK66-xafRKQcS5XiLsQhRPj9ojhCx6uyZ7Lzmp20dSFK5AoBnvwGWjBS7qskq61MESblRZJ7hIA2pt3Rd0dpZEdoI");'></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<input class="bg-transparent border-none p-0 text-lg font-medium text-text-main dark:text-white focus:ring-0 w-full font-display truncate placeholder-gray-400" type="text" value="Extra Virgin Olive Oil"/>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">Pantry</span>
+<span class="text-xs text-text-muted dark:text-gray-500">• 1 bottle</span>
+</div>
+</div>
+<div class="shrink-0 flex items-center">
+<input checked="" class="custom-checkbox h-6 w-6 rounded border-gray-300 text-primary focus:ring-primary/50 transition duration-150 ease-in-out cursor-pointer" type="checkbox"/>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="mixed-radius bg-white dark:bg-[#232622] p-4 flex items-center gap-4 shadow-sm border border-gray-100 dark:border-[#2f332e] group hover:border-primary/30 transition-all">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-md size-16 shadow-inner" data-alt="Bag of arborio rice for risotto" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDC7n4UG36gADom-vemCfexH2v4gDFrJHGis-S01KSHy6zcCFoBmtaJOH_P1M32p-GYPP03mC8RaSLGi9BR_9YfwLEgOsNj8xc4AKyaTmdmGbklzX7J_8rdXea0PNCkUm37UXLlOsPoBVZOlZ4kjsHMps0Pq9RKoH-Z7RgkAIAyuw5NgevZGHpwOSYz4pffHwT-pzbRnMkDK14dRIfbx8K8zQIwYS8yRGe-kmJwkshTC-89W1N_UE8QgmcwW7Lwx6u3LYZOhaCp7fQ");'></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<input class="bg-transparent border-none p-0 text-lg font-medium text-text-main dark:text-white focus:ring-0 w-full font-display truncate placeholder-gray-400" type="text" value="Arborio Rice"/>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">Pantry</span>
+<span class="text-xs text-text-muted dark:text-gray-500">• 1 kg</span>
+</div>
+</div>
+<div class="shrink-0 flex items-center">
+<input checked="" class="custom-checkbox h-6 w-6 rounded border-gray-300 text-primary focus:ring-primary/50 transition duration-150 ease-in-out cursor-pointer" type="checkbox"/>
+</div>
+</div>
+<!-- Item 3: Low Confidence / Needs Review -->
+<div class="mixed-radius bg-orange-50 dark:bg-orange-900/10 p-4 flex items-center gap-4 shadow-sm border border-orange-100 dark:border-orange-800/30 group">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-md size-16 shadow-inner opacity-80" data-alt="Blurred image of a spice jar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBZYyB4MlezkmVMcG5B1dAOcChPMi9WOU_uj5OdQk1LvfIH_45Wj0nUEtUUJCZ5TepzOmebzRRhV6PnR2e_dvYk-N1_jOJvsKZ1sUBxPH0fZaU3GDukOWQEnNv7EsT5iXtMzN5c_XrDsUgTi8hQznwek-Mjpf1nsl1C7Y4vDToow2fkPYPqNnUqSbCcknwXl5PbtBEGyICl8FBa1-z4qQGBVfvlCmexWPQByx2iMTI4_Ay4ctx3BxakYFEfE5LlzElFpn30c2eh9nk");'></div>
+<div class="absolute -top-2 -right-2 bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-300 rounded-full p-0.5 shadow-sm border border-orange-200 dark:border-orange-700">
+<span class="material-symbols-outlined text-[14px] block">priority_high</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<input class="bg-transparent border-b border-dashed border-orange-300 dark:border-orange-700 p-0 text-lg font-medium text-text-main dark:text-white focus:ring-0 w-full font-display truncate placeholder-orange-400/50 italic" type="text" value="Unknown Spice"/>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-full bg-orange-100 dark:bg-orange-900/40 px-2 py-0.5 text-xs font-medium text-orange-700 dark:text-orange-300 ring-1 ring-inset ring-orange-600/20">Review</span>
+</div>
+</div>
+<div class="shrink-0 flex items-center">
+<input class="custom-checkbox h-6 w-6 rounded border-gray-300 text-primary focus:ring-primary/50 transition duration-150 ease-in-out cursor-pointer" type="checkbox"/>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="mixed-radius bg-white dark:bg-[#232622] p-4 flex items-center gap-4 shadow-sm border border-gray-100 dark:border-[#2f332e] group hover:border-primary/30 transition-all">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-md size-16 shadow-inner" data-alt="Can of San Marzano tomatoes" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCK7QWc03XqYvR695IsTyjFB56CI44AIEG5FXZu2O2XZ9NyH9XDakZGaJAvnhJk61olSqZlp3-e7WqEdMbiPe_-e4nrfbudoKDMibEbnK8mkrsNXeL46v33X87MIevrhebh_uT3A2tO4UcRqPa6eZY4kzmHKb-dZK2iEPiKox3r148zaHLao_JqFMS9JweFYfsRKEJh01vZakq2J0E-4ClB3w76Sm0Jo0sdpUnCyqSEIjA9Ip0X8jTxMDYoV6vrbaRy44IHqXDeVLY");'></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<input class="bg-transparent border-none p-0 text-lg font-medium text-text-main dark:text-white focus:ring-0 w-full font-display truncate placeholder-gray-400" type="text" value="San Marzano Tomatoes"/>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">Pantry</span>
+<span class="text-xs text-text-muted dark:text-gray-500">• 2 cans</span>
+</div>
+</div>
+<div class="shrink-0 flex items-center">
+<input checked="" class="custom-checkbox h-6 w-6 rounded border-gray-300 text-primary focus:ring-primary/50 transition duration-150 ease-in-out cursor-pointer" type="checkbox"/>
+</div>
+</div>
+<!-- Item 5 -->
+<div class="mixed-radius bg-white dark:bg-[#232622] p-4 flex items-center gap-4 shadow-sm border border-gray-100 dark:border-[#2f332e] group hover:border-primary/30 transition-all opacity-60 grayscale">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-md size-16 shadow-inner" data-alt="Plastic water bottle" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCdJJkJeNXztBnIqxtacVKj48PNi9X4zi6beaUqmR0YPjlNMVsXtwlTD3XVVBz5xvmiysZu2eSNPPBlcrlPeFSORbHjCG2NsnoFU7_XESHInVXBSjpGz1raMiqdLLv4ib9SWMbcGM1aA-WcJ15bOMU6zCQ748NWBDpY-zmRmaxBWOqLkmY85JipNWv1O5TjbMo6E8oNh1tla_5IlPMoOXaGBTZ2zwP3U_AS0p9yPkqJgihg8I7cpjaqVivST5usF05yMVJyq1Ki-uw");'></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<input class="bg-transparent border-none p-0 text-lg font-medium text-text-main dark:text-white focus:ring-0 w-full font-display truncate placeholder-gray-400 line-through" type="text" value="Sparkling Water"/>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 ring-1 ring-inset ring-gray-500/10">Excluded</span>
+</div>
+</div>
+<div class="shrink-0 flex items-center">
+<input class="custom-checkbox h-6 w-6 rounded border-gray-300 text-primary focus:ring-primary/50 transition duration-150 ease-in-out cursor-pointer" type="checkbox"/>
+</div>
+</div>
+<!-- Manual Add Button -->
+<button class="flex items-center justify-center gap-2 py-4 text-primary hover:text-primary/80 transition-colors font-medium text-sm uppercase tracking-wider border-t border-dashed border-gray-200 dark:border-gray-800 mt-2">
+<span class="material-symbols-outlined text-lg">add_circle</span>
+                Add Item Manually
+            </button>
+</div>
+</main>
+<!-- Sticky Footer -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark pt-8 max-w-md mx-auto">
+<button class="w-full bg-primary hover:bg-[#96ac8f] text-white font-bold text-lg py-4 rounded-xl shadow-lg shadow-primary/20 transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 group">
+<span>Confirm &amp; Add Items</span>
+<span class="bg-white/20 px-2 py-0.5 rounded-full text-sm font-semibold group-hover:bg-white/30 transition-colors">3</span>
+</button>
+</div>
+</div>
+</body></html>

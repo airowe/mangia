@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mangia - Empty Pantry State</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&amp;family=Playfair+Display:ital,wght@0,400;0,600;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#d9753f",
+              "background-light": "#f8f7f6",
+              "background-dark": "#201712",
+              "surface-light": "#ffffff",
+              "surface-dark": "#2c241f",
+              "text-main": "#171412",
+              "text-muted": "#857166",
+            },
+            fontFamily: {
+              "display": ["Be Vietnam Pro", "sans-serif"],
+              "serif": ["Playfair Display", "serif"],
+            },
+            borderRadius: {
+              "DEFAULT": "0.25rem", 
+              "lg": "0.5rem", 
+              "xl": "0.75rem", 
+              "2xl": "1rem",
+              "full": "9999px"
+            },
+            boxShadow: {
+                "glass": "0 8px 32px 0 rgba(31, 38, 135, 0.07)",
+                "floating": "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-panel {
+            background: rgba(32, 23, 18, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .text-shadow-sm {
+            text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased selection:bg-primary/30 selection:text-primary">
+<div class="relative flex min-h-screen w-full flex-col overflow-hidden max-w-md mx-auto shadow-2xl bg-surface-light dark:bg-surface-dark border-x border-gray-100 dark:border-gray-800">
+<!-- Top App Bar -->
+<header class="flex items-center justify-between px-6 pt-12 pb-4 z-10 sticky top-0 bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-sm">
+<div class="w-10">
+<!-- Spacer for visual balance or potential back button -->
+</div>
+<h1 class="text-text-main dark:text-white text-base font-semibold tracking-wide uppercase opacity-90">Pantry</h1>
+<div class="w-10 flex justify-end">
+<button class="text-text-main dark:text-white opacity-70 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-2xl">settings</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col items-center justify-center px-6 pb-32 w-full animate-in fade-in duration-700 slide-in-from-bottom-4">
+<!-- Illustration Container -->
+<div class="relative w-full aspect-square max-w-[320px] mb-8 flex items-center justify-center">
+<!-- Decorative background blob -->
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent rounded-full blur-3xl scale-90"></div>
+<!-- Main Image -->
+<div class="relative z-10 w-full h-full bg-center bg-contain bg-no-repeat rounded-2xl" data-alt="Minimalist line drawing of floating kitchen shelves with a single elegant jar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDspdV5pRM0tr7MEGcnF9V6CgzGKdcF2FMTyfRX2dreTU_FNyZRoF190EwSYCtn8C9KRsvGDo9N5n8_GIVVUPHzR0p6NWrP-C4VVVIn9zPEHSAlZrA6hsAVp8OwjZoM7GDDckl8AJqzqGfZYyPcEOTP7JNwmbIDas-D4nnNLMmCV9axAeeaX3jE3bQgp6suJpLafdqPlNlTCWsDUKCq46V04C4Jru0kgK6PJ8_qjLXUaxIWCwsvj2TGcy5rgdg10akIABx0RI-wp54"); mask-image: linear-gradient(to bottom, black 80%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%); opacity: 0.9;'>
+</div>
+</div>
+<!-- Text Content -->
+<div class="flex flex-col items-center gap-4 text-center max-w-[320px]">
+<h2 class="font-serif text-4xl text-text-main dark:text-white font-medium leading-tight tracking-tight">
+                    Your Pantry <br/> is Quiet
+                </h2>
+<p class="text-text-muted dark:text-gray-400 text-base leading-relaxed font-normal">
+                    Start building your digital kitchen by scanning your ingredients to discover what you can cook.
+                </p>
+</div>
+<!-- Actions -->
+<div class="mt-10 w-full max-w-[320px] flex flex-col gap-5">
+<!-- Primary Button -->
+<button class="group relative w-full h-14 bg-primary text-white rounded-2xl font-bold text-lg tracking-wide shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 overflow-hidden">
+<span class="relative z-10 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[22px]">center_focus_weak</span>
+                        Scan Your Pantry
+                    </span>
+<div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</button>
+<!-- Secondary Link -->
+<button class="text-text-muted dark:text-gray-400 text-sm font-medium hover:text-primary dark:hover:text-primary transition-colors pb-1 border-b border-transparent hover:border-primary/30">
+                    Add items manually
+                </button>
+</div>
+</main>
+<!-- Glassmorphic Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 glass-panel pb-safe pt-2 px-6 z-50 max-w-md mx-auto">
+<div class="flex items-end justify-between relative h-16 pb-2">
+<!-- Home -->
+<a class="flex flex-1 flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-text-muted dark:text-gray-400 group-hover:text-primary transition-colors text-[28px] font-light">home</span>
+</a>
+<!-- Search -->
+<a class="flex flex-1 flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-text-muted dark:text-gray-400 group-hover:text-primary transition-colors text-[28px] font-light">search</span>
+</a>
+<!-- Center Action Button (Floating) -->
+<div class="flex-1 flex justify-center relative z-20 -top-8">
+<button class="size-14 bg-[#201712] dark:bg-primary rounded-full shadow-floating flex items-center justify-center text-white hover:scale-105 transition-transform duration-200">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+<!-- Pantry (Active) -->
+<a class="flex flex-1 flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-primary text-[28px] font-medium fill-current variation-filled">kitchen</span>
+<span class="text-[10px] font-bold text-primary tracking-wide uppercase">Pantry</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-1 flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-text-muted dark:text-gray-400 group-hover:text-primary transition-colors text-[28px] font-light">person</span>
+</a>
+</div>
+<!-- Safe area spacing for iOS home indicator -->
+<div class="h-6 w-full"></div>
+</nav>
+</div>
+</body></html>

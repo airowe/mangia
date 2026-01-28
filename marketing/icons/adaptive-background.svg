@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Android Adaptive Icon - Background Layer -->
+<!-- Export at 432x432 PNG -->
+<svg width="432" height="432" viewBox="0 0 432 432" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradAd" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBF9F5"/>
+      <stop offset="100%" stop-color="#F5E3C1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full bleed background -->
+  <rect width="432" height="432" fill="url(#bgGradAd)"/>
+
+  <!-- Decorative sage leaf -->
+  <ellipse cx="100" cy="115" rx="35" ry="22" transform="rotate(-30 100 115)" fill="#A8BCA0" opacity="0.5"/>
+</svg>

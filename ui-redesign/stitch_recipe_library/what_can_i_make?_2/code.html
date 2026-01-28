@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mangia - What Can I Make?</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d9753f",
+                        "sage": "#A8BCA0",
+                        "sage-light": "#E5EBE3",
+                        "sage-dark": "#5C6B58",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#201712",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2a221d",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#171412] dark:text-[#f4f2f1] font-display antialiased selection:bg-primary/30">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden pb-32">
+<header class="sticky top-0 z-40 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md transition-all duration-300">
+<div class="flex items-center justify-between px-4 py-4">
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[#171412] dark:text-white" style="font-size: 24px;">arrow_back</span>
+</button>
+<div class="flex gap-4">
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[#171412] dark:text-white" style="font-size: 24px;">notifications</span>
+</button>
+</div>
+</div>
+</header>
+<section class="px-6 pt-2 pb-6">
+<h1 class="font-display text-4xl md:text-5xl font-medium tracking-tight text-[#171412] dark:text-white italic mb-2">
+                What can I make?
+            </h1>
+<p class="font-sans text-sm text-[#857166] dark:text-[#a89b95] mb-6">
+                Open the fridge. Tell us what you see.
+            </p>
+<div class="relative group mb-6">
+<div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+<span class="material-symbols-outlined text-[#857166] group-focus-within:text-primary transition-colors">search</span>
+</div>
+<input class="block w-full rounded-xl border-none bg-white dark:bg-surface-dark py-4 pl-12 pr-4 text-base text-[#171412] dark:text-white shadow-sm ring-1 ring-black/5 focus:ring-2 focus:ring-primary placeholder:text-[#857166] dark:placeholder:text-[#6e5d54] transition-all font-sans" placeholder="Add an ingredient (e.g., Eggs, Spinach)" type="text"/>
+</div>
+<div class="flex flex-wrap gap-2">
+<div class="inline-flex items-center gap-1.5 rounded-full bg-sage/20 dark:bg-sage/10 border border-sage/30 px-3 py-1.5 transition-colors hover:bg-sage/30">
+<span class="text-sm font-medium text-sage-dark dark:text-sage-light font-sans">Tomatoes</span>
+<button class="flex items-center justify-center rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10">
+<span class="material-symbols-outlined text-sage-dark dark:text-sage-light" style="font-size: 16px;">close</span>
+</button>
+</div>
+<div class="inline-flex items-center gap-1.5 rounded-full bg-sage/20 dark:bg-sage/10 border border-sage/30 px-3 py-1.5 transition-colors hover:bg-sage/30">
+<span class="text-sm font-medium text-sage-dark dark:text-sage-light font-sans">Fresh Basil</span>
+<button class="flex items-center justify-center rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10">
+<span class="material-symbols-outlined text-sage-dark dark:text-sage-light" style="font-size: 16px;">close</span>
+</button>
+</div>
+<div class="inline-flex items-center gap-1.5 rounded-full bg-sage/20 dark:bg-sage/10 border border-sage/30 px-3 py-1.5 transition-colors hover:bg-sage/30">
+<span class="text-sm font-medium text-sage-dark dark:text-sage-light font-sans">Mozzarella</span>
+<button class="flex items-center justify-center rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10">
+<span class="material-symbols-outlined text-sage-dark dark:text-sage-light" style="font-size: 16px;">close</span>
+</button>
+</div>
+<div class="inline-flex items-center gap-1.5 rounded-full bg-sage/20 dark:bg-sage/10 border border-sage/30 px-3 py-1.5 transition-colors hover:bg-sage/30">
+<span class="text-sm font-medium text-sage-dark dark:text-sage-light font-sans">Garlic</span>
+<button class="flex items-center justify-center rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10">
+<span class="material-symbols-outlined text-sage-dark dark:text-sage-light" style="font-size: 16px;">close</span>
+</button>
+</div>
+</div>
+</section>
+<div class="h-px bg-gradient-to-r from-transparent via-[#e5e0dd] dark:via-[#3a302a] to-transparent w-full mb-6"></div>
+<div class="flex items-baseline justify-between px-6 mb-4">
+<h2 class="font-display text-2xl font-bold text-[#171412] dark:text-white">Matching Recipes</h2>
+<span class="font-sans text-xs font-medium text-primary uppercase tracking-wider">3 Results</span>
+</div>
+<main class="grid grid-cols-1 md:grid-cols-2 gap-6 px-6">
+<article class="group relative flex flex-col gap-3 cursor-pointer">
+<div class="relative aspect-[4/5] w-full overflow-hidden rounded-tl-3xl rounded-br-3xl rounded-tr-sm rounded-bl-sm shadow-md transition-transform duration-500 group-hover:shadow-xl">
+<img alt="Rustic tomato galette on parchment paper" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Rustic tomato galette on parchment paper" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpD0KGl1b1KF0FOE81KwXehMTAuH1o5M6_g1M_i0tTk41DvfI_r-eeqUswX7YpiLTbZtSaZlV-SnlJmC2W4SrxplSCxrAy7l73RGlEHrXO34ps0LDg_yvGy2PS7OrSWla5_DssGk15JVwWsWQVRjriTS_WTF1IctcCH9Q9g8IU6363vp2Lj9JtdG3cJ5pMJm2KUurSDJ7YAA2ESzT8rsDBHx1oXfuxdDNIhTxrUelMSKksOiwpvFxGuBo_PcoJ69lrEIZoVmxQfao"/>
+<div class="absolute top-3 left-3 bg-sage/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider font-sans shadow-sm border border-white/20">
+                        Perfect Match
+                    </div>
+<button class="absolute top-3 right-3 size-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">favorite</span>
+</button>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 text-xs font-medium text-[#857166] dark:text-[#a89b95] font-sans">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-primary" style="font-size: 16px;">schedule</span> 45 min</span>
+<span>•</span>
+<span>Vegetarian</span>
+</div>
+<h3 class="font-display text-2xl font-semibold leading-tight text-[#171412] dark:text-white group-hover:text-primary transition-colors">
+                        Rustic Heirloom Tomato Galette
+                    </h3>
+<p class="text-sm text-[#5c4d46] dark:text-[#ccc3be] line-clamp-2 font-display italic">
+                        A flaky, buttery crust embracing sweet summer tomatoes and fresh basil.
+                    </p>
+</div>
+</article>
+<article class="group relative flex flex-col gap-3 cursor-pointer mt-0 md:mt-12">
+<div class="relative aspect-[3/4] w-full overflow-hidden rounded-tr-3xl rounded-bl-3xl rounded-tl-sm rounded-br-sm shadow-md transition-transform duration-500 group-hover:shadow-xl">
+<img alt="Plate of spicy rigatoni pasta with basil" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Plate of spicy rigatoni pasta with basil" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWg_xFhDY8V7C7m9nKE_usq3ntsosJBY4jIQZhL9MXW8EfcAmLZcnASyQlB1qX5c-Xiu3fv0iVwL21x5_dM9EXhNcdISl7hMTeYkuKY7nWXYrN-ScocBbSOvroNsJWxCKSGmTnXFUXJ0QdG82_qehed8VwSE70RWojbdE5f06Xd1Wh2xdIFeWKEEIyEFoM5j9bjPxKGRVEiEVPfT_YA9verZj25wWrlQzRQlonRzLzwGMIpSVCwQLOtf3itJClXEdxyax_V56qi3I"/>
+<div class="absolute top-3 left-3 bg-primary/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider font-sans shadow-sm border border-white/20">
+                        Missing: Cream
+                    </div>
+<button class="absolute top-3 right-3 size-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">favorite</span>
+</button>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 text-xs font-medium text-[#857166] dark:text-[#a89b95] font-sans">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-primary" style="font-size: 16px;">schedule</span> 20 min</span>
+<span>•</span>
+<span>Pasta</span>
+</div>
+<h3 class="font-display text-2xl font-semibold leading-tight text-[#171412] dark:text-white group-hover:text-primary transition-colors">
+                        Spicy Vodka Rigatoni
+                    </h3>
+<p class="text-sm text-[#5c4d46] dark:text-[#ccc3be] line-clamp-2 font-display italic">
+                        Creamy, spicy, and perfectly al dente. A weeknight staple.
+                    </p>
+</div>
+</article>
+<article class="group relative flex flex-col gap-3 cursor-pointer">
+<div class="relative aspect-square w-full overflow-hidden rounded-tl-3xl rounded-br-3xl rounded-tr-sm rounded-bl-sm shadow-md transition-transform duration-500 group-hover:shadow-xl">
+<img alt="Close up of meatballs with tomato sauce" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Close up of meatballs with tomato sauce" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKlmgsw6rt1gA5WRpEEJldPoqFbD_yqZSMhILmUPYROPwCAEqwmxcCpDBnF6Qk-cks4PR5LKPfFQDOInpTaOgp_Vl1MKUzNJizP-glopi8UGt9AL3SQ3LJnPp2HCW5TQH8BseNj8mHgku7IJjQZm8UYYXY9OvlQjw3Pq67Hh2CpeJSVp62yhKBTnGfJ4flFAJY5geV-FS7Kvkn9oc3FLCXQvNvgJYTf36pMoIPY_Z9scdXJVpLJc4N09BhB6feyS2IHe9AstNa8ts"/>
+<div class="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm text-[#171412] dark:text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider font-sans shadow-sm border border-black/5">
+                        Use 3 ingredients
+                    </div>
+<button class="absolute top-3 right-3 size-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">favorite</span>
+</button>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 text-xs font-medium text-[#857166] dark:text-[#a89b95] font-sans">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-primary" style="font-size: 16px;">schedule</span> 60 min</span>
+<span>•</span>
+<span>Dinner</span>
+</div>
+<h3 class="font-display text-2xl font-semibold leading-tight text-[#171412] dark:text-white group-hover:text-primary transition-colors">
+                        Polpette al Sugo
+                    </h3>
+<p class="text-sm text-[#5c4d46] dark:text-[#ccc3be] line-clamp-2 font-display italic">
+                        Traditional Italian meatballs simmered in a rich tomato garlic sauce.
+                    </p>
+</div>
+</article>
+<article class="group relative flex flex-col gap-3 cursor-pointer mt-0 md:mt-12">
+<div class="relative aspect-[4/5] w-full overflow-hidden rounded-tr-3xl rounded-bl-3xl rounded-tl-sm rounded-br-sm shadow-md transition-transform duration-500 group-hover:shadow-xl">
+<img alt="Caprese salad on a dark plate" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Caprese salad on a dark plate" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnbJVCI-Xoz7a7Lm9dT6cgG6Lb1Un3owzR0PrBXkKqVmoMJ_sPwMJGkryeFRjH8l7qgIWoR8PLqCJSy5cQ1WOzpQ_tXszvJmZUp20bpmhWAcOYQ5GbWgElXCCYOyyw-3K7EqmgBRL9bL3B2UkriBL5B3hHcIMgqLHpXLXS8-MNGmjxPKY-mRd9NtBgjjLIOSQ7Wz8EVbCU5qmzGnDRqWlM-rGulk4L51NaWkBslxMzWkokMQRXlffL8N3Y7pn_LVRMedLMZ4qUUIQ"/>
+<div class="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm text-[#171412] dark:text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider font-sans shadow-sm border border-black/5">
+                         Use 4 Ingredients
+                    </div>
+<button class="absolute top-3 right-3 size-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">favorite</span>
+</button>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 text-xs font-medium text-[#857166] dark:text-[#a89b95] font-sans">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-primary" style="font-size: 16px;">schedule</span> 10 min</span>
+<span>•</span>
+<span>Lunch</span>
+</div>
+<h3 class="font-display text-2xl font-semibold leading-tight text-[#171412] dark:text-white group-hover:text-primary transition-colors">
+                        Classic Caprese Salad
+                    </h3>
+<p class="text-sm text-[#5c4d46] dark:text-[#ccc3be] line-clamp-2 font-display italic">
+                        The ultimate celebration of tomatoes, mozzarella, and fresh basil.
+                    </p>
+</div>
+</article>
+</main>
+<div class="fixed bottom-6 w-full px-4 z-50 pointer-events-none flex items-end justify-center">
+<div class="flex items-center gap-3 pointer-events-auto">
+<nav class="flex items-center gap-6 px-6 py-4 rounded-full bg-surface-light/80 dark:bg-surface-dark/80 backdrop-blur-xl border border-white/20 shadow-2xl">
+<a class="flex flex-col items-center justify-center text-[#857166] dark:text-[#a89b95] hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#857166] dark:text-[#a89b95] hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">bookmark</span>
+</a>
+</nav>
+<button class="flex items-center justify-center size-14 mb-1 rounded-full bg-primary text-white shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all ring-4 ring-background-light dark:ring-background-dark/0">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</button>
+<nav class="flex items-center gap-6 px-6 py-4 rounded-full bg-surface-light/80 dark:bg-surface-dark/80 backdrop-blur-xl border border-white/20 shadow-2xl">
+<a class="flex flex-col items-center justify-center text-[#857166] dark:text-[#a89b95] hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">shopping_cart</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#857166] dark:text-[#a89b95] hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">person</span>
+</a>
+</nav>
+</div>
+</div>
+</div>
+
+</body></html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kitchen Alerts - Mangia</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d9753f",
+                        "sage": "#A8BCA0",
+                        "sage-dark": "#7a8f72",
+                        "background-light": "#FAF9F6", /* Warm cream/paper */
+                        "background-dark": "#201712",
+                        "paper": "#ffffff",
+                        "paper-dark": "#2d241e",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#171412] dark:text-gray-100 font-sans antialiased overflow-x-hidden">
+<div class="relative min-h-screen w-full flex flex-col pb-24 group/design-root">
+<!-- Header Section -->
+<header class="sticky top-0 z-30 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-[#e5e0dc] dark:border-[#3a2e26]">
+<div class="flex items-center justify-between p-4 pb-3">
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-3xl text-[#171412] dark:text-white">chevron_left</span>
+</button>
+<div class="flex flex-col items-center">
+<h2 class="text-[#171412] dark:text-white text-2xl font-display font-bold leading-none tracking-tight">Kitchen Alerts</h2>
+<span class="text-primary dark:text-primary font-display italic text-sm mt-0.5">Inventory Status</span>
+</div>
+<button class="flex h-10 px-2 items-center justify-center">
+<p class="text-[#857166] dark:text-[#a69285] text-sm font-bold tracking-wide uppercase hover:text-primary transition-colors">Clear All</p>
+</button>
+</div>
+<!-- Filters -->
+<div class="flex items-center gap-3 px-4 pb-4 overflow-x-auto no-scrollbar">
+<button class="shrink-0 px-5 py-1.5 rounded-full bg-[#171412] dark:bg-white text-white dark:text-[#171412] text-sm font-medium font-sans">All</button>
+<button class="shrink-0 px-5 py-1.5 rounded-full border border-[#e5e0dc] dark:border-[#3a2e26] text-[#857166] dark:text-[#a69285] text-sm font-medium font-sans bg-transparent">Dairy</button>
+<button class="shrink-0 px-5 py-1.5 rounded-full border border-[#e5e0dc] dark:border-[#3a2e26] text-[#857166] dark:text-[#a69285] text-sm font-medium font-sans bg-transparent">Produce</button>
+<button class="shrink-0 px-5 py-1.5 rounded-full border border-[#e5e0dc] dark:border-[#3a2e26] text-[#857166] dark:text-[#a69285] text-sm font-medium font-sans bg-transparent">Pantry</button>
+</div>
+</header>
+<main class="flex-1 px-4 pt-4 space-y-8">
+<!-- Expired Section -->
+<section>
+<div class="flex items-baseline justify-between mb-3 px-1">
+<h3 class="text-primary font-display text-3xl font-bold tracking-tight">Expired</h3>
+<span class="text-primary/80 text-sm font-display italic">Action required</span>
+</div>
+<div class="space-y-3">
+<!-- Expired Card 1 -->
+<div class="relative overflow-hidden rounded-xl bg-primary/10 dark:bg-primary/20 border border-primary/20 p-3 pr-4 flex items-center justify-between gap-3 group transition-all active:scale-[0.98]">
+<!-- Left decorative line -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="flex items-center gap-4 pl-2">
+<div class="relative size-16 shrink-0 rounded-lg overflow-hidden shadow-sm">
+<img alt="Greek Yogurt" class="h-full w-full object-cover" data-alt="Close up of fresh creamy greek yogurt in a bowl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZjEZkKFKbiAMs_GsSCE5KoRWj0lZphcLpMeXU7JdYY1rDxj62KLuQSh72zGIdFriNsOoqwripccIYwvM-caB9FtA_qxlPXCslwo3NvETsHt2WffeoUX0RxOzI0_GwXq-D05Vci3Z11_NsNTbYqwFPRvFBXpOk40tQyFkWzwnyE7fhkq7mgcxspHus57PtvlvCtGvkGikvBUJQ83D6AtwzZ_G94U-zxpWtDukxuyKW5uu597_NS1jETLz-FIENCQDoQyDeYP7pMHQ"/>
+<div class="absolute inset-0 bg-primary/10 mix-blend-multiply"></div>
+</div>
+<div class="flex flex-col justify-center">
+<h4 class="text-[#171412] dark:text-white text-lg font-display font-bold leading-tight">Greek Yogurt</h4>
+<div class="flex items-center gap-1.5 mt-1 text-primary dark:text-red-300">
+<span class="material-symbols-outlined text-[16px]">error</span>
+<p class="text-sm font-bold uppercase tracking-wide">Expired: Yesterday</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2 items-end shrink-0">
+<button class="size-8 flex items-center justify-center rounded-full bg-white/50 dark:bg-black/20 text-primary hover:bg-white hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+<button class="flex items-center justify-center h-8 px-3 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[16px] mr-1">add</span> List
+                            </button>
+</div>
+</div>
+<!-- Expired Card 2 -->
+<div class="relative overflow-hidden rounded-xl bg-primary/10 dark:bg-primary/20 border border-primary/20 p-3 pr-4 flex items-center justify-between gap-3 group transition-all active:scale-[0.98]">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="flex items-center gap-4 pl-2">
+<div class="relative size-16 shrink-0 rounded-lg overflow-hidden shadow-sm">
+<img alt="Heavy Cream" class="h-full w-full object-cover" data-alt="Carton of heavy cream or milk being poured" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPPedhQpVbU9qRa6Uh3z5KuEE2yvJDDww7jW7haReWWEl6Lwfq7qQLyCxVQt7IiKe18zBVpayY2rLOpGOMyndbphr1wuS3Be5xYBJ4Meq88ExQldebZuH2jWCGfSQAY25WREaR7CJkhzhcTZEq41IIO9NSp-Hh_m1ZycJIv5f1UciVKeYS9Zfo50bB_BsLDDC4gaD9wyo-0jCdDiJUMJe11rVQ8O8_yEvQyk4ifSGzuWYBI_hNX-yTghTCnDOEIDjFeqCDHRyEyXE"/>
+<div class="absolute inset-0 bg-primary/10 mix-blend-multiply"></div>
+</div>
+<div class="flex flex-col justify-center">
+<h4 class="text-[#171412] dark:text-white text-lg font-display font-bold leading-tight">Heavy Cream</h4>
+<div class="flex items-center gap-1.5 mt-1 text-primary dark:text-red-300">
+<span class="material-symbols-outlined text-[16px]">error</span>
+<p class="text-sm font-bold uppercase tracking-wide">Expired: 2 days ago</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2 items-end shrink-0">
+<button class="size-8 flex items-center justify-center rounded-full bg-white/50 dark:bg-black/20 text-primary hover:bg-white hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+<button class="flex items-center justify-center h-8 px-3 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[16px] mr-1">add</span> List
+                            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Expiring Soon Section -->
+<section>
+<div class="flex items-baseline justify-between mb-3 px-1">
+<h3 class="text-sage-dark dark:text-sage font-display text-2xl font-bold tracking-tight">Expiring Soon</h3>
+<span class="text-sage-dark/80 dark:text-sage/80 text-sm font-display italic">Plan ahead</span>
+</div>
+<div class="space-y-3">
+<!-- Expiring Card 1 -->
+<div class="relative overflow-hidden rounded-xl bg-sage/20 dark:bg-sage/10 border border-sage/30 p-3 pr-4 flex items-center justify-between gap-3 group transition-all active:scale-[0.98]">
+<!-- Left decorative line -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-sage"></div>
+<div class="flex items-center gap-4 pl-2">
+<div class="relative size-16 shrink-0 rounded-lg overflow-hidden shadow-sm">
+<img alt="Parmesan Cheese" class="h-full w-full object-cover" data-alt="Wedge of fresh parmesan cheese on a wooden board" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-Fb5SB8XUzYQRrf_ljZU9ZNDvOdBsg_8p2hTY7gjtT9-_EXC5DDxpHxRRDUb0xaysx_zCaq1agetWhcpR4IgFnwbFIzQc_dN1lkhLu2JzNSaCv2l6FSDxKLiCSXD0pnPaWKr4GA9zdxQxHc492pMPMAKJirllxqLoO9JfadOtFsQ_98sQQoYvbkJONpZkS40d2Crb24S5iITnRKS_SPahgxaCx83rAdi6MXadZqsK-M6IJ3ckpl3zpqctlo3F0_mZWkeS1PiB8Kw"/>
+</div>
+<div class="flex flex-col justify-center">
+<h4 class="text-[#171412] dark:text-white text-lg font-display font-bold leading-tight">Parmesan Cheese</h4>
+<div class="flex items-center gap-1.5 mt-1 text-sage-dark dark:text-sage">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<p class="text-sm font-medium">In 3 Days</p>
+</div>
+</div>
+</div>
+<div class="shrink-0">
+<button class="flex items-center justify-center h-9 px-4 rounded-lg bg-white dark:bg-sage/20 border border-sage/30 text-sage-dark dark:text-sage text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-sage/10 transition-colors">
+                                Find Recipes
+                            </button>
+</div>
+</div>
+<!-- Expiring Card 2 -->
+<div class="relative overflow-hidden rounded-xl bg-sage/20 dark:bg-sage/10 border border-sage/30 p-3 pr-4 flex items-center justify-between gap-3 group transition-all active:scale-[0.98]">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-sage"></div>
+<div class="flex items-center gap-4 pl-2">
+<div class="relative size-16 shrink-0 rounded-lg overflow-hidden shadow-sm">
+<img alt="Basil Bundle" class="h-full w-full object-cover" data-alt="Fresh green basil leaves bunch" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBO-dUvy32t-JKDc9EHCf5xaBmrcrIl9I_mTppRESQhZFYhzGG5K_2koaOp68o9GijwqJwn-hn6yeVT0qNtn3pp6JMpbLQdU8C_aCLCTC-IqlQV4DhNZ7_Ytb53rJltLkxyvNUc9VsfvDbZDpn7vIe3vVAYa5LzXbQ_XpxfxVSXiqTd5OMZ8yaT6jFTLiXFoaRBG5WutlbZ-xGjB1nqd12egbbPNcV7ELCzjaDy_Xij_Pd44aL9BiGuZqvaGUKn41N06ZwksUmMmVc"/>
+</div>
+<div class="flex flex-col justify-center">
+<h4 class="text-[#171412] dark:text-white text-lg font-display font-bold leading-tight">Basil Bundle</h4>
+<div class="flex items-center gap-1.5 mt-1 text-sage-dark dark:text-sage">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<p class="text-sm font-medium">Tomorrow</p>
+</div>
+</div>
+</div>
+<div class="shrink-0">
+<button class="flex items-center justify-center h-9 px-4 rounded-lg bg-white dark:bg-sage/20 border border-sage/30 text-sage-dark dark:text-sage text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-sage/10 transition-colors">
+                                Find Recipes
+                            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Safe State Illustration / Bottom Spacer -->
+<div class="py-8 flex flex-col items-center justify-center opacity-40">
+<span class="material-symbols-outlined text-4xl mb-2 text-[#857166]">kitchen</span>
+<p class="font-display italic text-[#857166]">Scroll for more inventory</p>
+</div>
+</main>
+<!-- Floating Action Button (Disconnected) -->
+<div class="fixed bottom-[88px] left-1/2 -translate-x-1/2 z-50">
+<button class="size-14 rounded-full bg-primary text-white shadow-lg shadow-primary/40 flex items-center justify-center hover:scale-105 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+<!-- Bottom Navigation Bar (Glassmorphic) -->
+<nav class="fixed bottom-0 w-full z-40">
+<!-- Glass background with top border -->
+<div class="absolute inset-0 bg-white/85 dark:bg-[#1a1512]/85 backdrop-blur-xl border-t border-white/20 dark:border-white/5 shadow-[0_-4px_30px_rgba(0,0,0,0.03)]"></div>
+<div class="relative flex justify-between items-end px-6 pb-6 pt-3 h-20 max-w-md mx-auto">
+<button class="flex flex-col items-center gap-1 w-12 group">
+<span class="material-symbols-outlined text-[#857166] group-hover:text-primary transition-colors">home</span>
+<span class="text-[10px] font-medium text-[#857166] group-hover:text-primary transition-colors">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 w-12 group">
+<span class="material-symbols-outlined text-[#857166] group-hover:text-primary transition-colors">inventory_2</span>
+<span class="text-[10px] font-medium text-[#857166] group-hover:text-primary transition-colors">Pantry</span>
+</button>
+<!-- Spacer for FAB -->
+<div class="w-12"></div>
+<button class="flex flex-col items-center gap-1 w-12 group">
+<span class="material-symbols-outlined text-[#857166] group-hover:text-primary transition-colors">menu_book</span>
+<span class="text-[10px] font-medium text-[#857166] group-hover:text-primary transition-colors">Recipes</span>
+</button>
+<button class="flex flex-col items-center gap-1 w-12 group">
+<span class="material-symbols-outlined text-primary fill-1">notifications</span>
+<span class="text-[10px] font-medium text-primary">Alerts</span>
+</button>
+</div>
+</nav>
+</div>
+</body></html>

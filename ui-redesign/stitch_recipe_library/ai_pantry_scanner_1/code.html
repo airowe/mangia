@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mangia - AI Pantry Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ee6f2b",
+                        "sage": "#789c74",
+                        "sage-dark": "#4a6347",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221610",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .italian-radius {
+            border-radius: 2rem 0.25rem 2rem 2rem;
+        }
+        .italian-radius-inv {
+            border-radius: 0.25rem 2rem 2rem 2rem;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased overflow-hidden">
+<div class="relative flex h-screen w-full flex-col overflow-hidden bg-black">
+<div class="absolute inset-0 z-0 opacity-80">
+<img alt="Pantry shelves stocked with jars and ingredients" class="h-full w-full object-cover" data-alt="Pantry shelves stocked with jars and ingredients" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_OahR0Bdfz6D5uzdnXyGodNJrV6UKtaZKPO44T4x8uv12fmgxZaqLLfAZVo_tyWm2UNm2MkXBDokLG6xrbsImn_venRJuftP4HbeAB_wnxely9XWUPARe38t7g8VNxODfzm8fkfcVAZqqhl9L5mON-2lE7vKAoX8cB10Vu1ldd6sgibQk8IR9Z8YTLkaNYbe-9zBhgi9o1Pa38YoaakkfrvTLpX2pu9zk62XPRNHWsbGsbV5fvGVCqnUTaQMCdbJZejFJH8-AMuU"/>
+</div>
+<div class="absolute inset-0 z-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none"></div>
+<div class="relative z-10 flex w-full items-center justify-between px-6 pt-12 pb-4">
+<button class="group flex size-10 items-center justify-center rounded-full bg-black/20 backdrop-blur-md text-white transition-all hover:bg-white/10 active:scale-95">
+<span class="material-symbols-outlined !text-[24px]">close</span>
+</button>
+<div class="flex h-8 items-center justify-center gap-x-2 rounded-full bg-black/40 backdrop-blur-md px-4 border border-white/10">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<p class="text-white text-xs font-medium tracking-wider uppercase font-sans">Expiry Scanner</p>
+</div>
+<button class="group flex size-10 items-center justify-center rounded-full bg-black/20 backdrop-blur-md text-white transition-all hover:bg-white/10 active:scale-95">
+<span class="material-symbols-outlined !text-[24px]">more_vert</span>
+</button>
+</div>
+<div class="relative z-10 flex flex-1 flex-col items-center justify-center p-6">
+<div class="relative flex h-3/5 w-full max-w-sm flex-col items-center justify-center">
+<div class="absolute top-0 left-0 h-8 w-8 border-t-2 border-l-2 border-white/70 rounded-tl-xl"></div>
+<div class="absolute top-0 right-0 h-8 w-8 border-t-2 border-r-2 border-white/70 rounded-tr-sm"></div>
+<div class="absolute bottom-0 left-0 h-8 w-8 border-b-2 border-l-2 border-white/70 rounded-bl-sm"></div>
+<div class="absolute bottom-0 right-0 h-8 w-8 border-b-2 border-r-2 border-white/70 rounded-br-xl"></div>
+<div class="absolute top-[45%] left-[30%] h-12 w-32 border-2 border-sage shadow-[0_0_15px_rgba(120,156,116,0.6)] rounded bg-sage/10 backdrop-blur-[1px] flex items-center justify-center">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-sage-dark text-white text-[10px] font-sans font-medium px-2 py-1 rounded shadow-sm">
+                    Detecting Date...
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-sage-dark"></div>
+</div>
+</div>
+<div class="absolute top-[20%] left-[10%] flex items-center gap-2 opacity-50">
+<div class="h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_rgba(238,111,43,0.8)]"></div>
+<span class="rounded bg-black/50 px-2 py-1 text-[10px] text-white backdrop-blur-sm font-sans tracking-wide">San Marzano Tomatoes</span>
+</div>
+<div class="absolute bottom-[30%] right-[15%] flex items-center gap-2 opacity-50">
+<span class="rounded bg-black/50 px-2 py-1 text-[10px] text-white backdrop-blur-sm font-sans tracking-wide">Arborio Rice</span>
+<div class="h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_rgba(238,111,43,0.8)]"></div>
+</div>
+</div>
+<div class="mt-8 text-center max-w-xs">
+<h2 class="text-white text-[28px] font-light leading-tight italic drop-shadow-md">
+                Align the date within the frame to scan expiration.
+            </h2>
+</div>
+</div>
+<div class="relative z-10 pb-10 pt-4 px-8 flex flex-col items-center">
+<div class="mb-8 flex items-center gap-2 bg-sage/90 backdrop-blur-md border border-white/20 text-white pl-3 pr-4 py-2 rounded-full shadow-lg transform transition-all duration-500 ease-out translate-y-0 opacity-100">
+<div class="bg-white text-sage rounded-full p-0.5">
+<span class="material-symbols-outlined !text-[16px] font-bold">check</span>
+</div>
+<span class="text-sm font-sans font-medium">Expiration detected: Oct 12, 2024</span>
+</div>
+<div class="w-full flex items-center justify-between">
+<button class="relative size-14 overflow-hidden italian-radius border border-white/20 transition-transform active:scale-95 group">
+<div class="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors z-10 flex items-center justify-center">
+<span class="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity !text-[18px]">visibility</span>
+</div>
+<img alt="Previous scan thumbnail showing pasta" class="h-full w-full object-cover opacity-80" data-alt="Previous scan thumbnail showing pasta" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAddtH47V7nTz1F6u5exml65R8MyCr3DtXdFnMnqXhKqpUo_FBR4KeSfrPNFsashPCFuoECIcqi3Wo2lCBmOlws6RUGhxPctNkwouH1N-uB3-8U9iR8M9JpHyRIZLr6j7w4sODACZ74E-fxYMG3mfZuWLkq3jURrCcx7r6FYII7MNGK3q3NvcEyGo5RKm_kcyOGMq5mSQsnpEYClqrVmu170X2mT7TZm9xQWJdO4IqVmyp7PGwTxPbukIbnkaNljBAOdWipyYadFuQ"/>
+</button>
+<button class="group relative flex size-20 items-center justify-center rounded-full border-4 border-white/20 bg-transparent transition-all active:scale-90">
+<div class="absolute inset-1 rounded-full bg-primary shadow-lg transition-all group-hover:scale-95 group-active:scale-90 flex items-center justify-center">
+<span class="material-symbols-outlined text-white !text-[32px]">photo_camera</span>
+</div>
+</button>
+<button class="flex size-14 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-inherit !text-[24px]">flash_on</span>
+</button>
+</div>
+<div class="mt-6 flex justify-center gap-1">
+<div class="h-1 w-1 rounded-full bg-white/80"></div>
+<div class="h-1 w-1 rounded-full bg-white/30"></div>
+<div class="h-1 w-1 rounded-full bg-white/30"></div>
+</div>
+</div>
+</div>
+
+</body></html>

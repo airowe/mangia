@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mangia - Recipe Library</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d9753f",
+                        "background-light": "#f8f7f6", // Warm off-white paper feel
+                        "background-dark": "#201712",  // Deep espresso brown
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2c221c",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'float': '0 10px 30px -5px rgba(0, 0, 0, 0.1)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }.leaf-shape {
+            border-top-left-radius: 0px;
+            border-bottom-right-radius: 0px;
+            border-top-right-radius: 1rem;
+            border-bottom-left-radius: 1rem;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-stone-900 dark:text-stone-100 antialiased font-sans">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden pb-32 max-w-md mx-auto shadow-2xl bg-background-light dark:bg-background-dark">
+<header class="pt-8 pb-2 px-6">
+<h1 class="font-display text-4xl font-semibold tracking-tight text-stone-900 dark:text-stone-50">
+                Your Library
+            </h1>
+</header>
+<div class="px-6 py-4 sticky top-0 z-20 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm transition-all duration-300">
+<div class="group relative flex items-center w-full h-12 rounded-lg bg-white dark:bg-surface-dark shadow-sm ring-1 ring-stone-200 dark:ring-stone-800 focus-within:ring-primary dark:focus-within:ring-primary focus-within:ring-2 transition-all">
+<div class="flex items-center justify-center pl-4 text-stone-400 dark:text-stone-500">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="flex-1 bg-transparent border-none text-stone-800 dark:text-stone-200 placeholder:text-stone-400 focus:ring-0 text-base font-normal leading-normal h-full px-3" placeholder="Search for pasta, risotto..." type="text"/>
+</div>
+</div>
+<div class="w-full overflow-x-auto no-scrollbar pb-2">
+<div class="flex gap-3 px-6 min-w-max">
+<button class="flex h-9 items-center justify-center px-5 rounded-full bg-stone-900 dark:bg-stone-100 transition-colors">
+<p class="text-white dark:text-stone-900 text-sm font-medium">All</p>
+</button>
+<button class="flex h-9 items-center justify-center px-5 rounded-full bg-white dark:bg-surface-dark border border-stone-200 dark:border-stone-700 hover:border-primary/50 transition-colors">
+<p class="text-stone-600 dark:text-stone-300 text-sm font-medium">Favorites</p>
+</button>
+<button class="flex h-9 items-center justify-center px-5 rounded-full bg-white dark:bg-surface-dark border border-stone-200 dark:border-stone-700 hover:border-primary/50 transition-colors">
+<p class="text-stone-600 dark:text-stone-300 text-sm font-medium">Quick &amp; Easy</p>
+</button>
+<button class="flex h-9 items-center justify-center px-5 rounded-full bg-white dark:bg-surface-dark border border-stone-200 dark:border-stone-700 hover:border-primary/50 transition-colors">
+<p class="text-stone-600 dark:text-stone-300 text-sm font-medium">Dinner Party</p>
+</button>
+<button class="flex h-9 items-center justify-center px-5 rounded-full bg-white dark:bg-surface-dark border border-stone-200 dark:border-stone-700 hover:border-primary/50 transition-colors">
+<p class="text-stone-600 dark:text-stone-300 text-sm font-medium">Dessert</p>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-x-4 gap-y-8 p-6">
+<div class="flex flex-col group cursor-pointer">
+<div class="relative w-full aspect-[3/4] overflow-hidden leaf-shape shadow-sm mb-3">
+<div class="absolute inset-0 bg-stone-200 animate-pulse"></div>
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Rustic plate of spaghetti with tomato sauce and basil on wooden table" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDgCustT0SNoF1bDD5yXsH8Q2tiIq0OayMb_sdH6kuAza9GHKemerLVa2J1pKXC89wbU8MVUvSO_WmdSK3uLnMtxNfB3cxLCrYa6oTG9CHDbWusuRPn1qTS19ChEWqKDZQw0FDbW2QGuVwlel8IIBzdfZOo4bXMYa0loU-CvHmsy6lBcE_co1PtVZ0oMdkROrzy9-WG9Sc0AdoDisvZ9pkEpEdjCTp2_gLy6RbENghTgEYpy7rtshCuHZMXG6KYQwHsKGK2khsFAuM');">
+</div>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] fill-1">favorite</span>
+</button>
+</div>
+<div>
+<h3 class="font-display text-lg font-medium leading-tight text-stone-900 dark:text-stone-100 mb-1 group-hover:text-primary transition-colors">Spaghetti al Pomodoro</h3>
+<div class="flex items-center gap-2 text-stone-500 dark:text-stone-400 text-xs font-sans tracking-wide uppercase">
+<span>25 min</span>
+<span class="w-1 h-1 rounded-full bg-stone-300 dark:bg-stone-600"></span>
+<span>Easy</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col group cursor-pointer mt-8">
+<div class="relative w-full aspect-[3/4] overflow-hidden leaf-shape shadow-sm mb-3">
+<div class="absolute inset-0 bg-stone-200 animate-pulse"></div>
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Golden rosemary focaccia bread on a baking sheet" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAM0K01cJv1v-BDaaAA6rPcQPfYfNklRUawrKLQ4XXwc6HxWaR4b35WG9aBPrOeFmipm-W3Kc48EmAzHdewyPBa4sA4dcTU7-mKRLV8ILVvrQrGsBKvi2Tn5UqSAh1q21RRjPrTjRlpgyN1w_tBmBLkvzKC6CU4TSXFTl5x_UfkUtJZU8vg-4zeazMnDIzVPJR-UQzETD3LZFkEe1EcsZi1811XSJwJVz3EITchbk5bSO2gz2YGXcxMlPktWo6ysFHDKuZwqrSlG6w');">
+</div>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div>
+<h3 class="font-display text-lg font-medium leading-tight text-stone-900 dark:text-stone-100 mb-1 group-hover:text-primary transition-colors">Rosemary Focaccia</h3>
+<div class="flex items-center gap-2 text-stone-500 dark:text-stone-400 text-xs font-sans tracking-wide uppercase">
+<span>2 hrs</span>
+<span class="w-1 h-1 rounded-full bg-stone-300 dark:bg-stone-600"></span>
+<span>Medium</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col group cursor-pointer">
+<div class="relative w-full aspect-[3/4] overflow-hidden leaf-shape shadow-sm mb-3">
+<div class="absolute inset-0 bg-stone-200 animate-pulse"></div>
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Creamy mushroom risotto in a white bowl" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA3b2f_GoWPhLQzKMpGOhozRJu_PJZsCd46V4uhc4H6c2Xvod8vCuS3Xe6-Yus5-m_KUPfkcHOF4uZxGRZYcIJm7OKlcV5IkhOj89djFXi8J87FlJyrzn5uKWKSVS5FgRpOkDlGpTlG8KXALf14eQGQHoyCwwD-NXualuGpKVC1QBOag-KtBnixDP5A771KuAsjw3QQomZsY_ihpuLoUtDgqi_Eudf3j37UAMNsJPsPb2nTPRJt8dsWljj6nXTfStoeTQR-643R-2s');">
+</div>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div>
+<h3 class="font-display text-lg font-medium leading-tight text-stone-900 dark:text-stone-100 mb-1 group-hover:text-primary transition-colors">Funghi Risotto</h3>
+<div class="flex items-center gap-2 text-stone-500 dark:text-stone-400 text-xs font-sans tracking-wide uppercase">
+<span>45 min</span>
+<span class="w-1 h-1 rounded-full bg-stone-300 dark:bg-stone-600"></span>
+<span>Medium</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col group cursor-pointer mt-8">
+<div class="relative w-full aspect-[3/4] overflow-hidden leaf-shape shadow-sm mb-3">
+<div class="absolute inset-0 bg-stone-200 animate-pulse"></div>
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Classic Italian Tiramisu dusted with cocoa powder" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAUR6x6jY9c9u0cVQiWXJzpC34wl8Qc5p-0dX7blcKIIJTw-c21T6kl1Bu1Ed5ai0jBESB4l_QwlF2QCicHLp_m9E2YhEtDnRCQw5v4Ujo9ufyESS0BbofwmaxozsyI0hTj1AplW4pFTGlQSItNTnGsq9sBKCNiy6KlOTJ4gSnnwMF26EiY__8aTKcWtRf4-BD-iswF5gyvn1heJQDACEY5_BPea0fYx1ErlZhZTWACtkPvLctsDhSrC6YmoUzem_T5VbpZLyl2dhg');">
+</div>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] fill-1">favorite</span>
+</button>
+</div>
+<div>
+<h3 class="font-display text-lg font-medium leading-tight text-stone-900 dark:text-stone-100 mb-1 group-hover:text-primary transition-colors">Classic Tiramisu</h3>
+<div class="flex items-center gap-2 text-stone-500 dark:text-stone-400 text-xs font-sans tracking-wide uppercase">
+<span>40 min</span>
+<span class="w-1 h-1 rounded-full bg-stone-300 dark:bg-stone-600"></span>
+<span>Hard</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col group cursor-pointer">
+<div class="relative w-full aspect-[3/4] overflow-hidden leaf-shape shadow-sm mb-3">
+<div class="absolute inset-0 bg-stone-200 animate-pulse"></div>
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Fresh Caprese salad with mozzarella tomatoes and basil" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDR54ikhvRwzH1y8HUTUt0OmE_OTxTYbABrz0tInLcRIO0-i0GkUhhZzP_MEe47a8_Ay6O9J9wMRZtImFGpr0ApOwq9ijO5bgsWBtnx2q6Upde5S7vew6C9JTN-EZ4sst6gN9ovRq_5dKV9RtQ4Pw9b8wOOLmFAK18RinwOPN-6jnCjR0lmIAu99nbMtDcN3WLGtJ0MQpzvCZRhpsBHWga3WaI4QB4Jz3wiouUP5unRNT8gLZfiRcL68bUqwfFDYbrCx8thk2lP8iw');">
+</div>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div>
+<h3 class="font-display text-lg font-medium leading-tight text-stone-900 dark:text-stone-100 mb-1 group-hover:text-primary transition-colors">Caprese Salad</h3>
+<div class="flex items-center gap-2 text-stone-500 dark:text-stone-400 text-xs font-sans tracking-wide uppercase">
+<span>15 min</span>
+<span class="w-1 h-1 rounded-full bg-stone-300 dark:bg-stone-600"></span>
+<span>Easy</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col group cursor-pointer mt-8">
+<div class="relative w-full aspect-[3/4] overflow-hidden leaf-shape shadow-sm mb-3">
+<div class="absolute inset-0 bg-stone-200 animate-pulse"></div>
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Green basil pesto pasta in a ceramic bowl" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAPcg8H1e_e72nU5gSDBmVb38a37E2Tpb9HDcI37NScmjBwHfoQeD-GVSvy8x33rfPrZ-rNUqfWDKDJJ8pALmcxGpwfBUaQpkrkqq7niCpfzhE4QoPFgX7cxXfujD3ibaWCRPJN2_AQcnVfsnK97Pu5k5x_fdUWdhU9qUjY3XDkgbT1McDRFHwtUakK9mYby0Hvk1SkvlHnY8P3OTAjSYfxQRLFEqrL7tu3nAKO2zGyXbBUo2BkGkdoJW0hy_4f0byvlpp4Hf-RP00');">
+</div>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div>
+<h3 class="font-display text-lg font-medium leading-tight text-stone-900 dark:text-stone-100 mb-1 group-hover:text-primary transition-colors">Pesto Genovese</h3>
+<div class="flex items-center gap-2 text-stone-500 dark:text-stone-400 text-xs font-sans tracking-wide uppercase">
+<span>20 min</span>
+<span class="w-1 h-1 rounded-full bg-stone-300 dark:bg-stone-600"></span>
+<span>Easy</span>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed bottom-8 left-0 right-0 z-50 flex justify-center items-end px-4 pointer-events-none">
+<div class="relative flex items-center h-16 px-6 rounded-full bg-white/80 dark:bg-surface-dark/80 backdrop-blur-xl shadow-glass border border-white/20 dark:border-white/5 pointer-events-auto">
+<div class="flex items-center justify-between gap-6">
+<a class="flex flex-col items-center justify-center w-10 h-10 rounded-full text-stone-400 dark:text-stone-500 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">home</span>
+<span class="sr-only">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center w-10 h-10 rounded-full text-primary" href="#">
+<span class="material-symbols-outlined text-[26px] fill-1">collections_bookmark</span>
+<span class="sr-only">Collections</span>
+</a>
+<div class="w-10"></div>
+<a class="flex flex-col items-center justify-center w-10 h-10 rounded-full text-stone-400 dark:text-stone-500 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">kitchen</span>
+<span class="sr-only">Pantry</span>
+</a>
+<a class="flex flex-col items-center justify-center w-10 h-10 rounded-full text-stone-400 dark:text-stone-500 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">shopping_bag</span>
+<span class="sr-only">Shopping</span>
+</a>
+</div>
+<button class="absolute -top-6 left-1/2 -translate-x-1/2 flex items-center justify-center w-14 h-14 bg-primary text-white rounded-full shadow-float hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95 pointer-events-auto ring-4 ring-background-light dark:ring-background-dark">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</button>
+</div>
+</div>
+<script>
+    // Just inserting the account icon into the header since I modified the structure to be 4 items + plus button
+    document.addEventListener('DOMContentLoaded', () => {
+        const header = document.querySelector('header');
+        if(header) {
+            header.classList.add('flex', 'justify-between', 'items-center');
+            const accountLink = document.createElement('a');
+            accountLink.href = '#';
+            accountLink.className = 'w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors';
+            accountLink.innerHTML = '<span class="material-symbols-outlined">person</span>';
+            header.appendChild(accountLink);
+        }
+    });
+</script>
+</div>
+</body></html>

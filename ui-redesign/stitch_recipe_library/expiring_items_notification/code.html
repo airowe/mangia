@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mangia Lock Screen Notification</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ee6f2b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221610",
+                    },
+                    fontFamily: {
+                        "display": ["Be Vietnam Pro", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "3xl": "1.5rem", "full": "9999px"},
+                    backdropBlur: {
+                        'xs': '2px',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for cleaner look if content overflows */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* iOS Lock Screen Time Font Adjustment Simulation */
+        .lock-screen-time {
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display text-slate-900 antialiased selection:bg-primary/30">
+<div class="relative flex h-screen w-full flex-col overflow-hidden bg-gray-900">
+<!-- Background Wallpaper -->
+<div class="absolute inset-0 z-0 h-full w-full bg-cover bg-center" data-alt="Blurred modern marble kitchen with natural light" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDj3283Me-TpnaMN5ALV9mrvPLoZ7CoYWyPjssYC9utc7XP0KXc3Az2Beu_cNWbsBf3z5vDgBm3sC6mVIN9JW5K8JjJuJ7gy0TX-p8GBLg1QfPIgKW7DgnQSPaRF_qQiU6kQAf4tbk16HiEvBGh88ZOxA-05RRKOjqGiAPuKGXg2wLMnUQUBuxTfBtPybmh6v1ih6fgQtH9NqEP7ltKHPwc90DhLGIm3tJgBnp0PudGPyOB0yUz_J-QE2RszrN06TzyXUyzSkssl20'); filter: blur(8px) brightness(0.85);">
+</div>
+<!-- Subtle Gradient Overlay for Readability -->
+<div class="absolute inset-0 z-0 bg-gradient-to-b from-black/20 via-transparent to-black/40"></div>
+<!-- Status Bar Area (Simulated) -->
+<div class="relative z-10 flex w-full justify-between px-6 pt-3 text-white">
+<div class="text-sm font-medium">9:41</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-[18px]">wifi</span>
+<span class="material-symbols-outlined text-[18px] rotate-90">battery_full</span>
+</div>
+</div>
+<!-- Lock Screen Content -->
+<div class="relative z-10 flex flex-1 flex-col items-center pt-8 px-4">
+<!-- Date & Time -->
+<div class="flex flex-col items-center justify-center text-center text-white drop-shadow-md mb-8">
+<span class="material-symbols-outlined text-4xl mb-2 drop-shadow-md">lock</span>
+<h1 class="lock-screen-time text-[86px] font-bold leading-none tracking-tight">9:41</h1>
+<p class="text-xl font-medium tracking-wide opacity-90">Tuesday, January 9</p>
+</div>
+<!-- Notifications Stack -->
+<div class="mt-4 w-full max-w-[370px] space-y-2">
+<!-- Mangia Notification Group -->
+<div class="group relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-xl shadow-lg transition-all dark:bg-black/60">
+<!-- Header -->
+<div class="flex items-center justify-between px-4 pt-3 pb-2">
+<div class="flex items-center gap-2">
+<div class="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-white shadow-sm">
+<span class="material-symbols-outlined text-[16px]">restaurant_menu</span>
+</div>
+<span class="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-gray-200">MANGIA</span>
+</div>
+<span class="text-xs text-gray-500 dark:text-gray-400">now</span>
+</div>
+<!-- Main Content -->
+<div class="flex gap-4 px-4 pb-4">
+<!-- Thumbnail Image -->
+<div class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl shadow-sm">
+<div class="h-full w-full bg-cover bg-center" data-alt="Fresh basil leaves and greek yogurt bowl" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB34IRqTwQY68xnbi8SRRnz46BxwpEv2RJzzDNr_iZpDonI3cKLdqJ3L1g84rI1bp61q65f23a9FGlNRrDYyYHtLKaNOJYRlKC8BHW6_UPDriGUlsBscx3C2ABubzzx61_8EwpaEVH7UgLASzlQTB_09LHYpwm6TinMXh4pBxWCqL4xuw-bwDFb9f82cuhT1kELuOvpvYNfY7w6pVmalJxCwtVPK1K9r8T9-0A-sNuQZqlKUHZg-XvHC2Yn_hnL1rDlXkth7KF8p3Q');">
+</div>
+</div>
+<div class="flex flex-col gap-1 pr-2">
+<h3 class="text-base font-bold leading-tight text-gray-900 dark:text-white">Expiring Soon</h3>
+<p class="text-sm font-normal leading-snug text-gray-700 line-clamp-3 dark:text-gray-300">
+                                Your Greek Yogurt and Fresh Basil are about to expire. Want to find a recipe to use them?
+                            </p>
+</div>
+</div>
+<!-- Expanded Actions (Long Press Simulation) -->
+<!-- In a real static design, showing these buttons implies the user has interacted or it's a rich notification -->
+<div class="flex flex-col border-t border-gray-200/50 bg-gray-50/50 px-2 py-2 dark:border-white/10 dark:bg-white/5">
+<button class="mb-1 flex w-full cursor-pointer items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-orange-600 active:scale-[0.98]">
+                            View Recipes
+                        </button>
+<button class="flex w-full cursor-pointer items-center justify-center rounded-xl bg-white px-4 py-3 text-sm font-bold text-gray-800 shadow-sm transition hover:bg-gray-100 active:scale-[0.98] dark:bg-gray-700 dark:text-white">
+                            Add to Shopping List
+                        </button>
+</div>
+</div>
+<!-- Fake second notification below for realism -->
+<div class="relative mx-auto mt-2 h-2 w-[95%] rounded-t-xl bg-white/40 backdrop-blur-md dark:bg-black/30"></div>
+<div class="relative mx-auto -mt-1 h-2 w-[90%] rounded-t-xl bg-white/20 backdrop-blur-sm dark:bg-black/20"></div>
+</div>
+<div class="flex-1"></div>
+<!-- Bottom Action Buttons (Flashlight/Camera) -->
+<div class="mb-12 flex w-full items-end justify-between px-8 pb-4">
+<button class="flex h-[50px] w-[50px] items-center justify-center rounded-full bg-gray-800/40 backdrop-blur-md transition active:bg-white/20">
+<span class="material-symbols-outlined text-white">flashlight_on</span>
+</button>
+<button class="flex h-[50px] w-[50px] items-center justify-center rounded-full bg-gray-800/40 backdrop-blur-md transition active:bg-white/20">
+<span class="material-symbols-outlined text-white">photo_camera</span>
+</button>
+</div>
+<!-- Home Indicator -->
+<div class="absolute bottom-2 left-1/2 h-1 w-32 -translate-x-1/2 rounded-full bg-white"></div>
+</div>
+</div>
+</body></html>

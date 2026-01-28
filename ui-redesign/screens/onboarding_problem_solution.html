@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><title>onboarding_problem_solution</title><script src="https://cdn.tailwindcss.com"></script><script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script><style>        .iphone-frame {            width: 393px;            height: 852px;            background-color: #ffffff;            position: relative;            border-radius: 0px;            box-shadow: 0 0 20px rgba(0,0,0,0.1);            overflow: hidden;            margin: 2rem auto;        }        /* Custom Colors Variables */        :root {            --mangia-terracotta: #D97742;            --mangia-sage: #A8BCA0;            --mangia-cream: #FBF9F5;            --mangia-cream-dark: #F5E3C1;            --mangia-dark: #3A322C;            --mangia-brown: #7A716A;        }        .font-serif-custom {            font-family: Georgia, 'Times New Roman', Times, serif;        }    </style></head><body class="bg-gray-100 flex items-center justify-center min-h-screen"><!-- .iphone-frame Container --><div class="iphone-frame flex flex-col bg-[var(--mangia-cream)]"><!-- #header_001 --><header class="w-full pt-14 px-6 flex justify-end relative z-20"><button class="text-[var(--mangia-terracotta)] font-semibold text-sm tracking-wide uppercase" data-navigates-to="onboarding_get_started.html" style="; cursor: pointer;">Skip</button></header><!-- /#header_001 --><!-- Scrollable Content --><div class="flex-1 flex flex-col items-center justify-center px-6 relative overflow-hidden"><!-- Decorative Background Shapes --><!-- #bg-shape-1_002 --><div class="absolute top-20 -left-10 w-40 h-40 bg-[var(--mangia-cream-dark)] rounded-full mix-blend-multiply opacity-60 z-0"></div><!-- /#bg-shape-1_002 --><!-- #bg-shape-2_003 --><div class="absolute top-1/4 right-[-20px] w-32 h-32 bg-[var(--mangia-sage)] rounded-bl-[60px] rounded-tl-[20px] rounded-r-[10px] opacity-20 z-0"></div><!-- /#bg-shape-2_003 --><!-- Main Illustration / Image Area --><!-- #hero-image-container_004 --><div class="relative w-full aspect-[4/5] max-h-[420px] mb-8 z-10"><!-- Poster Frame --><div class="absolute inset-0 border-4 border-[var(--mangia-dark)] rounded-t-[140px] rounded-b-[40px] overflow-hidden transform rotate-[-2deg] bg-white shadow-xl"><!-- Generation-Info: {"aspectRatio": "4:5", "background": "solid"} --><img alt="Italian Market Poster style, chaotic pile of hand-written recipe cards and screenshots transforming into a neat, beautiful digital recipe card, vibrant terracotta and sage colors, high contrast" class="w-full h-full object-cover" src="https://media.screensdesign.com/gasset/c03e7860-f9b6-4826-b435-601e0ca84c9f.png"></div><!-- Sticker Element --><!-- #sticker-tag_005 --><div class="absolute -bottom-6 -right-2 bg-[var(--mangia-terracotta)] text-white w-24 h-24 rounded-full flex items-center justify-center transform rotate-12 shadow-lg border-2 border-white"><span class="text-center font-bold text-xs leading-tight uppercase tracking-wider">No More<br>Mess</span></div><!-- /#sticker-tag_005 --></div><!-- /#hero-image-container_004 --><!-- Text Content --><!-- #text-content_006 --><div class="relative z-10 text-center space-y-4 max-w-[320px]"><h1 class="text-[32px] leading-[1.1] font-serif-custom text-[var(--mangia-dark)]">                    Stop the <span class="italic text-[var(--mangia-terracotta)]">screenshot</span> chaos.                </h1><p class="text-[var(--mangia-brown)] text-lg leading-relaxed">                    Your recipes are scattered everywhere. We bring them home to one beautiful kitchen.                </p></div><!-- /#text-content_006 --></div><!-- Footer / Navigation --><!-- #footer_007 --><div class="p-8 pb-12 w-full flex flex-col items-center space-y-6"><!-- Pagination Dots --><!-- #pagination_008 --><div class="flex space-x-2"><div class="w-8 h-2.5 rounded-full bg-[var(--mangia-dark)]"></div><div class="w-2.5 h-2.5 rounded-full bg-[var(--mangia-cream-dark)]"></div><div class="w-2.5 h-2.5 rounded-full bg-[var(--mangia-cream-dark)]"></div></div><!-- /#pagination_008 --><!-- Primary CTA --><!-- #btn-next_009 --><button class="w-full h-[56px] bg-[var(--mangia-terracotta)] text-white rounded-full font-semibold text-lg shadow-lg active:scale-95 transition-transform flex items-center justify-center border-2 border-[var(--mangia-terracotta)]" data-navigates-to="onboarding_features.html" style="; cursor: pointer;">                Organize My Kitchen            </button><!-- /#btn-next_009 --></div><!-- /#footer_007 --></div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Collect all navigable elements with their targets
+        const hotspots = [];
+        document.querySelectorAll('[data-navigates-to]').forEach(el => {
+          hotspots.push({
+            element: el,
+            target: el.getAttribute('data-navigates-to'),
+            isScreenTap: el.getAttribute('data-screen-tap') === 'true'
+          });
+        });
+
+        // Document-level capture phase click handler
+        // Checks click position against element bounds - works regardless of z-index stacking
+        document.addEventListener('click', (e) => {
+          const clickX = e.clientX;
+          const clickY = e.clientY;
+
+          // First check screen-tap (tap anywhere) connections
+          const screenTapHotspot = hotspots.find(h => h.isScreenTap);
+          if (screenTapHotspot && screenTapHotspot.target) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.location.href = screenTapHotspot.target;
+            return;
+          }
+
+          // Check each hotspot element's bounds
+          for (const hotspot of hotspots) {
+            if (hotspot.isScreenTap) continue; // Already handled above
+            try {
+              const rect = hotspot.element.getBoundingClientRect();
+              if (clickX >= rect.left && clickX <= rect.right &&
+                  clickY >= rect.top && clickY <= rect.bottom) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (hotspot.target) window.location.href = hotspot.target;
+                return;
+              }
+            } catch (err) {
+              // Element might have issues, skip it
+            }
+          }
+
+          // Prevent default for non-connected interactive elements
+          const clickedInteractive = e.target.closest('a, button, [onclick]');
+          if (clickedInteractive) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }, true); // capture phase
+
+        // Prevent form submissions
+        document.addEventListener('submit', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }, true);
+      });
+    </script></body></html>

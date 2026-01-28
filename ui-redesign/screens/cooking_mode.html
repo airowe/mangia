@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><title>cooking_mode</title><script src="https://cdn.tailwindcss.com"></script><script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script><style>        .iphone-frame {            width: 393px;            height: 852px;            background-color: #ffffff;            position: relative;            border-radius: 0px;            box-shadow: 0 0 20px rgba(0,0,0,0.1);            overflow: hidden;            margin: 2rem auto;        }        :root {            --mangia-terracotta: #D97742;            --mangia-sage: #A8BCA0;            --mangia-cream: #FBF9F5;            --mangia-cream-dark: #F5E3C1;            --mangia-dark: #3A322C;            --mangia-brown: #7A716A;            --mangia-deep-brown: #2A1F18;            --mangia-taupe: #A9A29A;        }        .font-serif-custom {            font-family: Georgia, 'Times New Roman', Times, serif;        }    </style></head><body class="bg-gray-100 flex items-center justify-center min-h-screen"><!-- .iphone-frame Container --><div class="iphone-frame flex flex-col bg-[var(--mangia-deep-brown)] text-[var(--mangia-cream)]"><!-- Progress Header --><!-- #cooking-header_300 --><div class="pt-14 px-6 flex items-center justify-between mb-8 relative z-20"><!-- Close --><button class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all" data-navigates-to="recipe_detail.html" style="; cursor: pointer;"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button><!-- Step Indicator --><div class="bg-[var(--mangia-terracotta)] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase shadow-md">Step 3 of 8</div><!-- Ingredients Toggle --><button class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"><iconify-icon icon="lucide:list" width="24"></iconify-icon></button></div><!-- /#cooking-header_300 --><!-- Main Step Content --><!-- #step-content_301 --><div class="flex-1 flex flex-col px-8 relative overflow-hidden"><!-- Decorative Background Element --><div class="absolute top-0 right-[-50px] w-64 h-64 bg-[var(--mangia-terracotta)] rounded-full blur-[100px] opacity-20 pointer-events-none"></div><!-- Step Title --><h2 class="text-[var(--mangia-sage)] font-bold uppercase tracking-widest text-sm mb-6">Preparing The Base</h2><!-- Large Instruction Text --><div class="flex-1 flex items-center"><p class="font-serif-custom text-[34px] leading-[1.3] text-[var(--mangia-cream)]">                    In a large skillet over medium heat, add the <span class="text-[var(--mangia-terracotta)] underline decoration-dotted underline-offset-4 cursor-pointer">olive oil</span> and sauté the garlic until fragrant, about <span class="text-[var(--mangia-terracotta)] font-bold">2 minutes</span>.                </p></div><!-- Embedded Timer Card --><!-- #timer-card_302 --><div class="bg-[#3E342F] rounded-2xl p-4 flex items-center justify-between border border-white/10 mt-6 shadow-lg"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full border-4 border-[var(--mangia-sage)] border-t-transparent flex items-center justify-center text-[var(--mangia-sage)] animate-spin-slow"><iconify-icon icon="lucide:timer" width="20"></iconify-icon></div><div><span class="block text-2xl font-bold font-serif-custom">02:00</span><span class="text-xs text-white/40 uppercase tracking-wide">Timer</span></div></div><button class="bg-[var(--mangia-sage)] text-[var(--mangia-deep-brown)] px-5 py-2 rounded-full font-bold text-sm shadow-md active:scale-95">Start</button></div><!-- /#timer-card_302 --></div><!-- /#step-content_301 --><!-- Bottom Controls --><!-- #cooking-controls_303 --><div class="p-8 pb-12 flex justify-between items-center z-20"><!-- Prev --><button class="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white active:scale-95 transition-all"><iconify-icon icon="lucide:arrow-left" width="28"></iconify-icon></button><!-- Voice Control Indicator --><div class="flex flex-col items-center gap-2 opacity-50"><iconify-icon icon="lucide:mic" width="24"></iconify-icon><span class="text-[10px] uppercase tracking-widest">Listening</span></div><!-- Next --><button class="w-20 h-20 rounded-full bg-[var(--mangia-terracotta)] flex items-center justify-center text-white shadow-lg border-4 border-[var(--mangia-deep-brown)] ring-2 ring-[var(--mangia-terracotta)] active:scale-95 transition-all"><iconify-icon icon="lucide:arrow-right" width="32"></iconify-icon></button></div><!-- /#cooking-controls_303 --></div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Collect all navigable elements with their targets
+        const hotspots = [];
+        document.querySelectorAll('[data-navigates-to]').forEach(el => {
+          hotspots.push({
+            element: el,
+            target: el.getAttribute('data-navigates-to'),
+            isScreenTap: el.getAttribute('data-screen-tap') === 'true'
+          });
+        });
+
+        // Document-level capture phase click handler
+        // Checks click position against element bounds - works regardless of z-index stacking
+        document.addEventListener('click', (e) => {
+          const clickX = e.clientX;
+          const clickY = e.clientY;
+
+          // First check screen-tap (tap anywhere) connections
+          const screenTapHotspot = hotspots.find(h => h.isScreenTap);
+          if (screenTapHotspot && screenTapHotspot.target) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.location.href = screenTapHotspot.target;
+            return;
+          }
+
+          // Check each hotspot element's bounds
+          for (const hotspot of hotspots) {
+            if (hotspot.isScreenTap) continue; // Already handled above
+            try {
+              const rect = hotspot.element.getBoundingClientRect();
+              if (clickX >= rect.left && clickX <= rect.right &&
+                  clickY >= rect.top && clickY <= rect.bottom) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (hotspot.target) window.location.href = hotspot.target;
+                return;
+              }
+            } catch (err) {
+              // Element might have issues, skip it
+            }
+          }
+
+          // Prevent default for non-connected interactive elements
+          const clickedInteractive = e.target.closest('a, button, [onclick]');
+          if (clickedInteractive) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }, true); // capture phase
+
+        // Prevent form submissions
+        document.addEventListener('submit', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }, true);
+      });
+    </script></body></html>

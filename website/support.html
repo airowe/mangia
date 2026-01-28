@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support - Mangia</title>
+  <meta name="description" content="Get help with Mangia - FAQ, contact support, and troubleshooting guides.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            terracotta: {
+              50: '#FDF5F0',
+              100: '#FAEADE',
+              200: '#F5D5BC',
+              300: '#EEBB95',
+              400: '#E49B6A',
+              500: '#D97742',
+              600: '#C65F2E',
+              700: '#A44D25',
+              800: '#843F21',
+              900: '#6B351E',
+            },
+            sage: {
+              50: '#F5F8F4',
+              100: '#E8EFE5',
+              200: '#D3E0CE',
+              300: '#B5CAAC',
+              400: '#A8BCA0',
+              500: '#7A9E6F',
+              600: '#5E8054',
+              700: '#4A6643',
+              800: '#3D5238',
+              900: '#34452F',
+            },
+            cream: {
+              50: '#FEFDFB',
+              100: '#FBF9F5',
+              200: '#F5E3C1',
+              300: '#EED6A8',
+              400: '#E5C68C',
+              500: '#D9B370',
+            },
+            editorial: {
+              dark: '#3A322C',
+              brown: '#7A716A',
+              taupe: '#A9A29A',
+            }
+          },
+          fontFamily: {
+            serif: ['Libre Bodoni', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html { scroll-behavior: smooth; }
+    .text-editorial-headline {
+      font-family: 'Libre Bodoni', Georgia, serif;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+  </style>
+</head>
+<body class="bg-cream-100 text-editorial-dark font-sans antialiased">
+
+  <!-- Navigation -->
+  <nav class="fixed top-4 left-4 right-4 z-50">
+    <div class="max-w-6xl mx-auto bg-white/80 backdrop-blur-xl rounded-full px-6 py-4 shadow-lg border border-cream-200">
+      <div class="flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2 cursor-pointer">
+          <div class="w-10 h-10 bg-terracotta-500 rounded-full flex items-center justify-center">
+            <span class="text-white font-serif italic text-xl">M</span>
+          </div>
+          <span class="font-serif text-2xl text-editorial-dark">Mangia</span>
+        </a>
+        <a href="/" class="bg-editorial-dark text-cream-100 px-6 py-2.5 rounded-full font-semibold text-sm hover:bg-terracotta-500 transition-colors duration-200 cursor-pointer">
+          Back to Home
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="pt-32 pb-16 px-6 bg-gradient-to-b from-cream-100 to-white">
+    <div class="max-w-4xl mx-auto text-center">
+      <p class="text-terracotta-500 font-bold text-xs tracking-[0.2em] uppercase mb-4">Help Center</p>
+      <h1 class="text-editorial-headline text-4xl md:text-5xl text-editorial-dark mb-6">How Can We Help?</h1>
+      <p class="text-editorial-brown text-lg max-w-2xl mx-auto">
+        Find answers to common questions or get in touch with our support team.
+      </p>
+    </div>
+  </section>
+
+  <!-- Contact Cards -->
+  <section class="py-12 px-6 bg-white">
+    <div class="max-w-4xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-6">
+        <a href="mailto:support@mangia.app" class="bg-cream-100 rounded-3xl p-8 hover:shadow-lg transition-shadow duration-300 cursor-pointer group">
+          <div class="w-14 h-14 bg-terracotta-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="font-serif text-xl text-editorial-dark mb-2">Email Support</h3>
+          <p class="text-editorial-brown mb-4">Get help via email. We typically respond within 24 hours.</p>
+          <span class="text-terracotta-500 font-semibold">support@mangia.app</span>
+        </a>
+
+        <a href="https://twitter.com/mangiaapp" class="bg-cream-100 rounded-3xl p-8 hover:shadow-lg transition-shadow duration-300 cursor-pointer group">
+          <div class="w-14 h-14 bg-sage-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+            <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </div>
+          <h3 class="font-serif text-xl text-editorial-dark mb-2">Twitter / X</h3>
+          <p class="text-editorial-brown mb-4">Follow us for updates and quick support.</p>
+          <span class="text-terracotta-500 font-semibold">@mangiaapp</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="py-16 px-6 bg-cream-100">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-12">
+        <p class="text-terracotta-500 font-bold text-xs tracking-[0.2em] uppercase mb-4">FAQ</p>
+        <h2 class="text-editorial-headline text-3xl md:text-4xl text-editorial-dark">Frequently Asked Questions</h2>
+      </div>
+
+      <div class="space-y-4">
+        <!-- FAQ Item 1 -->
+        <details class="bg-white rounded-2xl border border-cream-200 group">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <h3 class="font-semibold text-editorial-dark pr-4">How do I import a recipe?</h3>
+            <svg class="w-5 h-5 text-editorial-taupe group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-6 pb-6 text-editorial-brown leading-relaxed">
+            <p class="mb-3">To import a recipe:</p>
+            <ol class="list-decimal ml-6 space-y-2">
+              <li>Tap the + button on the home screen</li>
+              <li>Select "Import from URL"</li>
+              <li>Paste the recipe URL (from TikTok, YouTube, Instagram, or any food blog)</li>
+              <li>Tap "Import" and our AI will extract the recipe automatically</li>
+            </ol>
+            <p class="mt-3">You can also use the iOS Share Sheet to import directly from your browser or social media apps.</p>
+          </div>
+        </details>
+
+        <!-- FAQ Item 2 -->
+        <details class="bg-white rounded-2xl border border-cream-200 group">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <h3 class="font-semibold text-editorial-dark pr-4">What sources can I import recipes from?</h3>
+            <svg class="w-5 h-5 text-editorial-taupe group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-6 pb-6 text-editorial-brown leading-relaxed">
+            <p>Mangia can import recipes from virtually any source:</p>
+            <ul class="list-disc ml-6 mt-3 space-y-1">
+              <li>TikTok videos</li>
+              <li>YouTube videos</li>
+              <li>Instagram posts and reels</li>
+              <li>Food blogs (AllRecipes, Serious Eats, Bon Appetit, etc.)</li>
+              <li>Pinterest pins</li>
+              <li>Any webpage with recipe content</li>
+            </ul>
+          </div>
+        </details>
+
+        <!-- FAQ Item 3 -->
+        <details class="bg-white rounded-2xl border border-cream-200 group">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <h3 class="font-semibold text-editorial-dark pr-4">How does pantry tracking work?</h3>
+            <svg class="w-5 h-5 text-editorial-taupe group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-6 pb-6 text-editorial-brown leading-relaxed">
+            <p class="mb-3">Your pantry is your inventory of ingredients at home. You can:</p>
+            <ul class="list-disc ml-6 space-y-1">
+              <li>Manually add items with quantities and expiration dates</li>
+              <li>Scan grocery receipts (Premium) to bulk-add items</li>
+              <li>Get alerts when items are expiring soon</li>
+              <li>See which recipes you can make with what you have</li>
+            </ul>
+            <p class="mt-3">When you generate a grocery list, Mangia automatically deducts items you already have in your pantry.</p>
+          </div>
+        </details>
+
+        <!-- FAQ Item 4 -->
+        <details class="bg-white rounded-2xl border border-cream-200 group">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <h3 class="font-semibold text-editorial-dark pr-4">What's the difference between Free and Premium?</h3>
+            <svg class="w-5 h-5 text-editorial-taupe group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-6 pb-6 text-editorial-brown leading-relaxed">
+            <p class="mb-4"><strong>Free tier includes:</strong></p>
+            <ul class="list-disc ml-6 space-y-1 mb-4">
+              <li>Up to 10 saved recipes</li>
+              <li>Basic pantry tracking</li>
+              <li>Grocery list generation</li>
+              <li>Cooking mode</li>
+            </ul>
+            <p class="mb-4"><strong>Premium ($4.99/month) adds:</strong></p>
+            <ul class="list-disc ml-6 space-y-1">
+              <li>Unlimited recipes</li>
+              <li>AI receipt scanning</li>
+              <li>Voice control in cooking mode</li>
+              <li>Weekly meal planning</li>
+              <li>Priority support</li>
+            </ul>
+          </div>
+        </details>
+
+        <!-- FAQ Item 5 -->
+        <details class="bg-white rounded-2xl border border-cream-200 group">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <h3 class="font-semibold text-editorial-dark pr-4">How do I cancel my subscription?</h3>
+            <svg class="w-5 h-5 text-editorial-taupe group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-6 pb-6 text-editorial-brown leading-relaxed">
+            <p class="mb-3">Since subscriptions are managed through Apple, you'll need to cancel via your iPhone:</p>
+            <ol class="list-decimal ml-6 space-y-2">
+              <li>Open the Settings app</li>
+              <li>Tap your name at the top</li>
+              <li>Tap "Subscriptions"</li>
+              <li>Find Mangia and tap "Cancel Subscription"</li>
+            </ol>
+            <p class="mt-3">You'll continue to have access to Premium features until the end of your current billing period.</p>
+          </div>
+        </details>
+
+        <!-- FAQ Item 6 -->
+        <details class="bg-white rounded-2xl border border-cream-200 group">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <h3 class="font-semibold text-editorial-dark pr-4">How do I use cooking mode?</h3>
+            <svg class="w-5 h-5 text-editorial-taupe group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-6 pb-6 text-editorial-brown leading-relaxed">
+            <p class="mb-3">Cooking mode provides a hands-free experience while cooking:</p>
+            <ol class="list-decimal ml-6 space-y-2">
+              <li>Open any recipe</li>
+              <li>Tap "Start Cooking"</li>
+              <li>Swipe left/right to navigate between steps</li>
+              <li>Say "Hey Siri, next step" for voice control (Premium)</li>
+              <li>Tap the timer icon to set step-specific timers</li>
+            </ol>
+            <p class="mt-3">The screen stays awake and text is extra large for easy reading.</p>
+          </div>
+        </details>
+
+        <!-- FAQ Item 7 -->
+        <details class="bg-white rounded-2xl border border-cream-200 group">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <h3 class="font-semibold text-editorial-dark pr-4">Can I export my recipes?</h3>
+            <svg class="w-5 h-5 text-editorial-taupe group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-6 pb-6 text-editorial-brown leading-relaxed">
+            <p>Yes! You can export your recipes at any time:</p>
+            <ol class="list-decimal ml-6 mt-3 space-y-2">
+              <li>Go to Settings > Account</li>
+              <li>Tap "Export My Data"</li>
+              <li>Choose your format (JSON or PDF)</li>
+              <li>Your data will be emailed to you</li>
+            </ol>
+          </div>
+        </details>
+
+        <!-- FAQ Item 8 -->
+        <details class="bg-white rounded-2xl border border-cream-200 group">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <h3 class="font-semibold text-editorial-dark pr-4">Is my data backed up?</h3>
+            <svg class="w-5 h-5 text-editorial-taupe group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-6 pb-6 text-editorial-brown leading-relaxed">
+            <p>Yes, your data is automatically synced to our secure cloud servers. This means:</p>
+            <ul class="list-disc ml-6 mt-3 space-y-1">
+              <li>Your recipes are safe even if you lose your phone</li>
+              <li>You can access your recipes on a new device by signing in</li>
+              <li>Changes sync automatically across devices</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Still Need Help -->
+  <section class="py-16 px-6 bg-terracotta-500">
+    <div class="max-w-2xl mx-auto text-center">
+      <h2 class="text-editorial-headline text-3xl text-white mb-4">Still Need Help?</h2>
+      <p class="text-terracotta-100 mb-8">
+        Can't find what you're looking for? Our support team is here to help.
+      </p>
+      <a href="mailto:support@mangia.app" class="inline-flex items-center justify-center gap-2 bg-white text-editorial-dark px-8 py-4 rounded-full font-semibold hover:bg-cream-100 transition-colors duration-200 cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        Contact Support
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-editorial-dark py-12 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-terracotta-500 rounded-full flex items-center justify-center">
+            <span class="text-white font-serif italic text-lg">M</span>
+          </div>
+          <span class="font-serif text-xl text-cream-100">Mangia</span>
+        </div>
+        <div class="flex items-center gap-6 text-sm">
+          <a href="/privacy" class="text-editorial-taupe hover:text-terracotta-400 transition-colors">Privacy Policy</a>
+          <a href="/terms" class="text-editorial-taupe hover:text-terracotta-400 transition-colors">Terms of Service</a>
+          <a href="/support" class="text-cream-100 hover:text-terracotta-400 transition-colors">Support</a>
+        </div>
+        <p class="text-editorial-taupe text-sm">&copy; 2026 Mangia. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
