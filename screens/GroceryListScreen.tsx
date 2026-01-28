@@ -14,6 +14,8 @@ import {
   TouchableOpacity,
   Share,
   ScrollView,
+  TextInput,
+  Keyboard,
 } from "react-native";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -65,6 +67,28 @@ export default function GroceryListScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAlreadyHave, setShowAlreadyHave] = useState(false);
+  const [newItemText, setNewItemText] = useState("");
+
+  // Add item manually
+  const handleAddItem = useCallback(() => {
+    const trimmed = newItemText.trim();
+    if (!trimmed) return;
+
+    const newItem: GroceryItemWithChecked = {
+      name: trimmed,
+      total_quantity: 1,
+      unit: "",
+      category: "other" as IngredientCategory,
+      in_pantry: false,
+      pantry_quantity: 0,
+      need_to_buy: 1,
+      checked: false,
+    };
+
+    setItems((prev) => [...prev, newItem]);
+    setNewItemText("");
+    Keyboard.dismiss();
+  }, [newItemText]);
 
   // Load recipes and generate grocery list
   const loadGroceryList = useCallback(async () => {
@@ -335,12 +359,40 @@ export default function GroceryListScreen() {
           </Text>
           <Text style={styles.emptySubtitle}>
             {noRecipesSelected
-              ? "Select recipes from your menu to generate a shopping list"
+              ? "Add items manually or select recipes from your menu"
               : "The selected recipes don't have any ingredients"}
           </Text>
+
+          {/* Manual add input */}
+          <View style={styles.addItemContainer}>
+            <TextInput
+              style={styles.addItemInput}
+              placeholder="Add an item..."
+              placeholderTextColor={mangiaColors.taupe}
+              value={newItemText}
+              onChangeText={setNewItemText}
+              onSubmitEditing={handleAddItem}
+              returnKeyType="done"
+            />
+            <TouchableOpacity
+              style={[
+                styles.addItemButton,
+                !newItemText.trim() && styles.addItemButtonDisabled,
+              ]}
+              onPress={handleAddItem}
+              disabled={!newItemText.trim()}
+            >
+              <MaterialCommunityIcons
+                name="plus"
+                size={24}
+                color={newItemText.trim() ? mangiaColors.white : mangiaColors.taupe}
+              />
+            </TouchableOpacity>
+          </View>
+
           {!noRecipesSelected && (
-            <TouchableOpacity style={styles.emptyButton} onPress={handleBack}>
-              <Text style={styles.emptyButtonText}>Go Back</Text>
+            <TouchableOpacity style={styles.emptyButtonSecondary} onPress={handleBack}>
+              <Text style={styles.emptyButtonSecondaryText}>Go Back</Text>
             </TouchableOpacity>
           )}
         </ReanimatedAnimated.View>
@@ -505,6 +557,47 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.bold,
     fontSize: 16,
     color: mangiaColors.white,
+  },
+  emptyButtonSecondary: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    marginTop: 12,
+  },
+  emptyButtonSecondaryText: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 16,
+    color: mangiaColors.terracotta,
+  },
+  addItemContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginTop: 24,
+    marginBottom: 16,
+    gap: 12,
+  },
+  addItemInput: {
+    flex: 1,
+    height: 52,
+    backgroundColor: mangiaColors.white,
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    fontFamily: fontFamily.regular,
+    fontSize: 16,
+    color: mangiaColors.dark,
+    borderWidth: 1,
+    borderColor: "#E8E6E3",
+  },
+  addItemButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: mangiaColors.terracotta,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addItemButtonDisabled: {
+    backgroundColor: "#E8E6E3",
   },
 
   // Header

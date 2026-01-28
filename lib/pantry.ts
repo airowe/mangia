@@ -139,11 +139,14 @@ export const addToPantry = async (
 // Fetch user's pantry items
 export const fetchPantryItems = async (): Promise<PantryItem[]> => {
   // Use mock data in dev bypass mode
+  console.log('[Pantry] DEV_BYPASS_AUTH:', DEV_BYPASS_AUTH);
   if (DEV_BYPASS_AUTH) {
+    console.log('[Pantry] Using mock data');
     await simulateDelay();
     return mockPantryStore;
   }
 
+  console.log('[Pantry] Fetching from API...');
   try {
     const response = await apiClient.get<PantryItem[]>("/api/pantry");
     return response || [];
