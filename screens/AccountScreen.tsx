@@ -44,8 +44,19 @@ export const AccountScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const { signOut } = useClerk();
-  const { user } = useUser();
+  const { user, isLoaded: isUserLoaded } = useUser();
   const { isPremium } = usePremiumFeature();
+
+  // Handle case where user data isn't loaded yet
+  if (!isUserLoaded && !DEV_BYPASS_AUTH) {
+    return (
+      <Screen style={styles.container} noPadding>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </Screen>
+    );
+  }
 
   // Get user info (real or mock)
   const userName = DEV_BYPASS_AUTH
@@ -439,6 +450,16 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
     fontSize: 12,
     color: "#9CA3AF",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontFamily: fontFamily.regular,
+    fontSize: 16,
+    color: mangiaColors.brown,
   },
 });
 
