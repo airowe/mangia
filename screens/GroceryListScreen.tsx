@@ -68,6 +68,12 @@ export default function GroceryListScreen() {
 
   // Load recipes and generate grocery list
   const loadGroceryList = useCallback(async () => {
+    // If no recipe IDs, skip loading and show empty state
+    if (recipeIds.length === 0) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const recipePromises = recipeIds.map((id) => fetchRecipeById(id));
       const fetchedRecipes = await Promise.all(recipePromises);
@@ -313,23 +319,30 @@ export default function GroceryListScreen() {
     );
   }
 
-  // Empty state
+  // Empty state - different message if no recipes selected vs no ingredients
   if (items.length === 0) {
+    const noRecipesSelected = recipeIds.length === 0;
     return (
       <Screen style={styles.container} noPadding>
         <ReanimatedAnimated.View entering={FadeIn.duration(400)} style={styles.emptyContainer}>
           <MaterialCommunityIcons
-            name="cart-outline"
+            name={noRecipesSelected ? "cart-plus" : "cart-outline"}
             size={80}
             color={mangiaColors.taupe}
           />
-          <Text style={styles.emptyTitle}>No ingredients found</Text>
-          <Text style={styles.emptySubtitle}>
-            The selected recipes don't have any ingredients
+          <Text style={styles.emptyTitle}>
+            {noRecipesSelected ? "Your List is Empty" : "No ingredients found"}
           </Text>
-          <TouchableOpacity style={styles.emptyButton} onPress={handleBack}>
-            <Text style={styles.emptyButtonText}>Go Back</Text>
-          </TouchableOpacity>
+          <Text style={styles.emptySubtitle}>
+            {noRecipesSelected
+              ? "Select recipes from your menu to generate a shopping list"
+              : "The selected recipes don't have any ingredients"}
+          </Text>
+          {!noRecipesSelected && (
+            <TouchableOpacity style={styles.emptyButton} onPress={handleBack}>
+              <Text style={styles.emptyButtonText}>Go Back</Text>
+            </TouchableOpacity>
+          )}
         </ReanimatedAnimated.View>
       </Screen>
     );
