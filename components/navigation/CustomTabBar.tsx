@@ -251,7 +251,7 @@ function TabBarItem({ label, icon, isFocused, onPress, isDark }: TabBarItemProps
   });
 
   const activeColor = mangiaColors.terracotta;
-  const inactiveColor = isDark ? 'rgba(255, 255, 255, 0.6)' : mangiaColors.brown;
+  const inactiveColor = isDark ? 'rgba(255, 255, 255, 0.7)' : mangiaColors.dark;
 
   return (
     <AnimatedPressable

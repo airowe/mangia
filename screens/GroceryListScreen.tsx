@@ -58,7 +58,7 @@ export default function GroceryListScreen() {
   const route = useRoute<GroceryListScreenRouteProp>();
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
-  const { recipeIds } = route.params;
+  const recipeIds = route.params?.recipeIds ?? [];
 
   const [items, setItems] = useState<GroceryItemWithChecked[]>([]);
   const [recipes, setRecipes] = useState<RecipeWithIngredients[]>([]);

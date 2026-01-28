@@ -569,15 +569,6 @@ export default function PantryScreen() {
         )}
       </ScrollView>
 
-      {/* Floating Add Button */}
-      <TouchableOpacity
-        style={[styles.fab, { bottom: 24 + insets.bottom }]}
-        onPress={() => setShowAddModal(true)}
-        activeOpacity={0.9}
-      >
-        <MaterialCommunityIcons name="plus" size={28} color={mangiaColors.white} />
-      </TouchableOpacity>
-
       {/* Add Item Modal */}
       <Portal>
         <Modal
@@ -1028,23 +1019,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.semibold,
     fontSize: 16,
     color: mangiaColors.white,
-  },
-
-  // FAB
-  fab: {
-    position: 'absolute',
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: mangiaColors.terracotta,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: mangiaColors.terracotta,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
   },
 
   // Modal
