@@ -9,6 +9,9 @@ import { RequestOptions } from "../hooks/useAbortableEffect";
 
 export interface RecipeWithIngredients extends Recipe {
   ingredients: RecipeIngredient[];
+  difficulty?: string;
+  formattedTotalTime?: string;
+  servingSuggestions?: number[];
 }
 
 // API response types

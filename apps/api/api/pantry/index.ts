@@ -8,6 +8,7 @@ import { createPantryItemSchema } from "../../lib/schemas";
 import { handleError } from "../../lib/errors";
 import { db, pantryItems } from "../../db";
 import { eq, asc } from "drizzle-orm";
+import { getStockStatus, getStockLabel } from "../../lib/stock-status";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req.headers.authorization as string);
@@ -24,7 +25,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         orderBy: [asc(pantryItems.name)],
       });
 
-      return res.status(200).json({ items });
+      const enrichedItems = items.map((item) => {
+        const status = getStockStatus(item.quantity);
+        return {
+          ...item,
+          stockStatus: status,
+          stockLabel: getStockLabel(status),
+        };
+      });
+
+      return res.status(200).json({ items: enrichedItems });
     } catch (error) {
       return handleError(error, res);
     }

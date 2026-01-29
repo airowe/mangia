@@ -11,6 +11,7 @@ export interface ScannedPantryItem {
   quantity: number;
   unit: string;
   expiryDate: string | null;
+  requiresReview: boolean;
 }
 
 interface GeminiRawItem {
@@ -131,13 +132,19 @@ export async function scanPantryImage(
     return [];
   }
 
-  // Categorize each item and add confidence
-  return parsed.items.map((item) => ({
-    name: item.name,
-    category: categorizeIngredient(item.name),
-    confidence: 0.85, // Gemini doesn't return confidence scores; use a reasonable default
-    quantity: item.quantity || 1,
-    unit: item.unit || "piece",
-    expiryDate: extractExpiry ? (item.expiryDate ?? null) : null,
-  }));
+  const CONFIDENCE_THRESHOLD = 0.7;
+
+  // Categorize each item and add confidence + review flag
+  return parsed.items.map((item) => {
+    const confidence = 0.85; // Gemini doesn't return confidence scores; use a reasonable default
+    return {
+      name: item.name,
+      category: categorizeIngredient(item.name),
+      confidence,
+      quantity: item.quantity || 1,
+      unit: item.unit || "piece",
+      expiryDate: extractExpiry ? (item.expiryDate ?? null) : null,
+      requiresReview: confidence < CONFIDENCE_THRESHOLD,
+    };
+  });
 }

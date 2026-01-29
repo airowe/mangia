@@ -19,8 +19,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // GET - List meal plans for date range
   if (req.method === "GET") {
     try {
-      const { startDate, endDate } = req.query;
+      const { startDate, endDate, date, grouped } = req.query;
 
+      // Grouped mode: compute week boundaries server-side from a single date
+      if (grouped === "true" && date && typeof date === "string") {
+        const inputDate = new Date(date + "T00:00:00Z");
+        // Monday-start week: getUTCDay() returns 0=Sun, 1=Mon ... 6=Sat
+        const dayOfWeek = inputDate.getUTCDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const weekStart = new Date(inputDate);
+        weekStart.setUTCDate(weekStart.getUTCDate() + mondayOffset);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+
+        const startStr = weekStart.toISOString().split("T")[0];
+        const endStr = weekEnd.toISOString().split("T")[0];
+
+        const plans = await db.query.mealPlans.findMany({
+          where: and(
+            eq(mealPlans.userId, user.id),
+            gte(mealPlans.date, startStr),
+            lte(mealPlans.date, endStr)
+          ),
+          with: { recipe: true },
+        });
+
+        // Group by date, then by meal type
+        const days: Record<string, Record<string, unknown>> = {};
+        for (const plan of plans) {
+          if (!days[plan.date]) {
+            days[plan.date] = {};
+          }
+          const mealType = plan.mealType || "other";
+          if (mealType === "snack") {
+            if (!days[plan.date].snacks) {
+              days[plan.date].snacks = [];
+            }
+            (days[plan.date].snacks as unknown[]).push(plan);
+          } else {
+            days[plan.date][mealType] = plan;
+          }
+        }
+
+        return res.status(200).json({
+          week: { start: startStr, end: endStr },
+          days,
+        });
+      }
+
+      // Non-grouped mode: requires startDate and endDate
       if (!startDate || !endDate) {
         return res.status(400).json({ error: "startDate and endDate are required" });
       }

@@ -55,28 +55,10 @@ import { isAbortError } from "../hooks/useAbortableEffect";
 const CATEGORIES = ["All", "Dry Goods", "Spices", "Refrigerated", "Produce"] as const;
 type Category = (typeof CATEGORIES)[number];
 
-// Stock status levels
-type StockStatus = 'full' | 'medium' | 'low' | 'critical';
+// Stock status levels — status and label computed server-side on GET /api/pantry
+import type { StockStatus } from '../models/Product';
 
-// Get stock status based on quantity
-function getStockStatus(quantity: number): StockStatus {
-  if (quantity <= 1) return 'critical';
-  if (quantity <= 3) return 'low';
-  if (quantity <= 5) return 'medium';
-  return 'full';
-}
-
-// Get stock label text
-function getStockLabel(status: StockStatus): string {
-  switch (status) {
-    case 'critical': return 'Running Low';
-    case 'low': return 'Low Stock';
-    case 'medium': return 'Medium';
-    case 'full': return 'In Stock';
-  }
-}
-
-// Get stock color
+// Get stock color (UI-only mapping, kept client-side)
 function getStockColor(status: StockStatus): string {
   switch (status) {
     case 'critical': return '#EF4444'; // red
@@ -312,7 +294,7 @@ export default function PantryScreen() {
   const renderItemCard = useCallback((item: PantryItem, index: number) => {
     const shapeIndex = index % MARKET_SHAPES.length;
     const shape = MARKET_SHAPES[shapeIndex];
-    const stockStatus = getStockStatus(item.quantity || 1);
+    const stockStatus: StockStatus = item.stockStatus || 'full';
     const stockColor = getStockColor(stockStatus);
     const stockProgress = Math.min((item.quantity || 1) / 10, 1);
 
@@ -386,7 +368,7 @@ export default function PantryScreen() {
               {stockStatus === 'critical' || stockStatus === 'low' ? (
                 <View style={[styles.stockBadge, { backgroundColor: `${stockColor}15` }]}>
                   <Text style={[styles.stockBadgeText, { color: stockColor }]}>
-                    {getStockLabel(stockStatus)}
+                    {item.stockLabel || 'In Stock'}
                   </Text>
                 </View>
               ) : (

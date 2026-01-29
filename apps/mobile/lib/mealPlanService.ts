@@ -37,6 +37,30 @@ export async function fetchMealPlans(
   }
 }
 
+export interface GroupedMealPlansResponse {
+  week: { start: string; end: string };
+  days: Record<string, Record<string, MealPlan | MealPlan[]>>;
+}
+
+/**
+ * Fetch grouped meal plans for a week (server computes week boundaries)
+ */
+export async function fetchGroupedMealPlans(
+  date: string,
+  options?: RequestOptions,
+): Promise<GroupedMealPlansResponse> {
+  try {
+    const data = await apiClient.get<GroupedMealPlansResponse>(
+      `/api/meal-plans?date=${date}&grouped=true`,
+      { signal: options?.signal },
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching grouped meal plans:", error);
+    throw error;
+  }
+}
+
 /**
  * Fetch user's recipes for meal plan picker
  */

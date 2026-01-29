@@ -16,6 +16,8 @@ export interface Product {
   createdAt?: string;
 }
 
+export type StockStatus = "critical" | "low" | "medium" | "full";
+
 export interface PantryItem {
   id: string;
   userId?: string;
@@ -34,4 +36,6 @@ export interface PantryItem {
   brand?: string;
   createdAt?: string;
   updatedAt?: string;
+  stockStatus?: StockStatus;
+  stockLabel?: string;
 }

@@ -35,6 +35,7 @@ import {
 } from "../lib/groceryList";
 import { getCategoryDisplayName } from "../utils/categorizeIngredient";
 import { isAbortError } from "../hooks/useAbortableEffect";
+import { apiClient } from "../lib/api/client";
 
 type GroceryListScreenRouteProp = RouteProp<
   { params: { recipeIds: string[] } },
@@ -70,16 +71,29 @@ export default function GroceryListScreen() {
   const [showAlreadyHave, setShowAlreadyHave] = useState(false);
   const [newItemText, setNewItemText] = useState("");
 
-  // Add item manually
-  const handleAddItem = useCallback(() => {
+  // Add item manually — categorize via server, fallback to "other"
+  const handleAddItem = useCallback(async () => {
     const trimmed = newItemText.trim();
     if (!trimmed) return;
+
+    let category: IngredientCategory = "other" as IngredientCategory;
+    try {
+      const result = await apiClient.post<{ categories: { name: string; category: string }[] }>(
+        "/api/ingredients/categorize",
+        { names: [trimmed] },
+      );
+      if (result.categories?.[0]?.category) {
+        category = result.categories[0].category as IngredientCategory;
+      }
+    } catch (error) {
+      console.warn("Failed to categorize ingredient, using fallback:", error);
+    }
 
     const newItem: GroceryItemWithChecked = {
       name: trimmed,
       totalQuantity: 1,
       unit: "",
-      category: "other" as IngredientCategory,
+      category,
       fromRecipes: [],
       inPantry: false,
       pantryQuantity: 0,

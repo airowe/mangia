@@ -10,6 +10,7 @@ import { handleError } from "../../lib/errors";
 import { db, recipes, ingredients } from "../../db";
 import { eq, desc, asc, and, or, ilike, inArray, gte, lte, sql, type SQL } from "drizzle-orm";
 import { categorizeIngredient } from "../../lib/grocery-generator";
+import { getDifficulty, formatTotalTime } from "../../lib/recipe-metadata";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req.headers.authorization as string);
@@ -121,8 +122,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .where(whereClause),
       ]);
 
+      const enrichedRecipes = userRecipes.map((r) => ({
+        ...r,
+        difficulty: getDifficulty(r.prepTime, r.cookTime),
+        formattedTotalTime: formatTotalTime(r.prepTime, r.cookTime),
+      }));
+
       return res.status(200).json({
-        recipes: userRecipes,
+        recipes: enrichedRecipes,
         total: countResult[0]?.count ?? 0,
       });
     } catch (error) {

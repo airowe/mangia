@@ -24,6 +24,8 @@ import {
   MealPlan,
   MealTypeDB,
   fetchMealPlans,
+  fetchGroupedMealPlans,
+  GroupedMealPlansResponse,
   fetchRecipesForMealPlan,
   addMealToPlan,
   updateMealPlan,
@@ -81,24 +83,27 @@ const MealPlannerScreen: React.FC = () => {
     navigation.navigate("GroceryListScreen", { recipeIds: weekRecipeIds });
   }, [weekRecipeIds, navigation]);
 
-  // Fetch meal plans for the week
+  // Grouped response from server (week boundaries + day grouping)
+  const [groupedData, setGroupedData] = useState<GroupedMealPlansResponse | null>(null);
+
+  // Fetch meal plans for the week — server computes week boundaries
   const loadMealPlans = useCallback(async (signal?: AbortSignal) => {
     try {
-      // Get meal plans for the current week
-      const startOfWeek = new Date(selectedDate);
-      startOfWeek.setDate(
-        startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7),
-      );
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(endOfWeek.getDate() + 6);
-
-      const data = await fetchMealPlans(
-        startOfWeek.toISOString().split("T")[0],
-        endOfWeek.toISOString().split("T")[0],
-        { signal },
-      );
+      const data = await fetchGroupedMealPlans(selectedDate, { signal });
       if (!signal?.aborted) {
-        setMealPlans(data || []);
+        // Flatten grouped data back into mealPlans array for existing code paths
+        const flatPlans: MealPlan[] = [];
+        for (const dayMeals of Object.values(data.days)) {
+          for (const [key, value] of Object.entries(dayMeals)) {
+            if (key === "snacks" && Array.isArray(value)) {
+              flatPlans.push(...(value as MealPlan[]));
+            } else if (value && typeof value === "object" && !Array.isArray(value)) {
+              flatPlans.push(value as MealPlan);
+            }
+          }
+        }
+        setMealPlans(flatPlans);
+        setGroupedData(data);
       }
     } catch (err) {
       if (isAbortError(err)) return;
@@ -130,11 +135,22 @@ const MealPlannerScreen: React.FC = () => {
     return () => { abortController.abort(); };
   }, [loadMealPlans, loadRecipes]);
 
-  // Get meals for selected date
+  // Get meals for selected date — uses server-grouped data when available
   const getDayMeals = (): DayMeals => {
+    if (groupedData?.days?.[selectedDate]) {
+      const dayData = groupedData.days[selectedDate];
+      const meals: DayMeals = {};
+      for (const key of ["breakfast", "lunch", "dinner"] as MealTypeKey[]) {
+        if (dayData[key] && !Array.isArray(dayData[key])) {
+          meals[key] = dayData[key] as MealPlan;
+        }
+      }
+      return meals;
+    }
+
+    // Fallback to flat array filtering
     const dayPlans = mealPlans.filter((mp) => mp.date === selectedDate);
     const meals: DayMeals = {};
-
     dayPlans.forEach((plan) => {
       if (
         plan.mealType !== "snack" &&
@@ -145,7 +161,6 @@ const MealPlannerScreen: React.FC = () => {
         meals[plan.mealType] = plan;
       }
     });
-
     return meals;
   };
 

@@ -29,6 +29,7 @@ export type PantryStackParamList = {
       quantity: number;
       unit: string;
       expiryDate: string | null;
+      requiresReview: boolean;
     }[];
   };
   KitchenAlertsScreen: undefined;

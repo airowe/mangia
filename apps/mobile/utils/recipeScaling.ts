@@ -119,25 +119,4 @@ export function getScaledIngredientDisplay(
   return parts.join(' ');
 }
 
-/**
- * Calculate serving suggestions based on original servings
- */
-export function getServingSuggestions(originalServings: number): number[] {
-  const suggestions = new Set<number>();
-
-  // Always include common serving sizes
-  [1, 2, 4, 6, 8].forEach((s) => suggestions.add(s));
-
-  // Add original and nearby values
-  suggestions.add(originalServings);
-  suggestions.add(originalServings * 2);
-  if (originalServings >= 2) {
-    suggestions.add(Math.floor(originalServings / 2));
-  }
-
-  // Convert to sorted array and limit
-  return Array.from(suggestions)
-    .filter((s) => s > 0 && s <= 24)
-    .sort((a, b) => a - b)
-    .slice(0, 6);
-}
+// getServingSuggestions moved to server: GET /api/recipes/:id returns servingSuggestions[]

@@ -50,23 +50,8 @@ const FILTERS: FilterPill[] = [
   { id: "dessert", label: "Dessert" },
 ];
 
-// Get difficulty label based on cook time
-const getDifficulty = (recipe: Recipe): string => {
-  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
-  if (totalTime <= 30) return "Easy";
-  if (totalTime <= 60) return "Medium";
-  return "Hard";
-};
-
-// Format time display
-const formatTime = (recipe: Recipe): string => {
-  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
-  if (totalTime === 0) return "";
-  if (totalTime < 60) return `${totalTime} min`;
-  const hours = Math.floor(totalTime / 60);
-  const mins = totalTime % 60;
-  return mins > 0 ? `${hours} hr ${mins} min` : `${hours} hr`;
-};
+// Difficulty and formatted time are now computed server-side
+// Use recipe.difficulty and recipe.formattedTotalTime from API response
 
 export const RecipesScreen = () => {
   const navigation = useNavigation<RecipesScreenNavigationProp>();
@@ -340,16 +325,16 @@ export const RecipesScreen = () => {
                       {recipe.title}
                     </Text>
                     <View style={styles.cardMeta}>
-                      {formatTime(recipe) && (
+                      {recipe.formattedTotalTime ? (
                         <>
                           <Text style={styles.cardMetaText}>
-                            {formatTime(recipe)}
+                            {recipe.formattedTotalTime}
                           </Text>
                           <View style={styles.metaDot} />
                         </>
-                      )}
+                      ) : null}
                       <Text style={styles.cardMetaText}>
-                        {getDifficulty(recipe)}
+                        {recipe.difficulty || "Easy"}
                       </Text>
                     </View>
                   </View>

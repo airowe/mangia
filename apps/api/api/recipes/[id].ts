@@ -8,6 +8,8 @@ import { updateRecipeSchema } from "../../lib/schemas";
 import { handleError } from "../../lib/errors";
 import { db, recipes, ingredients } from "../../db";
 import { eq, and } from "drizzle-orm";
+import { getDifficulty, formatTotalTime } from "../../lib/recipe-metadata";
+import { getServingSuggestions } from "../../lib/serving-suggestions";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req.headers.authorization as string);
@@ -36,7 +38,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(404).json({ error: "Recipe not found" });
       }
 
-      return res.status(200).json({ recipe });
+      const enrichedRecipe = {
+        ...recipe,
+        difficulty: getDifficulty(recipe.prepTime, recipe.cookTime),
+        formattedTotalTime: formatTotalTime(recipe.prepTime, recipe.cookTime),
+        servingSuggestions: getServingSuggestions(recipe.servings || 4),
+      };
+
+      return res.status(200).json({ recipe: enrichedRecipe });
     } catch (error) {
       return handleError(error, res);
     }

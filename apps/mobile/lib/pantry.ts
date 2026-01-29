@@ -12,6 +12,7 @@ export interface ScannedPantryItem {
   quantity: number;
   unit: string;
   expiryDate: string | null;
+  requiresReview: boolean;
 }
 
 // Mock pantry data for dev bypass mode

@@ -61,8 +61,8 @@ export default function ConfirmScannedItemsScreen() {
       unit: item.unit,
       confidence: item.confidence,
       expiryDate: item.expiryDate,
-      status: (item.confidence >= 0.7 ? "confirmed" : "review") as ItemStatus,
-      isSelected: item.confidence >= 0.7,
+      status: (item.requiresReview === false ? "confirmed" : "review") as ItemStatus,
+      isSelected: item.requiresReview === false,
     }));
   }, [route.params]);
 
