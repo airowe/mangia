@@ -2,16 +2,17 @@
 // Kitchen alerts showing expired and expiring items
 // Design reference: expired_items_alerts/code.html
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  RefreshControl,
+  ActivityIndicator,
   Alert,
 } from "react-native";
-import { Image } from "expo-image";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import ReanimatedAnimated, { FadeIn, FadeInDown, FadeInRight } from "react-native-reanimated";
@@ -20,97 +21,108 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Screen } from "../components/Screen";
 import { mangiaColors } from "../theme/tokens/colors";
 import { fontFamily } from "../theme/tokens/typography";
+import { fetchPantryAlerts, type AlertItem } from "../lib/kitchenAlerts";
+import { removeFromPantry } from "../lib/pantry";
+import { isAbortError } from "../hooks/useAbortableEffect";
 
-// Alert item types
-interface AlertItem {
-  id: string;
-  name: string;
-  imageUrl?: string;
-  expiryText: string;
-  category: string;
-  type: "expired" | "expiring";
-}
-
-// Filter categories
-const FILTER_CATEGORIES = ["All", "Dairy", "Produce", "Pantry", "Proteins"];
-
-// Mock data for alerts
-const MOCK_EXPIRED: AlertItem[] = [
-  {
-    id: "1",
-    name: "Greek Yogurt",
-    expiryText: "Yesterday",
-    category: "Dairy",
-    type: "expired",
-  },
-  {
-    id: "2",
-    name: "Heavy Cream",
-    expiryText: "2 days ago",
-    category: "Dairy",
-    type: "expired",
-  },
-];
-
-const MOCK_EXPIRING: AlertItem[] = [
-  {
-    id: "3",
-    name: "Parmesan Cheese",
-    expiryText: "In 3 Days",
-    category: "Dairy",
-    type: "expiring",
-  },
-  {
-    id: "4",
-    name: "Basil Bundle",
-    expiryText: "Tomorrow",
-    category: "Produce",
-    type: "expiring",
-  },
-  {
-    id: "5",
-    name: "Ground Beef",
-    expiryText: "In 2 Days",
-    category: "Proteins",
-    type: "expiring",
-  },
+// Filter categories: display label → DB category value
+const FILTER_CATEGORIES: { label: string; value: string | null }[] = [
+  { label: "All", value: null },
+  { label: "Dairy", value: "dairy_eggs" },
+  { label: "Produce", value: "produce" },
+  { label: "Pantry", value: "pantry" },
+  { label: "Proteins", value: "meat_seafood" },
 ];
 
 export default function KitchenAlertsScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [expiredItems, setExpiredItems] = useState<AlertItem[]>(MOCK_EXPIRED);
-  const [expiringItems, setExpiringItems] = useState<AlertItem[]>(MOCK_EXPIRING);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [expiredItems, setExpiredItems] = useState<AlertItem[]>([]);
+  const [expiringItems, setExpiringItems] = useState<AlertItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadAlerts = useCallback(
+    async (category: string | null, signal?: AbortSignal) => {
+      try {
+        const params = category ? { category } : {};
+        const result = await fetchPantryAlerts(params, { signal });
+        if (!signal?.aborted) {
+          setExpiredItems(result.expired);
+          setExpiringItems(result.expiring);
+        }
+      } catch (err) {
+        if (isAbortError(err)) return;
+        console.error("Failed to load alerts:", err);
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    },
+    []
+  );
+
+  // Fetch on mount and when filter changes
+  useEffect(() => {
+    setLoading(true);
+    const abortController = new AbortController();
+    loadAlerts(activeFilter, abortController.signal);
+    return () => { abortController.abort(); };
+  }, [activeFilter, loadAlerts]);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadAlerts(activeFilter);
+  }, [activeFilter, loadAlerts]);
 
   const handleBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
 
   const handleClearAll = useCallback(() => {
+    if (expiredItems.length === 0) return;
     Alert.alert(
-      "Clear All Alerts",
-      "Are you sure you want to clear all alerts?",
+      "Remove Expired Items",
+      `Remove ${expiredItems.length} expired item${expiredItems.length > 1 ? "s" : ""} from your pantry?`,
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Clear All",
+          text: "Remove All",
           style: "destructive",
-          onPress: () => {
-            setExpiredItems([]);
-            setExpiringItems([]);
+          onPress: async () => {
+            setLoading(true);
+            // Delete sequentially to avoid overwhelming the server
+            let failures = 0;
+            for (const item of expiredItems) {
+              try {
+                await removeFromPantry(item.id);
+              } catch {
+                failures++;
+              }
+            }
+            if (failures > 0) {
+              Alert.alert("Error", `Failed to remove ${failures} item${failures > 1 ? "s" : ""}`);
+            }
+            loadAlerts(activeFilter);
           },
         },
       ]
     );
-  }, []);
+  }, [expiredItems, activeFilter, loadAlerts]);
 
-  const handleDeleteItem = useCallback((itemId: string, type: "expired" | "expiring") => {
-    if (type === "expired") {
+  const handleDeleteItem = useCallback(async (itemId: string) => {
+    try {
+      await removeFromPantry(itemId);
+      // Optimistic removal from local state
       setExpiredItems((prev) => prev.filter((i) => i.id !== itemId));
-    } else {
       setExpiringItems((prev) => prev.filter((i) => i.id !== itemId));
+    } catch (err) {
+      console.error("Failed to delete item:", err);
+      Alert.alert("Error", "Failed to remove item from pantry");
     }
   }, []);
 
@@ -122,14 +134,6 @@ export default function KitchenAlertsScreen() {
     // TODO: Navigate to recipes using this ingredient
     Alert.alert("Find Recipes", `Finding recipes for ${item.name}...`);
   }, []);
-
-  const filteredExpired = activeFilter === "All"
-    ? expiredItems
-    : expiredItems.filter((i) => i.category === activeFilter);
-
-  const filteredExpiring = activeFilter === "All"
-    ? expiringItems
-    : expiringItems.filter((i) => i.category === activeFilter);
 
   const renderExpiredCard = useCallback((item: AlertItem, index: number) => (
     <ReanimatedAnimated.View
@@ -172,7 +176,7 @@ export default function KitchenAlertsScreen() {
         <View style={styles.cardActions}>
           <TouchableOpacity
             style={styles.deleteButton}
-            onPress={() => handleDeleteItem(item.id, "expired")}
+            onPress={() => handleDeleteItem(item.id)}
           >
             <MaterialCommunityIcons
               name="delete-outline"
@@ -275,25 +279,25 @@ export default function KitchenAlertsScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterContainer}
         >
-          {FILTER_CATEGORIES.map((category, index) => (
+          {FILTER_CATEGORIES.map((filter, index) => (
             <ReanimatedAnimated.View
-              key={category}
+              key={filter.label}
               entering={FadeInRight.delay(index * 50).duration(200)}
             >
               <TouchableOpacity
                 style={[
                   styles.filterPill,
-                  activeFilter === category && styles.filterPillActive,
+                  activeFilter === filter.value && styles.filterPillActive,
                 ]}
-                onPress={() => setActiveFilter(category)}
+                onPress={() => setActiveFilter(filter.value)}
               >
                 <Text
                   style={[
                     styles.filterPillText,
-                    activeFilter === category && styles.filterPillTextActive,
+                    activeFilter === filter.value && styles.filterPillTextActive,
                   ]}
                 >
-                  {category}
+                  {filter.label}
                 </Text>
               </TouchableOpacity>
             </ReanimatedAnimated.View>
@@ -309,9 +313,22 @@ export default function KitchenAlertsScreen() {
           { paddingBottom: insets.bottom + 100 },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={mangiaColors.terracotta}
+          />
+        }
       >
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={mangiaColors.terracotta} />
+          </View>
+        ) : (
+        <>
         {/* Expired Section */}
-        {filteredExpired.length > 0 && (
+        {expiredItems.length > 0 && (
           <ReanimatedAnimated.View
             entering={FadeInDown.delay(100).duration(400)}
             style={styles.section}
@@ -321,13 +338,13 @@ export default function KitchenAlertsScreen() {
               <Text style={styles.sectionSubtitleExpired}>Action required</Text>
             </View>
             <View style={styles.cardList}>
-              {filteredExpired.map(renderExpiredCard)}
+              {expiredItems.map(renderExpiredCard)}
             </View>
           </ReanimatedAnimated.View>
         )}
 
         {/* Expiring Soon Section */}
-        {filteredExpiring.length > 0 && (
+        {expiringItems.length > 0 && (
           <ReanimatedAnimated.View
             entering={FadeInDown.delay(200).duration(400)}
             style={styles.section}
@@ -337,13 +354,13 @@ export default function KitchenAlertsScreen() {
               <Text style={styles.sectionSubtitleExpiring}>Plan ahead</Text>
             </View>
             <View style={styles.cardList}>
-              {filteredExpiring.map(renderExpiringCard)}
+              {expiringItems.map(renderExpiringCard)}
             </View>
           </ReanimatedAnimated.View>
         )}
 
         {/* Empty State */}
-        {filteredExpired.length === 0 && filteredExpiring.length === 0 && (
+        {expiredItems.length === 0 && expiringItems.length === 0 && (
           <ReanimatedAnimated.View
             entering={FadeIn.delay(300).duration(400)}
             style={styles.emptyState}
@@ -358,6 +375,9 @@ export default function KitchenAlertsScreen() {
               No expired or expiring items in your pantry.
             </Text>
           </ReanimatedAnimated.View>
+        )}
+
+        </>
         )}
 
         {/* Bottom spacer illustration */}
@@ -462,6 +482,14 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+
+  // Loading
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 64,
   },
 
   // Sections
