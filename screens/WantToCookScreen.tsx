@@ -40,6 +40,7 @@ import {
   RecipeWithIngredients,
 } from '../lib/recipeService';
 import { SAMPLE_RECIPES, SampleRecipe } from '../lib/sampleRecipes';
+import { isAbortError } from '../hooks/useAbortableEffect';
 
 type RootStackParamList = {
   ImportRecipeScreen: undefined;
@@ -61,21 +62,30 @@ export const WantToCookScreen: React.FC = () => {
   const [isLoadingSamples, setIsLoadingSamples] = useState(false);
 
   // Load recipes with status = 'want_to_cook'
-  const loadRecipes = useCallback(async () => {
+  const loadRecipes = useCallback(async (signal?: AbortSignal) => {
     try {
-      const data = await fetchRecipesByStatus('want_to_cook');
-      setRecipes(data);
+      const data = await fetchRecipesByStatus('want_to_cook', { signal });
+      if (!signal?.aborted) {
+        setRecipes(data);
+      }
     } catch (error) {
+      if (isAbortError(error)) return;
       console.error('Error loading recipes:', error);
-      Alert.alert('Error', 'Failed to load recipes');
+      if (!signal?.aborted) {
+        Alert.alert('Error', 'Failed to load recipes');
+      }
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      if (!signal?.aborted) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    loadRecipes();
+    const abortController = new AbortController();
+    loadRecipes(abortController.signal);
+    return () => { abortController.abort(); };
   }, [loadRecipes]);
 
   const handleRefresh = useCallback(() => {

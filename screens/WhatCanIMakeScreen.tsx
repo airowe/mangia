@@ -26,6 +26,7 @@ import { mangiaColors } from "../theme/tokens/colors";
 import { fontFamily } from "../theme/tokens/typography";
 import { RecipeMatch, findRecipeMatches } from "../lib/whatCanIMake";
 import { usePremiumFeature } from "../hooks/usePremiumFeature";
+import { isAbortError } from "../hooks/useAbortableEffect";
 
 type RootStackParamList = {
   RecipeDetailScreen: { recipeId: string };
@@ -61,24 +62,33 @@ export const WhatCanIMakeScreen: React.FC = () => {
     }
   }, [isPremium, requirePremium]);
 
-  const loadMatches = useCallback(async () => {
+  const loadMatches = useCallback(async (signal?: AbortSignal) => {
     if (!isPremium) return;
 
     try {
       setError(null);
-      const results = await findRecipeMatches(0);
-      setMatches(results.filter((m) => m.matchPercentage > 0));
+      const results = await findRecipeMatches(0, { signal });
+      if (!signal?.aborted) {
+        setMatches(results.filter((m) => m.matchPercentage > 0));
+      }
     } catch (err) {
+      if (isAbortError(err)) return;
       console.error("Error loading matches:", err);
-      setError("Failed to load recipe matches. Please try again.");
+      if (!signal?.aborted) {
+        setError("Failed to load recipe matches. Please try again.");
+      }
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      if (!signal?.aborted) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
   }, [isPremium]);
 
   useEffect(() => {
-    loadMatches();
+    const abortController = new AbortController();
+    loadMatches(abortController.signal);
+    return () => { abortController.abort(); };
   }, [loadMatches]);
 
   const handleRefresh = useCallback(() => {

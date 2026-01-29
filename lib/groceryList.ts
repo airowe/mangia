@@ -4,6 +4,7 @@ import { ConsolidatedIngredient, GroceryList, GroceryItem } from '../models/Groc
 import { fetchPantryItems } from './pantry';
 import { categorizeIngredient, getCategoryOrder } from '../utils/categorizeIngredient';
 import { apiClient } from './api/client';
+import { RequestOptions } from '../hooks/useAbortableEffect';
 
 /**
  * Generates a consolidated grocery list from selected recipes
@@ -160,9 +161,14 @@ export async function createGroceryList(
 /**
  * Gets all grocery lists for the current user
  */
-export async function getGroceryLists(): Promise<GroceryList[]> {
+export async function getGroceryLists(
+  options?: RequestOptions,
+): Promise<GroceryList[]> {
   try {
-    const data = await apiClient.get<GroceryList[]>('/api/grocery-lists');
+    const data = await apiClient.get<GroceryList[]>(
+      '/api/grocery-lists',
+      { signal: options?.signal }
+    );
     return data || [];
   } catch (error) {
     console.error('Error fetching grocery lists:', error);
@@ -173,13 +179,17 @@ export async function getGroceryLists(): Promise<GroceryList[]> {
 /**
  * Gets a grocery list with all its items
  */
-export async function getGroceryListWithItems(listId: string): Promise<{
+export async function getGroceryListWithItems(
+  listId: string,
+  options?: RequestOptions,
+): Promise<{
   list: GroceryList;
   items: GroceryItem[];
 }> {
   try {
     const data = await apiClient.get<{ list: GroceryList; items: GroceryItem[] }>(
-      `/api/grocery-lists/${listId}`
+      `/api/grocery-lists/${listId}`,
+      { signal: options?.signal }
     );
     return data;
   } catch (error) {

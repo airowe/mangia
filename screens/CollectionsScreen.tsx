@@ -29,6 +29,7 @@ import {
   createCollection,
   deleteCollection,
 } from '../lib/collectionService';
+import { isAbortError } from '../hooks/useAbortableEffect';
 
 type RootStackParamList = {
   CollectionDetail: { id: string; name: string };
@@ -51,23 +52,32 @@ export default function CollectionsScreen() {
   const [selectedColor, setSelectedColor] = useState<CollectionColor>('#CC5500');
   const [isCreating, setIsCreating] = useState(false);
 
-  const loadCollections = useCallback(async () => {
+  const loadCollections = useCallback(async (signal?: AbortSignal) => {
     try {
-      const data = await fetchCollections();
-      setCollections(data);
+      const data = await fetchCollections({ signal });
+      if (!signal?.aborted) {
+        setCollections(data);
+      }
     } catch (error) {
+      if (isAbortError(error)) return;
       console.error('Error loading collections:', error);
-      Alert.alert('Error', 'Failed to load collections');
+      if (!signal?.aborted) {
+        Alert.alert('Error', 'Failed to load collections');
+      }
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      if (!signal?.aborted) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
   }, []);
 
   // Refresh on screen focus
   useFocusEffect(
     useCallback(() => {
-      loadCollections();
+      const abortController = new AbortController();
+      loadCollections(abortController.signal);
+      return () => { abortController.abort(); };
     }, [loadCollections])
   );
 

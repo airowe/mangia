@@ -7,13 +7,19 @@ import {
   CollectionWithCount,
   CollectionWithRecipes,
 } from '../models/Collection';
+import { RequestOptions } from '../hooks/useAbortableEffect';
 
 /**
  * Fetch all collections for the current user with recipe counts
  */
-export async function fetchCollections(): Promise<CollectionWithCount[]> {
+export async function fetchCollections(
+  options?: RequestOptions,
+): Promise<CollectionWithCount[]> {
   try {
-    const data = await apiClient.get<CollectionWithCount[]>('/api/collections');
+    const data = await apiClient.get<CollectionWithCount[]>(
+      '/api/collections',
+      { signal: options?.signal }
+    );
     return data || [];
   } catch (error) {
     console.error('Error fetching collections:', error);
@@ -24,9 +30,15 @@ export async function fetchCollections(): Promise<CollectionWithCount[]> {
 /**
  * Fetch a single collection by ID with full recipe details
  */
-export async function fetchCollectionById(id: string): Promise<CollectionWithRecipes | null> {
+export async function fetchCollectionById(
+  id: string,
+  options?: RequestOptions,
+): Promise<CollectionWithRecipes | null> {
   try {
-    const data = await apiClient.get<CollectionWithRecipes>(`/api/collections/${id}`);
+    const data = await apiClient.get<CollectionWithRecipes>(
+      `/api/collections/${id}`,
+      { signal: options?.signal }
+    );
     return data || null;
   } catch (error) {
     console.error('Error fetching collection:', error);

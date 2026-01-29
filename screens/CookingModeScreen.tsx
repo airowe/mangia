@@ -34,6 +34,7 @@ import { Feather } from '@expo/vector-icons';
 
 import { mangiaColors } from '../theme/tokens/colors';
 import { fetchRecipeById, RecipeWithIngredients, markAsCooked } from '../lib/recipeService';
+import { isAbortError } from '../hooks/useAbortableEffect';
 
 // Cooking components
 import {
@@ -124,19 +125,28 @@ export default function CookingModeScreen() {
 
   // Load recipe
   useEffect(() => {
+    const abortController = new AbortController();
     const load = async () => {
       try {
-        const data = await fetchRecipeById(recipeId);
-        setRecipe(data);
+        const data = await fetchRecipeById(recipeId, { signal: abortController.signal });
+        if (!abortController.signal.aborted) {
+          setRecipe(data);
+        }
       } catch (error) {
+        if (isAbortError(error)) return;
         console.error('Error loading recipe:', error);
-        Alert.alert('Error', 'Failed to load recipe');
-        navigation.goBack();
+        if (!abortController.signal.aborted) {
+          Alert.alert('Error', 'Failed to load recipe');
+          navigation.goBack();
+        }
       } finally {
-        setLoading(false);
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
     load();
+    return () => { abortController.abort(); };
   }, [recipeId, navigation]);
 
   const totalSteps = recipe?.instructions?.length || 0;

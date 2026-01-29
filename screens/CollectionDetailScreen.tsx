@@ -24,6 +24,7 @@ import {
   deleteCollection,
   removeRecipeFromCollection,
 } from '../lib/collectionService';
+import { isAbortError } from '../hooks/useAbortableEffect';
 
 type RouteParams = {
   params: { id: string; name: string };
@@ -49,23 +50,32 @@ export default function CollectionDetailScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
-  const loadCollection = useCallback(async () => {
+  const loadCollection = useCallback(async (signal?: AbortSignal) => {
     try {
-      const data = await fetchCollectionById(id);
-      setCollection(data);
+      const data = await fetchCollectionById(id, { signal });
+      if (!signal?.aborted) {
+        setCollection(data);
+      }
     } catch (error) {
+      if (isAbortError(error)) return;
       console.error('Error loading collection:', error);
-      Alert.alert('Error', 'Failed to load collection');
+      if (!signal?.aborted) {
+        Alert.alert('Error', 'Failed to load collection');
+      }
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      if (!signal?.aborted) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
   }, [id]);
 
   // Refresh on focus
   useFocusEffect(
     useCallback(() => {
-      loadCollection();
+      const abortController = new AbortController();
+      loadCollection(abortController.signal);
+      return () => { abortController.abort(); };
     }, [loadCollection])
   );
 

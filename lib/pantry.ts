@@ -2,6 +2,7 @@ import { PantryItem } from "../models/Product";
 import { apiClient } from "./api/client";
 import { ApiResponse } from "./api/client";
 import { DEV_BYPASS_AUTH } from "./devConfig";
+import { RequestOptions } from "../hooks/useAbortableEffect";
 
 // Mock pantry data for dev bypass mode
 const MOCK_PANTRY_ITEMS: PantryItem[] = [
@@ -137,7 +138,9 @@ export const addToPantry = async (
 };
 
 // Fetch user's pantry items
-export const fetchPantryItems = async (): Promise<PantryItem[]> => {
+export const fetchPantryItems = async (
+  options?: RequestOptions,
+): Promise<PantryItem[]> => {
   // Use mock data in dev bypass mode
   console.log('[Pantry] DEV_BYPASS_AUTH:', DEV_BYPASS_AUTH);
   if (DEV_BYPASS_AUTH) {
@@ -148,7 +151,10 @@ export const fetchPantryItems = async (): Promise<PantryItem[]> => {
 
   console.log('[Pantry] Fetching from API...');
   try {
-    const response = await apiClient.get<PantryItem[]>("/api/pantry");
+    const response = await apiClient.get<PantryItem[]>(
+      "/api/pantry",
+      { signal: options?.signal }
+    );
     return response || [];
   } catch (error) {
     console.error("Error fetching pantry items:", error);

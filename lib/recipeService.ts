@@ -5,6 +5,7 @@ import { apiClient } from "./api/client";
 import { mockApi } from "./api/mockData";
 import { Recipe, RecipeIngredient, RecipeStatus } from "../models/Recipe";
 import { DEV_BYPASS_AUTH } from "./devConfig";
+import { RequestOptions } from "../hooks/useAbortableEffect";
 
 export interface RecipeWithIngredients extends Recipe {
   ingredients: RecipeIngredient[];
@@ -24,6 +25,7 @@ interface RecipeResponse {
  */
 export async function fetchRecipesByStatus(
   status: RecipeStatus,
+  options?: RequestOptions,
 ): Promise<RecipeWithIngredients[]> {
   // Use mock data in dev bypass mode
   if (DEV_BYPASS_AUTH) {
@@ -33,7 +35,8 @@ export async function fetchRecipesByStatus(
 
   try {
     const response = await apiClient.get<RecipesResponse>(
-      `/api/recipes?status=${status}`
+      `/api/recipes?status=${status}`,
+      { signal: options?.signal }
     );
     return response.recipes || [];
   } catch (error) {
@@ -45,7 +48,9 @@ export async function fetchRecipesByStatus(
 /**
  * Fetch all recipes for the current user
  */
-export async function fetchAllUserRecipes(): Promise<RecipeWithIngredients[]> {
+export async function fetchAllUserRecipes(
+  options?: RequestOptions,
+): Promise<RecipeWithIngredients[]> {
   // Use mock data in dev bypass mode
   if (DEV_BYPASS_AUTH) {
     await simulateDelay();
@@ -53,7 +58,10 @@ export async function fetchAllUserRecipes(): Promise<RecipeWithIngredients[]> {
   }
 
   try {
-    const response = await apiClient.get<RecipesResponse>('/api/recipes');
+    const response = await apiClient.get<RecipesResponse>(
+      '/api/recipes',
+      { signal: options?.signal }
+    );
     return response.recipes || [];
   } catch (error) {
     console.error("Error fetching recipes:", error);
@@ -66,6 +74,7 @@ export async function fetchAllUserRecipes(): Promise<RecipeWithIngredients[]> {
  */
 export async function fetchRecipeById(
   recipeId: string,
+  options?: RequestOptions,
 ): Promise<RecipeWithIngredients | null> {
   // Use mock data in dev bypass mode
   if (DEV_BYPASS_AUTH) {
@@ -74,7 +83,10 @@ export async function fetchRecipeById(
   }
 
   try {
-    const response = await apiClient.get<RecipeResponse>(`/api/recipes/${recipeId}`);
+    const response = await apiClient.get<RecipeResponse>(
+      `/api/recipes/${recipeId}`,
+      { signal: options?.signal }
+    );
     return response.recipe || null;
   } catch (error) {
     console.error("Error fetching recipe:", error);
@@ -149,6 +161,7 @@ export async function restoreRecipe(recipeId: string): Promise<void> {
  */
 export async function searchRecipes(
   query: string,
+  options?: RequestOptions,
 ): Promise<RecipeWithIngredients[]> {
   // Use mock data in dev bypass mode
   if (DEV_BYPASS_AUTH) {
@@ -158,7 +171,8 @@ export async function searchRecipes(
 
   try {
     const response = await apiClient.get<RecipesResponse>(
-      `/api/recipes?search=${encodeURIComponent(query)}`
+      `/api/recipes?search=${encodeURIComponent(query)}`,
+      { signal: options?.signal }
     );
     return response.recipes || [];
   } catch (error) {
@@ -196,7 +210,8 @@ export async function createRecipe(
  * Fetch recently added recipes
  */
 export async function getRecentRecipes(
-  limit: number = 5
+  limit: number = 5,
+  options?: RequestOptions,
 ): Promise<RecipeWithIngredients[]> {
   // Use mock data in dev bypass mode
   if (DEV_BYPASS_AUTH) {
@@ -214,7 +229,8 @@ export async function getRecentRecipes(
 
   try {
     const response = await apiClient.get<RecipesResponse>(
-      `/api/recipes?limit=${limit}&sort=created_at:desc`
+      `/api/recipes?limit=${limit}&sort=created_at:desc`,
+      { signal: options?.signal }
     );
     return response.recipes || [];
   } catch (error) {

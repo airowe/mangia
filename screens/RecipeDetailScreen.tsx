@@ -7,7 +7,7 @@
  * Reference: /ui-redesign/screens/recipe_detail.html
  */
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -51,6 +51,7 @@ import {
   getCollectionsForRecipe,
 } from '../lib/collectionService';
 import { shareRecipe, shareIngredients } from '../lib/recipeSharing';
+import { isAbortError } from '../hooks/useAbortableEffect';
 
 // Recipe components
 import {
@@ -93,22 +94,31 @@ export default function RecipeDetailScreen() {
   const [isAddingToCollection, setIsAddingToCollection] = useState(false);
   const [moreMenuVisible, setMoreMenuVisible] = useState(false);
 
-  const loadRecipe = useCallback(async () => {
+  const loadRecipe = useCallback(async (signal?: AbortSignal) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchRecipeById(recipeId);
-      setRecipe(data);
+      const data = await fetchRecipeById(recipeId, { signal });
+      if (!signal?.aborted) {
+        setRecipe(data);
+      }
     } catch (err) {
+      if (isAbortError(err)) return;
       console.error('Failed to load recipe:', err);
-      setError('Failed to load recipe. Please try again.');
+      if (!signal?.aborted) {
+        setError('Failed to load recipe. Please try again.');
+      }
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }, [recipeId]);
 
   useEffect(() => {
-    loadRecipe();
+    const abortController = new AbortController();
+    loadRecipe(abortController.signal);
+    return () => { abortController.abort(); };
   }, [loadRecipe]);
 
   // Set initial servings when recipe loads
@@ -337,7 +347,7 @@ export default function RecipeDetailScreen() {
       <Screen>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error || 'Recipe not found'}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadRecipe}>
+          <TouchableOpacity style={styles.retryButton} onPress={() => loadRecipe()}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>

@@ -3,6 +3,7 @@
 
 import { apiClient } from "./api/client";
 import { Recipe } from "../models/Recipe";
+import { RequestOptions } from "../hooks/useAbortableEffect";
 
 export type MealTypeDB = "breakfast" | "lunch" | "dinner" | "snack";
 
@@ -22,10 +23,12 @@ export interface MealPlan {
 export async function fetchMealPlans(
   startDate: string,
   endDate: string,
+  options?: RequestOptions,
 ): Promise<MealPlan[]> {
   try {
     const data = await apiClient.get<MealPlan[]>(
       `/api/meal-plans?startDate=${startDate}&endDate=${endDate}`,
+      { signal: options?.signal },
     );
     return data || [];
   } catch (error) {
@@ -37,9 +40,14 @@ export async function fetchMealPlans(
 /**
  * Fetch user's recipes for meal plan picker
  */
-export async function fetchRecipesForMealPlan(): Promise<Recipe[]> {
+export async function fetchRecipesForMealPlan(
+  options?: RequestOptions,
+): Promise<Recipe[]> {
   try {
-    const data = await apiClient.get<Recipe[]>("/api/recipes");
+    const data = await apiClient.get<Recipe[]>(
+      "/api/recipes",
+      { signal: options?.signal },
+    );
     return data || [];
   } catch (error) {
     console.error("Error fetching recipes:", error);

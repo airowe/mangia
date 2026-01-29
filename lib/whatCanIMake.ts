@@ -5,6 +5,7 @@ import { RecipeWithIngredients, fetchAllUserRecipes } from "./recipeService";
 import { fetchPantryItems } from "./pantry";
 import { PantryItem } from "../models/Product";
 import { RecipeIngredient } from "../models/Recipe";
+import { RequestOptions } from "../hooks/useAbortableEffect";
 
 export interface RecipeMatch {
   recipe: RecipeWithIngredients;
@@ -123,12 +124,13 @@ function findPantryMatch(
  * Calculate recipe matches based on pantry contents
  */
 export async function findRecipeMatches(
-  minMatchPercentage: number = 0
+  minMatchPercentage: number = 0,
+  options?: RequestOptions,
 ): Promise<RecipeMatch[]> {
   // Fetch recipes and pantry items
   const [recipes, pantryItems] = await Promise.all([
-    fetchAllUserRecipes(),
-    fetchPantryItems(),
+    fetchAllUserRecipes(options),
+    fetchPantryItems(options),
   ]);
 
   const matches: RecipeMatch[] = [];

@@ -34,6 +34,7 @@ import {
   generateGroceryList,
 } from "../lib/groceryList";
 import { getCategoryDisplayName } from "../utils/categorizeIngredient";
+import { isAbortError } from "../hooks/useAbortableEffect";
 
 type GroceryListScreenRouteProp = RouteProp<
   { params: { recipeIds: string[] } },
@@ -92,7 +93,7 @@ export default function GroceryListScreen() {
   }, [newItemText]);
 
   // Load recipes and generate grocery list
-  const loadGroceryList = useCallback(async () => {
+  const loadGroceryList = useCallback(async (signal?: AbortSignal) => {
     // If no recipe IDs, skip loading and show empty state
     if (recipeIds.length === 0) {
       setIsLoading(false);
@@ -100,14 +101,18 @@ export default function GroceryListScreen() {
     }
 
     try {
-      const recipePromises = recipeIds.map((id) => fetchRecipeById(id));
+      const recipePromises = recipeIds.map((id) => fetchRecipeById(id, { signal }));
       const fetchedRecipes = await Promise.all(recipePromises);
+      if (signal?.aborted) return;
+
       const validRecipes = fetchedRecipes.filter(
         (r): r is RecipeWithIngredients => r !== null
       );
       setRecipes(validRecipes);
 
       const consolidated = await generateGroceryList(validRecipes);
+      if (signal?.aborted) return;
+
       const itemsWithChecked = consolidated.map((item) => ({
         ...item,
         checked: false,
@@ -115,16 +120,23 @@ export default function GroceryListScreen() {
 
       setItems(itemsWithChecked);
     } catch (error) {
+      if (isAbortError(error)) return;
       console.error("Error loading grocery list:", error);
-      Alert.alert("Error", "Failed to generate grocery list");
+      if (!signal?.aborted) {
+        Alert.alert("Error", "Failed to generate grocery list");
+      }
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      if (!signal?.aborted) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
   }, [recipeIds]);
 
   useEffect(() => {
-    loadGroceryList();
+    const abortController = new AbortController();
+    loadGroceryList(abortController.signal);
+    return () => { abortController.abort(); };
   }, [loadGroceryList]);
 
   const handleRefresh = useCallback(() => {

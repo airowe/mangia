@@ -23,6 +23,7 @@ import { mangiaColors } from "../theme/tokens/colors";
 import { fontFamily } from "../theme/tokens/typography";
 import { RecipeLibraryStackParamList } from "../navigation/RecipeLibraryStack";
 import { RecipeWithIngredients } from "../lib/recipeService";
+import { isAbortError } from "../hooks/useAbortableEffect";
 
 type RecipesScreenNavigationProp = NativeStackNavigationProp<
   RecipeLibraryStackParamList,
@@ -78,22 +79,29 @@ export const RecipesScreen = () => {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [searchFocused, setSearchFocused] = useState(false);
 
-  const loadRecipes = useCallback(async () => {
+  const loadRecipes = useCallback(async (signal?: AbortSignal) => {
     try {
       // Load all recipes (not filtered by status for the library view)
-      const allRecipes = await fetchRecipesByStatus("want_to_cook");
-      const cookedRecipes = await fetchRecipesByStatus("cooked");
-      setRecipes([...allRecipes, ...cookedRecipes]);
+      const allRecipes = await fetchRecipesByStatus("want_to_cook", { signal });
+      const cookedRecipes = await fetchRecipesByStatus("cooked", { signal });
+      if (!signal?.aborted) {
+        setRecipes([...allRecipes, ...cookedRecipes]);
+      }
     } catch (err) {
+      if (isAbortError(err)) return;
       console.error("Failed to load recipes:", err);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    loadRecipes();
+    const abortController = new AbortController();
+    loadRecipes(abortController.signal);
+    return () => { abortController.abort(); };
   }, [loadRecipes]);
 
   const handleRefresh = () => {

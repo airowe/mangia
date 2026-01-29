@@ -29,6 +29,7 @@ import {
   updateMealPlan,
   removeMealFromPlan,
 } from "../lib/mealPlanService";
+import { isAbortError } from "../hooks/useAbortableEffect";
 
 type RootStackParamList = {
   MealPlannerScreen: undefined;
@@ -81,7 +82,7 @@ const MealPlannerScreen: React.FC = () => {
   }, [weekRecipeIds, navigation]);
 
   // Fetch meal plans for the week
-  const loadMealPlans = useCallback(async () => {
+  const loadMealPlans = useCallback(async (signal?: AbortSignal) => {
     try {
       // Get meal plans for the current week
       const startOfWeek = new Date(selectedDate);
@@ -94,28 +95,39 @@ const MealPlannerScreen: React.FC = () => {
       const data = await fetchMealPlans(
         startOfWeek.toISOString().split("T")[0],
         endOfWeek.toISOString().split("T")[0],
+        { signal },
       );
-      setMealPlans(data || []);
+      if (!signal?.aborted) {
+        setMealPlans(data || []);
+      }
     } catch (err) {
+      if (isAbortError(err)) return;
       console.error("Error fetching meal plans:", err);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }, [selectedDate]);
 
   // Fetch user's recipes for the picker
-  const loadRecipes = useCallback(async () => {
+  const loadRecipes = useCallback(async (signal?: AbortSignal) => {
     try {
-      const data = await fetchRecipesForMealPlan();
-      setRecipes(data || []);
+      const data = await fetchRecipesForMealPlan({ signal });
+      if (!signal?.aborted) {
+        setRecipes(data || []);
+      }
     } catch (err) {
+      if (isAbortError(err)) return;
       console.error("Error fetching recipes:", err);
     }
   }, []);
 
   useEffect(() => {
-    loadMealPlans();
-    loadRecipes();
+    const abortController = new AbortController();
+    loadMealPlans(abortController.signal);
+    loadRecipes(abortController.signal);
+    return () => { abortController.abort(); };
   }, [loadMealPlans, loadRecipes]);
 
   // Get meals for selected date

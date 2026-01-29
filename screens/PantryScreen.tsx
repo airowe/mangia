@@ -2,7 +2,7 @@
 // Pantry management - track ingredients you have at home
 // Editorial design with "market-shape" asymmetric cards
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -49,6 +49,7 @@ import {
   removeFromPantry,
 } from "../lib/pantry";
 import { DEV_BYPASS_AUTH } from "../lib/devConfig";
+import { isAbortError } from "../hooks/useAbortableEffect";
 
 // Storage locations / categories
 const CATEGORIES = ["All", "Dry Goods", "Spices", "Refrigerated", "Produce"] as const;
@@ -116,21 +117,30 @@ export default function PantryScreen() {
   });
 
   // Load pantry items
-  const loadPantry = useCallback(async () => {
+  const loadPantry = useCallback(async (signal?: AbortSignal) => {
     try {
-      const data = await fetchPantryItems();
-      setItems(data);
+      const data = await fetchPantryItems({ signal });
+      if (!signal?.aborted) {
+        setItems(data);
+      }
     } catch (error) {
+      if (isAbortError(error)) return;
       console.error("Error loading pantry:", error);
-      Alert.alert("Error", "Failed to load pantry items");
+      if (!signal?.aborted) {
+        Alert.alert("Error", "Failed to load pantry items");
+      }
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      if (!signal?.aborted) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    loadPantry();
+    const abortController = new AbortController();
+    loadPantry(abortController.signal);
+    return () => { abortController.abort(); };
   }, [loadPantry]);
 
   // Refresh handler

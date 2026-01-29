@@ -265,8 +265,10 @@ export const HomeScreen: React.FC = () => {
   }, [pagination.page, pagination.totalPages, loadProducts]);
 
   useEffect(() => {
+    const abortController = new AbortController();
     loadProducts(1);
     loadPantryItems();
+    return () => { abortController.abort(); };
   }, [loadProducts, loadPantryItems]);
 
   // Show loading indicator while pantry is loading
