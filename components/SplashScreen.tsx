@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { ActivityIndicator } from 'react-native-paper';
 import { colors } from '../theme/colors';
@@ -8,13 +8,13 @@ const SplashScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
-        <Animated.View style={styles.logoBackground}>
+        <View style={styles.logoBackground}>
           <Image
             source={require('../../assets/icon.png')}
             style={styles.logo}
             contentFit="contain"
           />
-        </Animated.View>
+        </View>
       </View>
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />

@@ -4,11 +4,14 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   Platform,
-  StyleProp,
-  ViewStyle,
 } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  interpolate,
+  Extrapolate,
+  SharedValue,
+} from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -27,28 +30,18 @@ type RootStackParamList = {
 interface CustomHeaderProps {
   showBackButton?: boolean;
   title?: string;
-  scrollY?: Animated.Value;
+  scrollY?: SharedValue<number>;
 }
 
-export function CustomHeader({
+export const CustomHeader = React.memo<CustomHeaderProps>(function CustomHeader({
   title,
   showBackButton = false,
   scrollY,
-}: CustomHeaderProps) {
+}) {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user } = useUser();
   const insets = useSafeAreaInsets();
-
-  const headerTranslateY = scrollY || new Animated.Value(0);
-
-  // Opacity for the title and other elements
-  const headerOpacity =
-    scrollY?.interpolate({
-      inputRange: [0, 30, 60],
-      outputRange: [1, 0.5, 0],
-      extrapolate: "clamp",
-    }) || new Animated.Value(1);
 
   // Get user initials from full name or 'G.G.' if not available
   const getUserInitials = () => {
@@ -67,8 +60,22 @@ export function CustomHeader({
     );
   };
 
+  // Animated opacity style for scroll-based header content
+  const animatedOpacityStyle = useAnimatedStyle(() => {
+    if (!scrollY) {
+      return { opacity: 1 };
+    }
+    const opacity = interpolate(
+      scrollY.value,
+      [0, 30, 60],
+      [1, 0.5, 0],
+      Extrapolate.CLAMP
+    );
+    return { opacity };
+  });
+
   const headerContent = (
-    <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
+    <Animated.View style={[styles.headerContent, animatedOpacityStyle]}>
       <View style={styles.headerTop}>
         <View style={styles.leftContainer}>
           {showBackButton ? (
@@ -124,7 +131,6 @@ export function CustomHeader({
         scrollY={scrollY}
         style={{
           ...styles.headerContainer,
-          transform: [{ translateY: headerTranslateY }],
           ...(Platform.OS === "ios" && {
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
@@ -137,7 +143,9 @@ export function CustomHeader({
       </AnimatedHeader>
     </View>
   );
-}
+});
+
+CustomHeader.displayName = 'CustomHeader';
 
 const styles = StyleSheet.create({
   // Header container styles

@@ -16,14 +16,18 @@ import {
   StyleSheet,
   View,
   Text,
-  Animated,
   RefreshControl,
   Alert,
   ActivityIndicator,
   Platform,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import AnimatedRN, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  useSharedValue,
+  useAnimatedScrollHandler,
+} from 'react-native-reanimated';
 import { Screen } from '../components/Screen';
 import { AddToPantrySheet } from '../components/AddToPantrySheet';
 import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
@@ -100,7 +104,13 @@ export const HomeScreen: React.FC = () => {
     (product) => !pantryItems.some((item) => item.id === product.id)
   );
 
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollY = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
 
   const loadProducts = useCallback(
     async (pageNum: number = 1) => {
@@ -331,12 +341,7 @@ export const HomeScreen: React.FC = () => {
           />
         }
         contentContainerStyle={[styles.scrollViewContent]}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          {
-            useNativeDriver: true,
-          }
-        )}
+        onScroll={scrollHandler}
         scrollEventThrottle={16}
         contentInsetAdjustmentBehavior="automatic"
       >

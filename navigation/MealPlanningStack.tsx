@@ -1,8 +1,8 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MealPlannerScreen from '../screens/MealPlannerScreen';
 import GroceryListScreen from '../screens/GroceryListScreen';
-import { Animated } from 'react-native';
+import { useSharedValue } from 'react-native-reanimated';
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { CustomHeader } from '../components/CustomHeader';
 
@@ -14,7 +14,7 @@ type MealPlanningStackParamList = {
 const Stack = createNativeStackNavigator<MealPlanningStackParamList>();
 
 export default function MealPlanningStack() {
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollY = useSharedValue(0);
 
   const screenOptions: NativeStackNavigationOptions = {
     header: ({ route, options }) => {

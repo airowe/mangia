@@ -1,41 +1,61 @@
 import React from 'react';
-import { Animated, StyleSheet, Platform, ViewStyle } from 'react-native';
+import { StyleSheet, Platform, ViewStyle } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  interpolate,
+  Extrapolate,
+  SharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 
 interface AnimatedHeaderProps {
-  scrollY: Animated.Value;
+  scrollY: SharedValue<number>;
   children: React.ReactNode;
   headerMaxHeight?: number;
   headerMinHeight?: number;
   style?: ViewStyle;
 }
 
-export const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
+export const AnimatedHeader = React.memo<AnimatedHeaderProps>(function AnimatedHeader({
   scrollY,
   children,
   headerMaxHeight = 60,
   headerMinHeight = 44,
   style,
-}) => {
+}) {
   const insets = useSafeAreaInsets();
-  const headerHeight = scrollY.interpolate({
-    inputRange: [0, headerMaxHeight - headerMinHeight],
-    outputRange: [headerMaxHeight, headerMinHeight],
-    extrapolate: 'clamp',
+
+  const animatedHeaderStyle = useAnimatedStyle(() => {
+    const headerHeight = interpolate(
+      scrollY.value,
+      [0, headerMaxHeight - headerMinHeight],
+      [headerMaxHeight, headerMinHeight],
+      Extrapolate.CLAMP
+    );
+
+    const headerTranslateY = interpolate(
+      scrollY.value,
+      [0, headerMaxHeight],
+      [0, -headerMaxHeight],
+      Extrapolate.CLAMP
+    );
+
+    return {
+      height: headerHeight,
+      transform: [{ translateY: headerTranslateY }],
+    };
   });
 
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, headerMaxHeight],
-    outputRange: [0, -headerMaxHeight],
-    extrapolate: 'clamp',
-  });
+  const animatedContentStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [0, headerMaxHeight * 0.5, headerMaxHeight],
+      [1, 0.5, 0],
+      Extrapolate.CLAMP
+    );
 
-  // Add a subtle shadow/opacity effect when scrolling
-  const opacity = scrollY.interpolate({
-    inputRange: [0, headerMaxHeight * 0.5, headerMaxHeight],
-    outputRange: [1, 0.5, 0],
-    extrapolate: 'clamp',
+    return { opacity };
   });
 
   return (
@@ -43,26 +63,20 @@ export const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
       style={[
         styles.header,
         {
-          height: headerHeight,
-          transform: [{ translateY: headerTranslateY }],
           paddingTop: insets.top,
           ...style,
         },
+        animatedHeaderStyle,
       ]}
     >
-      <Animated.View
-        style={[
-          styles.headerContent,
-          {
-            opacity,
-          },
-        ]}
-      >
+      <Animated.View style={[styles.headerContent, animatedContentStyle]}>
         {children}
       </Animated.View>
     </Animated.View>
   );
-};
+});
+
+AnimatedHeader.displayName = 'AnimatedHeader';
 
 const styles = StyleSheet.create({
   header: {
