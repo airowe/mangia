@@ -5,6 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
 import { validateBody } from "../../lib/validation";
 import { updatePantryItemSchema } from "../../lib/schemas";
+import { handleError } from "../../lib/errors";
 import { db, pantryItems } from "../../db";
 import { eq, and } from "drizzle-orm";
 
@@ -46,9 +47,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(200).json({ item: updatedItem });
-    } catch (error: any) {
-      console.error("Error updating pantry item:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 
@@ -65,9 +65,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(200).json({ success: true });
-    } catch (error: any) {
-      console.error("Error deleting pantry item:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 

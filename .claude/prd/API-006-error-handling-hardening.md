@@ -13,12 +13,12 @@ Current error handling issues:
 - Meal plan POST uses `??` (nullish coalescing) where it should use update-or-create logic more defensively
 
 ## Success Criteria
-- [ ] Consistent error response format: `{ error: string, code?: string, details?: object }`
-- [ ] Production errors don't leak internal details (DB errors, stack traces)
-- [ ] Centralized error handler utility
-- [ ] All endpoints use the centralized error handler in catch blocks
-- [ ] User ownership checks use a shared helper function
-- [ ] `pnpm typecheck` passes
+- [x] Consistent error response format: `{ error: string, code?: string, details?: object }`
+- [x] Production errors don't leak internal details (DB errors, stack traces)
+- [x] Centralized error handler utility
+- [x] All endpoints use the centralized error handler in catch blocks
+- [x] User ownership checks use a shared helper function
+- [x] `pnpm typecheck` passes
 
 ## Technical Approach
 

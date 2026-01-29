@@ -5,6 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
 import { validateBody } from "../../lib/validation";
 import { updateRecipeSchema } from "../../lib/schemas";
+import { handleError } from "../../lib/errors";
 import { db, recipes, ingredients } from "../../db";
 import { eq, and } from "drizzle-orm";
 
@@ -36,9 +37,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(200).json({ recipe });
-    } catch (error: any) {
-      console.error("Error fetching recipe:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 
@@ -106,9 +106,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       return res.status(200).json({ recipe: completeRecipe });
-    } catch (error: any) {
-      console.error("Error updating recipe:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 
@@ -125,9 +124,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(200).json({ success: true });
-    } catch (error: any) {
-      console.error("Error deleting recipe:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 

@@ -5,6 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
 import { validateBody } from "../../lib/validation";
 import { createCollectionSchema } from "../../lib/schemas";
+import { handleError } from "../../lib/errors";
 import { db, collections, recipeCollections, recipes } from "../../db";
 import { eq, asc, sql } from "drizzle-orm";
 
@@ -39,9 +40,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }));
 
       return res.status(200).json({ collections: collectionsWithCount });
-    } catch (error: any) {
-      console.error("Error fetching collections:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 
@@ -63,9 +63,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .returning();
 
       return res.status(201).json({ collection: newCollection });
-    } catch (error: any) {
-      console.error("Error creating collection:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 

@@ -5,6 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
 import { validateBody } from "../../lib/validation";
 import { updateMealPlanSchema } from "../../lib/schemas";
+import { handleError } from "../../lib/errors";
 import { db, mealPlans } from "../../db";
 import { eq, and } from "drizzle-orm";
 
@@ -48,9 +49,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       return res.status(200).json(updatedWithRecipe);
-    } catch (error: any) {
-      console.error("Error updating meal plan:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 
@@ -67,9 +67,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(200).json({ success: true });
-    } catch (error: any) {
-      console.error("Error deleting meal plan:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 

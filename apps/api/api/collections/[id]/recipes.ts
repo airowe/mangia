@@ -5,6 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../../lib/auth";
 import { validateBody } from "../../../lib/validation";
 import { collectionRecipeSchema } from "../../../lib/schemas";
+import { handleError } from "../../../lib/errors";
 import { db, collections, recipes, recipeCollections } from "../../../db";
 import { eq, and } from "drizzle-orm";
 
@@ -66,9 +67,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .returning();
 
       return res.status(201).json({ recipeCollection: entry });
-    } catch (error: any) {
-      console.error("Error adding recipe to collection:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 
@@ -93,9 +93,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(200).json({ success: true });
-    } catch (error: any) {
-      console.error("Error removing recipe from collection:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 

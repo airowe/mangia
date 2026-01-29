@@ -5,6 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
 import { validateBody } from "../../lib/validation";
 import { createCookbookSchema } from "../../lib/schemas";
+import { handleError } from "../../lib/errors";
 import { db, cookbooks } from "../../db";
 import { eq, asc, ilike, or, and } from "drizzle-orm";
 
@@ -47,9 +48,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const userCookbooks = await query;
 
       return res.status(200).json({ cookbooks: userCookbooks });
-    } catch (error: any) {
-      console.error("Error fetching cookbooks:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 
@@ -72,9 +72,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .returning();
 
       return res.status(201).json({ cookbook: newCookbook });
-    } catch (error: any) {
-      console.error("Error creating cookbook:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 

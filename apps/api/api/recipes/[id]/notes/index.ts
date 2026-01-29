@@ -5,6 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../../../lib/auth";
 import { validateBody } from "../../../../lib/validation";
 import { createRecipeNoteSchema } from "../../../../lib/schemas";
+import { handleError } from "../../../../lib/errors";
 import { db, recipeNotes, recipes } from "../../../../db";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -39,9 +40,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       return res.status(200).json(notes);
-    } catch (error: any) {
-      console.error("Error fetching recipe notes:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 
@@ -72,9 +72,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .where(eq(recipes.id, recipeId));
 
       return res.status(201).json(newNote);
-    } catch (error: any) {
-      console.error("Error creating recipe note:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 

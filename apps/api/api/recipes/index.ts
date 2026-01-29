@@ -6,6 +6,7 @@ import { authenticateRequest } from "../../lib/auth";
 import { validateBody } from "../../lib/validation";
 import { createRecipeSchema } from "../../lib/schemas";
 import { checkImportLimit, incrementImportCount } from "../../lib/rate-limit";
+import { handleError } from "../../lib/errors";
 import { db, recipes, ingredients } from "../../db";
 import { eq, desc, asc, and, or, ilike, sql, type SQL } from "drizzle-orm";
 
@@ -82,9 +83,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         recipes: userRecipes,
         total: countResult[0]?.count ?? 0,
       });
-    } catch (error: any) {
-      console.error("Error fetching recipes:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 
@@ -155,9 +155,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await incrementImportCount(user.id);
 
       return res.status(201).json({ recipe: completeRecipe });
-    } catch (error: any) {
-      console.error("Error creating recipe:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 

@@ -3,6 +3,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../../../lib/auth";
+import { handleError } from "../../../../lib/errors";
 import { db, recipeNotes, recipes } from "../../../../db";
 import { eq, and } from "drizzle-orm";
 
@@ -51,9 +52,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(200).json({ success: true });
-    } catch (error: any) {
-      console.error("Error deleting recipe note:", error);
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      return handleError(error, res);
     }
   }
 
