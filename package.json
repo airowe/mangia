@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev:mobile": "turbo run dev --filter=@mangia/mobile",
-    "dev:api": "turbo run dev --filter=@mangia/api",
+    "dev:api": "vercel dev --cwd apps/api --listen 3001 --yes",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
