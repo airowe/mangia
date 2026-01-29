@@ -10,8 +10,8 @@ started_at: "2026-01-29T16:39:15Z"
 - [x] API-001: Type Safety & Case Normalization
 - [x] API-002: Zod Validation
 - [x] API-003: Collection Management Endpoints
-- [ ] API-004: Free Tier Enforcement
+- [x] API-004: Free Tier Enforcement
 - [ ] API-005: Recipe Search & Filtering
 - [ ] API-006: Error Handling & Hardening
 
---prd .claude/prd/API-004-free-tier-enforcement.md
+--prd .claude/prd/API-005-recipe-search-filtering.md

@@ -5,6 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
 import { validateBody } from "../../lib/validation";
 import { createRecipeSchema } from "../../lib/schemas";
+import { checkImportLimit, incrementImportCount } from "../../lib/rate-limit";
 import { db, recipes, ingredients } from "../../db";
 import { eq, desc } from "drizzle-orm";
 
@@ -42,6 +43,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const body = validateBody(req.body, createRecipeSchema, res);
       if (!body) return;
+
+      // Check import limit for free tier users
+      const limitResult = await checkImportLimit(user.id, user.isPremium);
+      if (!limitResult.allowed) {
+        return res.status(429).json({
+          error: "Monthly recipe import limit reached",
+          limit: limitResult.limit,
+          remaining: 0,
+          resetAt: limitResult.resetAt?.toISOString(),
+        });
+      }
 
       // Create recipe
       const [newRecipe] = await db
@@ -88,6 +100,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ingredients: true,
         },
       });
+
+      // Increment import counter for free tier tracking
+      await incrementImportCount(user.id);
 
       return res.status(201).json({ recipe: completeRecipe });
     } catch (error: any) {

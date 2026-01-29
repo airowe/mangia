@@ -7,13 +7,13 @@ Implement free tier limits using the existing `monthlyImportCount` and `monthlyI
 The database schema has `monthlyImportCount` and `monthlyImportResetAt` columns, and `@mangia/shared` exports `FREE_TIER_LIMITS`, but none of this is wired up. Free users can import unlimited recipes.
 
 ## Success Criteria
-- [ ] Recipe creation (POST /recipes) checks and enforces monthly import limits for non-premium users
-- [ ] Monthly counter resets automatically when a new month begins
-- [ ] Counter increments on successful recipe creation
-- [ ] Premium users bypass all limits
-- [ ] Rate limit response returns clear error with remaining count and reset date
-- [ ] Shared `FREE_TIER_LIMITS` constants are used (not hardcoded values)
-- [ ] `pnpm typecheck` passes
+- [x] Recipe creation (POST /recipes) checks and enforces monthly import limits for non-premium users
+- [x] Monthly counter resets automatically when a new month begins
+- [x] Counter increments on successful recipe creation
+- [x] Premium users bypass all limits
+- [x] Rate limit response returns clear error with remaining count and reset date
+- [x] Shared `FREE_TIER_LIMITS` constants are used (not hardcoded values)
+- [x] `pnpm typecheck` passes
 
 ## Technical Approach
 
