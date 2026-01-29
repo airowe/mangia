@@ -11,7 +11,7 @@ started_at: "2026-01-29T16:39:15Z"
 - [x] API-002: Zod Validation
 - [x] API-003: Collection Management Endpoints
 - [x] API-004: Free Tier Enforcement
-- [ ] API-005: Recipe Search & Filtering
+- [x] API-005: Recipe Search & Filtering
 - [ ] API-006: Error Handling & Hardening
 
---prd .claude/prd/API-005-recipe-search-filtering.md
+--prd .claude/prd/API-006-error-handling-hardening.md

@@ -11,13 +11,13 @@ The current GET /recipes endpoint only supports filtering by `status`. Users nee
 - Get total count for pagination
 
 ## Success Criteria
-- [ ] `GET /recipes` supports `search` query param (searches title and description, case-insensitive)
-- [ ] `GET /recipes` supports `mealType` filter
-- [ ] `GET /recipes` supports `sourceType` filter
-- [ ] `GET /recipes` supports `sort` param: `newest` (default), `oldest`, `rating`, `most_cooked`, `alphabetical`
-- [ ] `GET /recipes` returns `total` count alongside `recipes` array for pagination
-- [ ] Existing `status`, `limit`, `offset` params still work
-- [ ] Multiple filters can be combined
+- [x] `GET /recipes` supports `search` query param (searches title and description, case-insensitive)
+- [x] `GET /recipes` supports `mealType` filter
+- [x] `GET /recipes` supports `sourceType` filter
+- [x] `GET /recipes` supports `sort` param: `newest` (default), `oldest`, `rating`, `most_cooked`, `alphabetical`
+- [x] `GET /recipes` returns `total` count alongside `recipes` array for pagination
+- [x] Existing `status`, `limit`, `offset` params still work
+- [x] Multiple filters can be combined
 - [ ] `pnpm typecheck` passes
 
 ## Technical Approach

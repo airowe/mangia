@@ -7,7 +7,7 @@ import { validateBody } from "../../lib/validation";
 import { createRecipeSchema } from "../../lib/schemas";
 import { checkImportLimit, incrementImportCount } from "../../lib/rate-limit";
 import { db, recipes, ingredients } from "../../db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, asc, and, or, ilike, sql, type SQL } from "drizzle-orm";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req.headers.authorization as string);
@@ -16,22 +16,72 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  // GET - List recipes
+  // GET - List recipes with search, filtering, sorting, and pagination
   if (req.method === "GET") {
     try {
-      const { status, limit = "50", offset = "0" } = req.query;
+      const {
+        status,
+        mealType,
+        sourceType,
+        search,
+        sort = "newest",
+        limit = "50",
+        offset = "0",
+      } = req.query;
 
-      const userRecipes = await db.query.recipes.findMany({
-        where: eq(recipes.userId, user.id),
-        with: {
-          ingredients: true,
-        },
-        orderBy: [desc(recipes.createdAt)],
-        limit: parseInt(limit as string),
-        offset: parseInt(offset as string),
+      // Build where conditions
+      const conditions: SQL[] = [eq(recipes.userId, user.id)];
+
+      if (status && typeof status === "string") {
+        conditions.push(eq(recipes.status, status as any));
+      }
+      if (mealType && typeof mealType === "string") {
+        conditions.push(eq(recipes.mealType, mealType as any));
+      }
+      if (sourceType && typeof sourceType === "string") {
+        conditions.push(eq(recipes.sourceType, sourceType));
+      }
+      if (search && typeof search === "string") {
+        const searchTerm = `%${search}%`;
+        conditions.push(
+          or(
+            ilike(recipes.title, searchTerm),
+            ilike(recipes.description, searchTerm)
+          )!
+        );
+      }
+
+      const whereClause = and(...conditions)!;
+
+      // Build sort order
+      const sortMap: Record<string, SQL> = {
+        newest: desc(recipes.createdAt),
+        oldest: asc(recipes.createdAt),
+        rating: desc(recipes.rating),
+        most_cooked: desc(recipes.cookCount),
+        alphabetical: asc(recipes.title),
+      };
+      const orderBy = sortMap[sort as string] || sortMap.newest;
+
+      // Fetch recipes and total count in parallel
+      const [userRecipes, countResult] = await Promise.all([
+        db.query.recipes.findMany({
+          where: whereClause,
+          with: { ingredients: true },
+          orderBy: [orderBy],
+          limit: parseInt(limit as string),
+          offset: parseInt(offset as string),
+        }),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(recipes)
+          .where(whereClause),
+      ]);
+
+      return res.status(200).json({
+        recipes: userRecipes,
+        total: countResult[0]?.count ?? 0,
       });
-
-      return res.status(200).json({ recipes: userRecipes });
     } catch (error: any) {
       console.error("Error fetching recipes:", error);
       return res.status(500).json({ error: error.message });
