@@ -21,7 +21,16 @@ export type PantryStackParamList = {
   PantryMain: undefined;
   ManualItemEntryScreen: undefined;
   AIPantryScannerScreen: undefined;
-  ConfirmScannedItemsScreen: undefined;
+  ConfirmScannedItemsScreen: {
+    scannedItems: {
+      name: string;
+      category: string;
+      confidence: number;
+      quantity: number;
+      unit: string;
+      expiryDate: string | null;
+    }[];
+  };
   KitchenAlertsScreen: undefined;
   WhatCanIMakeScreen: undefined;
   RecipeDetailScreen: { recipeId: string };

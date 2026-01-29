@@ -2,7 +2,7 @@
 // Confirm scanned pantry items before adding
 // Design reference: confirm_scanned_items/code.html
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,9 +13,8 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { Image } from "expo-image";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import ReanimatedAnimated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,6 +22,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Screen } from "../components/Screen";
 import { mangiaColors } from "../theme/tokens/colors";
 import { fontFamily } from "../theme/tokens/typography";
+import { getCategoryDisplayName } from "../utils/categorizeIngredient";
+import { addToPantry } from "../lib/pantry";
+import { PantryStackParamList } from "../navigation/PantryStack";
 
 // Scanned item status types
 type ItemStatus = "confirmed" | "review" | "excluded";
@@ -30,62 +32,41 @@ type ItemStatus = "confirmed" | "review" | "excluded";
 interface ScannedItem {
   id: string;
   name: string;
-  category: string;
+  categoryKey: string;
+  categoryDisplay: string;
   quantity: string;
-  imageUrl?: string;
+  unit: string;
+  confidence: number;
+  expiryDate: string | null;
   status: ItemStatus;
   isSelected: boolean;
 }
 
-// Mock scanned items for demo
-const MOCK_SCANNED_ITEMS: ScannedItem[] = [
-  {
-    id: "1",
-    name: "Extra Virgin Olive Oil",
-    category: "Pantry",
-    quantity: "1 bottle",
-    status: "confirmed",
-    isSelected: true,
-  },
-  {
-    id: "2",
-    name: "Arborio Rice",
-    category: "Pantry",
-    quantity: "1 kg",
-    status: "confirmed",
-    isSelected: true,
-  },
-  {
-    id: "3",
-    name: "Unknown Spice",
-    category: "Review",
-    quantity: "",
-    status: "review",
-    isSelected: false,
-  },
-  {
-    id: "4",
-    name: "San Marzano Tomatoes",
-    category: "Pantry",
-    quantity: "2 cans",
-    status: "confirmed",
-    isSelected: true,
-  },
-  {
-    id: "5",
-    name: "Sparkling Water",
-    category: "Excluded",
-    quantity: "1 bottle",
-    status: "excluded",
-    isSelected: false,
-  },
-];
+type ConfirmScreenRouteProp = RouteProp<PantryStackParamList, "ConfirmScannedItemsScreen">;
 
 export default function ConfirmScannedItemsScreen() {
   const navigation = useNavigation();
+  const route = useRoute<ConfirmScreenRouteProp>();
   const insets = useSafeAreaInsets();
 
-  const [items, setItems] = useState<ScannedItem[]>(MOCK_SCANNED_ITEMS);
+  // Convert route params to ScannedItem[]
+  const initialItems = useMemo<ScannedItem[]>(() => {
+    const scannedItems = route.params?.scannedItems || [];
+    return scannedItems.map((item, index) => ({
+      id: String(index + 1),
+      name: item.name,
+      categoryKey: item.category,
+      categoryDisplay: getCategoryDisplayName(item.category as any),
+      quantity: `${item.quantity} ${item.unit}`,
+      unit: item.unit,
+      confidence: item.confidence,
+      expiryDate: item.expiryDate,
+      status: (item.confidence >= 0.7 ? "confirmed" : "review") as ItemStatus,
+      isSelected: item.confidence >= 0.7,
+    }));
+  }, [route.params]);
+
+  const [items, setItems] = useState<ScannedItem[]>(initialItems);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedCount = items.filter((i) => i.isSelected).length;
@@ -123,8 +104,27 @@ export default function ConfirmScannedItemsScreen() {
 
     setIsSubmitting(true);
     try {
-      // TODO: Add items to pantry
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Add each selected item to pantry
+      const results = await Promise.allSettled(
+        selectedItems.map((item) =>
+          addToPantry({
+            id: "",
+            title: item.name,
+            quantity: parseFloat(item.quantity) || 1,
+            unit: item.unit || "piece",
+            category: item.categoryKey as any,
+          }),
+        ),
+      );
+
+      const failures = results.filter((r) => r.status === "rejected");
+      if (failures.length > 0) {
+        Alert.alert(
+          "Partial Success",
+          `Added ${results.length - failures.length} of ${results.length} items to pantry.`,
+        );
+      }
+
       navigation.goBack();
     } catch (error) {
       console.error("Error adding items:", error);
@@ -201,7 +201,7 @@ export default function ConfirmScannedItemsScreen() {
                   isReview && styles.categoryBadgeTextReview,
                   isExcluded && styles.categoryBadgeTextExcluded,
                 ]}>
-                  {item.category}
+                  {item.categoryDisplay}
                 </Text>
               </View>
               {item.quantity && (

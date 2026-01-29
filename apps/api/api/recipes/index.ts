@@ -9,6 +9,7 @@ import { checkImportLimit, incrementImportCount } from "../../lib/rate-limit";
 import { handleError } from "../../lib/errors";
 import { db, recipes, ingredients } from "../../db";
 import { eq, desc, asc, and, or, ilike, sql, type SQL } from "drizzle-orm";
+import { categorizeIngredient } from "../../lib/grocery-generator";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req.headers.authorization as string);
@@ -135,7 +136,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             name: ing.name,
             quantity: ing.quantity,
             unit: ing.unit,
-            category: ing.category,
+            category: ing.category || categorizeIngredient(ing.name),
             notes: ing.notes,
             isOptional: ing.isOptional,
             orderIndex: index,

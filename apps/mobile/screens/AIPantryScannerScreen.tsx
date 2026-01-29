@@ -2,7 +2,7 @@
 // AI-powered pantry scanner with camera viewfinder
 // Design reference: ai_pantry_scanner_1/code.html, ai_pantry_scanner_2/code.html
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -10,14 +10,16 @@ import {
   TouchableOpacity,
   Dimensions,
   StatusBar,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
-import { Image } from "expo-image";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import ReanimatedAnimated, {
   FadeIn,
   FadeInUp,
-  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -26,33 +28,24 @@ import ReanimatedAnimated, {
   Easing,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BlurView } from "expo-blur";
 
 import { mangiaColors } from "../theme/tokens/colors";
 import { fontFamily } from "../theme/tokens/typography";
+import { scanPantryImage } from "../lib/pantry";
+import { PantryStackParamList } from "../navigation/PantryStack";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-// Simulated detected items for demo
-interface DetectedItem {
-  id: string;
-  name: string;
-  top: number;
-  left?: number;
-  right?: number;
-}
+type NavigationProp = NativeStackNavigationProp<PantryStackParamList, "AIPantryScannerScreen">;
 
 export default function AIPantryScannerScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
+  const cameraRef = useRef<CameraView>(null);
 
+  const [permission, requestPermission] = useCameraPermissions();
   const [flashOn, setFlashOn] = useState(false);
-  const [isScanning, setIsScanning] = useState(true);
-  const [detectedExpiry, setDetectedExpiry] = useState<string | null>(null);
-  const [detectedItems] = useState<DetectedItem[]>([
-    { id: "1", name: "San Marzano Tomatoes", top: 80, left: 40 },
-    { id: "2", name: "Arborio Rice", top: 280, right: 60 },
-  ]);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   // Pulsing animation for the scanner indicator
   const pulseScale = useSharedValue(1);
@@ -73,42 +66,92 @@ export default function AIPantryScannerScreen() {
     opacity: 2 - pulseScale.value,
   }));
 
-  // Simulate detection after a delay
+  // Request camera permission on mount
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDetectedExpiry("Oct 12, 2024");
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!permission?.granted) {
+      requestPermission();
+    }
+  }, [permission]);
 
   const handleClose = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
 
-  const handleCapture = useCallback(() => {
-    // Navigate to confirm scanned items screen
-    // navigation.navigate("ConfirmScannedItemsScreen");
-  }, [navigation]);
+  const handleCapture = useCallback(async () => {
+    if (!cameraRef.current || isCapturing) return;
+
+    setIsCapturing(true);
+    try {
+      // Capture photo as base64 JPEG
+      const photo = await cameraRef.current.takePictureAsync({
+        base64: true,
+        quality: 0.7, // Compress to keep under 4MB
+      });
+
+      if (!photo?.base64) {
+        Alert.alert("Error", "Failed to capture photo. Please try again.");
+        return;
+      }
+
+      // Send to server for AI analysis
+      const items = await scanPantryImage(photo.base64);
+
+      if (items.length === 0) {
+        Alert.alert(
+          "No Items Found",
+          "We couldn't identify any food items in this photo. Try taking a clearer photo.",
+          [{ text: "OK" }],
+        );
+        return;
+      }
+
+      // Navigate to confirmation screen with real data
+      navigation.navigate("ConfirmScannedItemsScreen", {
+        scannedItems: items,
+      });
+    } catch (error: any) {
+      const message =
+        error?.code === "PREMIUM_REQUIRED"
+          ? "AI Pantry Scanner is a premium feature. Upgrade to use it."
+          : "Failed to scan image. Please try again.";
+      Alert.alert("Scan Error", message);
+    } finally {
+      setIsCapturing(false);
+    }
+  }, [navigation, isCapturing]);
 
   const toggleFlash = useCallback(() => {
     setFlashOn((prev) => !prev);
   }, []);
 
+  // Show permission request if not granted
+  if (!permission?.granted) {
+    return (
+      <View style={[styles.container, styles.permissionContainer]}>
+        <StatusBar barStyle="light-content" />
+        <MaterialCommunityIcons name="camera-off" size={48} color={`${mangiaColors.white}60`} />
+        <Text style={styles.permissionText}>Camera access is required to scan your pantry.</Text>
+        <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+          <Text style={styles.permissionButtonText}>Grant Access</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleClose} style={{ marginTop: 16 }}>
+          <Text style={[styles.permissionButtonText, { color: `${mangiaColors.white}80` }]}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* Camera Background (placeholder) */}
-      <View style={styles.cameraBackground}>
-        <View style={styles.cameraPlaceholder}>
-          <MaterialCommunityIcons
-            name="camera"
-            size={48}
-            color={`${mangiaColors.white}30`}
-          />
-          <Text style={styles.cameraPlaceholderText}>Camera Preview</Text>
-        </View>
-      </View>
+      {/* Camera Background */}
+      <CameraView
+        ref={cameraRef}
+        style={styles.cameraBackground}
+        facing="back"
+        flash={flashOn ? "on" : "off"}
+      />
 
       {/* Gradient Overlay */}
       <View style={styles.gradientOverlay} />
@@ -132,7 +175,9 @@ export default function AIPantryScannerScreen() {
             <ReanimatedAnimated.View style={[styles.pulseDot, pulseStyle]} />
             <View style={styles.solidDot} />
           </View>
-          <Text style={styles.statusText}>AI Vision Active</Text>
+          <Text style={styles.statusText}>
+            {isCapturing ? "Scanning..." : "AI Vision Active"}
+          </Text>
         </View>
 
         <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
@@ -147,48 +192,6 @@ export default function AIPantryScannerScreen() {
         <View style={[styles.corner, styles.cornerTR]} />
         <View style={[styles.corner, styles.cornerBL]} />
         <View style={[styles.corner, styles.cornerBR]} />
-
-        {/* Detection Box (when scanning) */}
-        {isScanning && (
-          <ReanimatedAnimated.View
-            entering={FadeIn.duration(300)}
-            style={styles.detectionBox}
-          >
-            <View style={styles.detectionTooltip}>
-              <Text style={styles.detectionTooltipText}>Detecting Date...</Text>
-              <View style={styles.tooltipArrow} />
-            </View>
-          </ReanimatedAnimated.View>
-        )}
-
-        {/* Floating Item Tags */}
-        {detectedItems.map((item) => (
-          <ReanimatedAnimated.View
-            key={item.id}
-            entering={FadeIn.delay(500).duration(400)}
-            style={[
-              styles.itemTag,
-              {
-                top: item.top,
-                left: item.left,
-                right: item.right,
-              },
-            ]}
-          >
-            {item.left !== undefined && (
-              <>
-                <View style={styles.itemDot} />
-                <Text style={styles.itemTagText}>{item.name}</Text>
-              </>
-            )}
-            {item.right !== undefined && (
-              <>
-                <Text style={styles.itemTagText}>{item.name}</Text>
-                <View style={styles.itemDot} />
-              </>
-            )}
-          </ReanimatedAnimated.View>
-        ))}
       </View>
 
       {/* Instruction Text */}
@@ -197,48 +200,32 @@ export default function AIPantryScannerScreen() {
         style={styles.instructionContainer}
       >
         <Text style={styles.instructionText}>
-          Align the date within the frame to scan expiration.
+          {isCapturing
+            ? "Analyzing your pantry..."
+            : "Point at your pantry or fridge and tap capture."}
         </Text>
       </ReanimatedAnimated.View>
 
       {/* Bottom Controls */}
       <View style={[styles.bottomControls, { paddingBottom: insets.bottom + 24 }]}>
-        {/* Expiry Detection Toast */}
-        {detectedExpiry && (
-          <ReanimatedAnimated.View
-            entering={FadeInUp.duration(400)}
-            style={styles.expiryToast}
-          >
-            <View style={styles.expiryCheckmark}>
-              <MaterialCommunityIcons name="check" size={14} color={mangiaColors.sage} />
-            </View>
-            <Text style={styles.expiryToastText}>
-              Expiration detected: {detectedExpiry}
-            </Text>
-          </ReanimatedAnimated.View>
-        )}
-
         {/* Control Buttons Row */}
         <View style={styles.controlsRow}>
-          {/* Recent Scan Thumbnail */}
-          <TouchableOpacity style={styles.thumbnailButton} activeOpacity={0.8}>
-            <View style={styles.thumbnailPlaceholder}>
-              <MaterialCommunityIcons
-                name="image"
-                size={20}
-                color={`${mangiaColors.white}60`}
-              />
-            </View>
-          </TouchableOpacity>
+          {/* Spacer for thumbnail */}
+          <View style={styles.thumbnailButton} />
 
           {/* Capture Button */}
           <TouchableOpacity
-            style={styles.captureButton}
+            style={[styles.captureButton, isCapturing && { opacity: 0.5 }]}
             onPress={handleCapture}
+            disabled={isCapturing}
             activeOpacity={0.9}
           >
             <View style={styles.captureButtonInner}>
-              <MaterialCommunityIcons name="camera" size={32} color={mangiaColors.white} />
+              {isCapturing ? (
+                <ActivityIndicator size="large" color={mangiaColors.white} />
+              ) : (
+                <MaterialCommunityIcons name="camera" size={32} color={mangiaColors.white} />
+              )}
             </View>
           </TouchableOpacity>
 
@@ -273,28 +260,42 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
 
+  // Permission screen
+  permissionContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 16,
+    paddingHorizontal: 32,
+  },
+  permissionText: {
+    fontFamily: fontFamily.regular,
+    fontSize: 16,
+    color: `${mangiaColors.white}80`,
+    textAlign: "center",
+    lineHeight: 24,
+  },
+  permissionButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    backgroundColor: mangiaColors.terracotta,
+    marginTop: 8,
+  },
+  permissionButtonText: {
+    fontFamily: fontFamily.medium,
+    fontSize: 16,
+    color: mangiaColors.white,
+  },
+
   // Camera Background
   cameraBackground: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#1a1a1a",
-  },
-  cameraPlaceholder: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 12,
-  },
-  cameraPlaceholderText: {
-    fontFamily: fontFamily.regular,
-    fontSize: 14,
-    color: `${mangiaColors.white}40`,
   },
 
   // Gradient Overlay
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "transparent",
-    // Simulated gradient with partial overlays
   },
 
   // Top Bar
@@ -400,84 +401,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 16,
   },
 
-  // Detection Box
-  detectionBox: {
-    position: "absolute",
-    top: "45%",
-    left: "25%",
-    width: 128,
-    height: 48,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: mangiaColors.sage,
-    backgroundColor: `${mangiaColors.sage}15`,
-    shadowColor: mangiaColors.sage,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 15,
-    elevation: 8,
-  },
-  detectionTooltip: {
-    position: "absolute",
-    top: -32,
-    left: "50%",
-    transform: [{ translateX: -40 }],
-    backgroundColor: "#4a6347",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  detectionTooltipText: {
-    fontFamily: fontFamily.medium,
-    fontSize: 10,
-    color: mangiaColors.white,
-  },
-  tooltipArrow: {
-    position: "absolute",
-    bottom: -6,
-    left: "50%",
-    marginLeft: -6,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderTopWidth: 6,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderTopColor: "#4a6347",
-  },
-
-  // Item Tags
-  itemTag: {
-    position: "absolute",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    opacity: 0.5,
-  },
-  itemDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: mangiaColors.terracotta,
-    shadowColor: mangiaColors.terracotta,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  itemTagText: {
-    fontFamily: fontFamily.regular,
-    fontSize: 10,
-    color: mangiaColors.white,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    overflow: "hidden",
-    letterSpacing: 0.5,
-  },
-
   // Instruction
   instructionContainer: {
     position: "absolute",
@@ -509,36 +432,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     alignItems: "center",
   },
-  expiryToast: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 32,
-    borderRadius: 24,
-    backgroundColor: `${mangiaColors.sage}E6`,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  expiryCheckmark: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: mangiaColors.white,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  expiryToastText: {
-    fontFamily: fontFamily.medium,
-    fontSize: 14,
-    color: mangiaColors.white,
-  },
 
   // Control Buttons
   controlsRow: {
@@ -551,17 +444,6 @@ const styles = StyleSheet.create({
   thumbnailButton: {
     width: 56,
     height: 56,
-    borderRadius: 24,
-    borderTopRightRadius: 4,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
-  },
-  thumbnailPlaceholder: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-    justifyContent: "center",
-    alignItems: "center",
   },
   captureButton: {
     width: 80,

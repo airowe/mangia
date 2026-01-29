@@ -10,6 +10,7 @@ import { handleError, ApiError } from "../../lib/errors";
 import { db, recipes, ingredients } from "../../db";
 import { eq } from "drizzle-orm";
 import { parseRecipeFromUrl, detectUrlType } from "../../lib/recipe-parser";
+import { categorizeIngredient } from "../../lib/grocery-generator";
 
 const importSchema = z.object({
   url: z.string().url("Please provide a valid URL").refine(
@@ -77,6 +78,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           name: ing.name,
           quantity: ing.quantity ? parseFloat(ing.quantity) || null : null,
           unit: ing.unit || null,
+          category: categorizeIngredient(ing.name),
           orderIndex: index,
         })),
       );

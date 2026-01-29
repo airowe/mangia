@@ -1,116 +1,29 @@
 import { Recipe, RecipeIngredient, IngredientCategory } from '../models/Recipe';
-import { PantryItem } from '../models/Product';
 import { ConsolidatedIngredient, GroceryList, GroceryItem } from '../models/GroceryList';
-import { fetchPantryItems } from './pantry';
-import { categorizeIngredient, getCategoryOrder } from '../utils/categorizeIngredient';
 import { apiClient } from './api/client';
 import { RequestOptions } from '../hooks/useAbortableEffect';
 
+interface GenerateResponse {
+  items: ConsolidatedIngredient[];
+}
+
 /**
- * Generates a consolidated grocery list from selected recipes
+ * Generates a consolidated grocery list from selected recipes.
+ * Server handles ingredient consolidation, pantry deduction, and categorization.
  */
 export async function generateGroceryList(
   recipes: Recipe[]
 ): Promise<ConsolidatedIngredient[]> {
-  // Get user's pantry
-  const pantryItems = await fetchPantryItems();
-  const pantryMap = buildPantryMap(pantryItems);
-
-  // Consolidate ingredients from all recipes
-  const consolidated = consolidateIngredients(recipes);
-
-  // Check against pantry
-  const withPantryStatus = consolidated.map(item => {
-    const pantryKey = normalizeIngredientName(item.name);
-    const pantryItem = pantryMap.get(pantryKey);
-
-    const inPantry = !!pantryItem;
-    const pantryQuantity = pantryItem?.quantity || 0;
-    const needToBuy = Math.max(0, item.totalQuantity - pantryQuantity);
-
-    return {
-      ...item,
-      inPantry,
-      pantryQuantity,
-      needToBuy,
-    };
-  });
-
-  // Sort by category (store layout)
-  return withPantryStatus.sort((a, b) => {
-    return getCategoryOrder(a.category) - getCategoryOrder(b.category);
-  });
-}
-
-/**
- * Builds a map of pantry items by normalized name
- */
-function buildPantryMap(items: PantryItem[]): Map<string, PantryItem> {
-  const map = new Map<string, PantryItem>();
-
-  for (const item of items) {
-    const key = normalizeIngredientName(item.title);
-    map.set(key, item);
+  try {
+    const response = await apiClient.post<GenerateResponse>(
+      '/api/grocery-lists/generate',
+      { recipeIds: recipes.map(r => r.id) },
+    );
+    return response.items || [];
+  } catch (error) {
+    console.error('Error generating grocery list:', error);
+    throw error;
   }
-
-  return map;
-}
-
-/**
- * Consolidates ingredients from multiple recipes, combining duplicates
- */
-function consolidateIngredients(recipes: Recipe[]): ConsolidatedIngredient[] {
-  const ingredientMap = new Map<string, ConsolidatedIngredient>();
-
-  for (const recipe of recipes) {
-    for (const ingredient of recipe.ingredients) {
-      const key = normalizeIngredientName(ingredient.name);
-
-      if (ingredientMap.has(key)) {
-        // Add to existing
-        const existing = ingredientMap.get(key)!;
-        existing.totalQuantity += ingredient.quantity || 0;
-        existing.fromRecipes.push({
-          recipeId: recipe.id,
-          recipeTitle: recipe.title,
-          quantity: ingredient.quantity || 0,
-        });
-      } else {
-        // Create new entry
-        const category = ingredient.category as IngredientCategory || categorizeIngredient(ingredient.name);
-        ingredientMap.set(key, {
-          name: ingredient.name,
-          totalQuantity: ingredient.quantity || 0,
-          unit: ingredient.unit || '',
-          category,
-          fromRecipes: [{
-            recipeId: recipe.id,
-            recipeTitle: recipe.title,
-            quantity: ingredient.quantity || 0,
-          }],
-          inPantry: false,
-          pantryQuantity: 0,
-          needToBuy: 0,
-        });
-      }
-    }
-  }
-
-  return Array.from(ingredientMap.values());
-}
-
-/**
- * Normalizes ingredient names for comparison
- */
-export function normalizeIngredientName(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s]/g, '')  // Remove punctuation
-    .replace(/\s+/g, ' ')          // Normalize whitespace
-    // Remove common quantity words that might be in the name
-    .replace(/\b(fresh|dried|chopped|minced|diced|sliced|whole|large|small|medium|optional)\b/g, '')
-    .trim();
 }
 
 /**

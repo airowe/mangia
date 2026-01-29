@@ -1,8 +1,18 @@
 import { PantryItem } from "../models/Product";
+import { IngredientCategory } from "../models/Recipe";
 import { apiClient } from "./api/client";
 import { ApiResponse } from "./api/client";
 import { DEV_BYPASS_AUTH } from "./devConfig";
 import { RequestOptions } from "../hooks/useAbortableEffect";
+
+export interface ScannedPantryItem {
+  name: string;
+  category: IngredientCategory;
+  confidence: number;
+  quantity: number;
+  unit: string;
+  expiryDate: string | null;
+}
 
 // Mock pantry data for dev bypass mode
 const MOCK_PANTRY_ITEMS: PantryItem[] = [
@@ -198,6 +208,23 @@ export const updatePantryItemQuantity = async (
           ? error
           : new Error("Unknown error updating quantity"),
     };
+  }
+};
+
+// Scan pantry image using AI vision
+export const scanPantryImage = async (
+  imageBase64: string,
+  extractExpiry: boolean = true,
+): Promise<ScannedPantryItem[]> => {
+  try {
+    const response = await apiClient.post<{ items: ScannedPantryItem[] }>(
+      "/api/pantry/scan",
+      { imageBase64, extractExpiry },
+    );
+    return response.items || [];
+  } catch (error) {
+    console.error("Error scanning pantry image:", error);
+    throw error;
   }
 };
 

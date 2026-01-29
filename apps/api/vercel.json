@@ -5,6 +5,9 @@
   "functions": {
     "api/recipes/import.ts": {
       "maxDuration": 60
+    },
+    "api/pantry/scan.ts": {
+      "maxDuration": 30
     }
   }
 }
