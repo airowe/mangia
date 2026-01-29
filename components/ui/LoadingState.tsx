@@ -21,12 +21,12 @@ interface LoadingStateProps {
   fullScreen?: boolean;
 }
 
-export function LoadingState({
+export const LoadingState = React.memo<LoadingStateProps>(function LoadingState({
   text,
   size = 'large',
   style,
   fullScreen = true,
-}: LoadingStateProps) {
+}) {
   const { theme } = useTheme();
   const { colors, spacing, typography } = theme;
 
@@ -53,7 +53,9 @@ export function LoadingState({
       )}
     </Animated.View>
   );
-}
+});
+
+LoadingState.displayName = 'LoadingState';
 
 const styles = StyleSheet.create({
   container: {

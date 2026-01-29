@@ -11,12 +11,12 @@ interface RecipeItemProps {
   isSelected?: boolean;
 }
 
-export const RecipeItem: React.FC<RecipeItemProps> = ({
+export const RecipeItem = React.memo<RecipeItemProps>(function RecipeItem({
   recipe,
   onPress,
   showMealType = true,
   isSelected = false,
-}) => {
+}) {
   const imageUrl = recipe.image_url;
 
   return (
@@ -63,7 +63,9 @@ export const RecipeItem: React.FC<RecipeItemProps> = ({
       </View>
     </TouchableOpacity>
   );
-};
+});
+
+RecipeItem.displayName = 'RecipeItem';
 
 const styles = StyleSheet.create({
   container: {

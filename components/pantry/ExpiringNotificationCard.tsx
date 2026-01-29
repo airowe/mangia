@@ -31,13 +31,13 @@ interface ExpiringNotificationCardProps {
   onDismiss?: () => void;
 }
 
-export function ExpiringNotificationCard({
+export const ExpiringNotificationCard = React.memo<ExpiringNotificationCardProps>(function ExpiringNotificationCard({
   items,
   timestamp = "now",
   onViewRecipes,
   onAddToShoppingList,
   onDismiss,
-}: ExpiringNotificationCardProps) {
+}) {
   // Build message based on items
   const itemNames = items.map((i) => i.name);
   const message =
@@ -123,7 +123,9 @@ export function ExpiringNotificationCard({
       <View style={styles.stackedCard2} />
     </ReanimatedAnimated.View>
   );
-}
+});
+
+ExpiringNotificationCard.displayName = 'ExpiringNotificationCard';
 
 const styles = StyleSheet.create({
   container: {

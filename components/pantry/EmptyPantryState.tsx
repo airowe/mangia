@@ -24,10 +24,10 @@ interface EmptyPantryStateProps {
   onAddManually?: () => void;
 }
 
-export function EmptyPantryState({
+export const EmptyPantryState = React.memo<EmptyPantryStateProps>(function EmptyPantryState({
   onScanPantry,
   onAddManually,
-}: EmptyPantryStateProps) {
+}) {
   return (
     <ReanimatedAnimated.View
       style={styles.container}
@@ -146,7 +146,9 @@ export function EmptyPantryState({
       </ReanimatedAnimated.View>
     </ReanimatedAnimated.View>
   );
-}
+});
+
+EmptyPantryState.displayName = 'EmptyPantryState';
 
 const styles = StyleSheet.create({
   container: {

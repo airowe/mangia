@@ -23,7 +23,7 @@ interface EditorialCardProps {
   style?: ViewStyle;
 }
 
-export function EditorialCard({
+export const EditorialCard = React.memo<EditorialCardProps>(function EditorialCard({
   variant,
   imageUrl,
   title,
@@ -31,7 +31,7 @@ export function EditorialCard({
   category,
   onPress,
   style,
-}: EditorialCardProps) {
+}) {
   const { theme, isDark } = useTheme();
   const { colors, spacing, borderRadius } = theme;
 
@@ -152,4 +152,6 @@ export function EditorialCard({
   }
 
   return content;
-}
+});
+
+EditorialCard.displayName = 'EditorialCard';

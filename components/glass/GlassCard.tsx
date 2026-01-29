@@ -31,7 +31,7 @@ interface GlassCardProps {
   elevation?: 0 | 1 | 2 | 3;
 }
 
-export function GlassCard({
+export const GlassCard = React.memo<GlassCardProps>(function GlassCard({
   children,
   style,
   intensity = 50,
@@ -39,7 +39,7 @@ export function GlassCard({
   padding = 'md',
   borderRadius: customBorderRadius,
   elevation = 1,
-}: GlassCardProps) {
+}) {
   const { theme, isDark } = useTheme();
   const { spacing, borderRadius, colors } = theme;
 
@@ -107,7 +107,9 @@ export function GlassCard({
       <View style={contentStyle}>{children}</View>
     </View>
   );
-}
+});
+
+GlassCard.displayName = 'GlassCard';
 
 function getShadowStyle(elevation: 0 | 1 | 2 | 3, isDark: boolean): ViewStyle {
   if (elevation === 0) return {};

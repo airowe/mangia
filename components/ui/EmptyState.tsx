@@ -38,7 +38,7 @@ interface EmptyStateProps {
   iconSize?: number;
 }
 
-export function EmptyState({
+export const EmptyState = React.memo<EmptyStateProps>(function EmptyState({
   icon,
   title,
   subtitle,
@@ -47,7 +47,7 @@ export function EmptyState({
   style,
   animationDelay = 0,
   iconSize = 80,
-}: EmptyStateProps) {
+}) {
   const { theme } = useTheme();
   const { colors, spacing, typography } = theme;
 
@@ -124,7 +124,9 @@ export function EmptyState({
       )}
     </Animated.View>
   );
-}
+});
+
+EmptyState.displayName = 'EmptyState';
 
 const styles = StyleSheet.create({
   container: {

@@ -26,10 +26,10 @@ interface CookingTimerProps {
   onTimerComplete?: () => void;
 }
 
-export function CookingTimer({
+export const CookingTimer = React.memo<CookingTimerProps>(function CookingTimer({
   initialSeconds = 120,
   onTimerComplete,
-}: CookingTimerProps) {
+}) {
   const [seconds, setSeconds] = useState(initialSeconds);
   const [isRunning, setIsRunning] = useState(false);
   const rotation = useSharedValue(0);
@@ -109,7 +109,9 @@ export function CookingTimer({
       </TouchableOpacity>
     </View>
   );
-}
+});
+
+CookingTimer.displayName = 'CookingTimer';
 
 const styles = StyleSheet.create({
   container: {

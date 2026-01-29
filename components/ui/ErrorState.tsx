@@ -29,7 +29,7 @@ interface ErrorStateProps {
   icon?: keyof typeof MaterialCommunityIcons.glyphMap;
 }
 
-export function ErrorState({
+export const ErrorState = React.memo<ErrorStateProps>(function ErrorState({
   message,
   title = 'Something went wrong',
   onRetry,
@@ -37,7 +37,7 @@ export function ErrorState({
   style,
   fullScreen = true,
   icon = 'alert-circle-outline',
-}: ErrorStateProps) {
+}) {
   const { theme } = useTheme();
   const { colors, spacing, typography, borderRadius } = theme;
 
@@ -113,7 +113,9 @@ export function ErrorState({
       )}
     </Animated.View>
   );
-}
+});
+
+ErrorState.displayName = 'ErrorState';
 
 const styles = StyleSheet.create({
   container: {

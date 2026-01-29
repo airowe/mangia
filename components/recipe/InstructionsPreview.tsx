@@ -18,7 +18,7 @@ interface InstructionsPreviewProps {
   instructions: string[];
 }
 
-export function InstructionsPreview({ instructions }: InstructionsPreviewProps) {
+export const InstructionsPreview = React.memo<InstructionsPreviewProps>(function InstructionsPreview({ instructions }) {
   if (!instructions || instructions.length === 0) {
     return null;
   }
@@ -42,7 +42,9 @@ export function InstructionsPreview({ instructions }: InstructionsPreviewProps) 
       </View>
     </Animated.View>
   );
-}
+});
+
+InstructionsPreview.displayName = 'InstructionsPreview';
 
 const styles = StyleSheet.create({
   container: {

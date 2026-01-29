@@ -39,7 +39,7 @@ interface FeaturedRecipeCardProps {
   variant?: 'hero' | 'large' | 'standard';
 }
 
-export function FeaturedRecipeCard({ recipe, onPress, variant = 'standard' }: FeaturedRecipeCardProps) {
+export const FeaturedRecipeCard = React.memo<FeaturedRecipeCardProps>(function FeaturedRecipeCard({ recipe, onPress, variant = 'standard' }) {
   const { theme } = useTheme();
 
   const imageUrl =
@@ -111,7 +111,9 @@ export function FeaturedRecipeCard({ recipe, onPress, variant = 'standard' }: Fe
       </Animated.View>
     </TouchableOpacity>
   );
-}
+});
+
+FeaturedRecipeCard.displayName = 'FeaturedRecipeCard';
 
 const styles = StyleSheet.create({
   container: {

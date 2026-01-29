@@ -34,7 +34,7 @@ interface CookingControlsProps {
   isSpeaking?: boolean;
 }
 
-export function CookingControls({
+export const CookingControls = React.memo<CookingControlsProps>(function CookingControls({
   onPrevious,
   onNext,
   canGoPrevious,
@@ -44,7 +44,7 @@ export function CookingControls({
   isVoiceEnabled = false,
   isListening = false,
   isSpeaking = false,
-}: CookingControlsProps) {
+}) {
   // Pulsing animation for voice indicator
   const pulseValue = useSharedValue(1);
   const speakingValue = useSharedValue(1);
@@ -167,7 +167,9 @@ export function CookingControls({
       )}
     </View>
   );
-}
+});
+
+CookingControls.displayName = 'CookingControls';
 
 const styles = StyleSheet.create({
   container: {

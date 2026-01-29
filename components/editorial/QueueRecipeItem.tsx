@@ -34,12 +34,12 @@ interface QueueRecipeItemProps {
   onStartCooking?: (recipe: Recipe) => void;
 }
 
-export function QueueRecipeItem({
+export const QueueRecipeItem = React.memo<QueueRecipeItemProps>(function QueueRecipeItem({
   recipe,
   index,
   onPress,
   onStartCooking,
-}: QueueRecipeItemProps) {
+}) {
   const imageUrl =
     recipe.image_url ||
     `https://source.unsplash.com/featured/?${encodeURIComponent(recipe.title)},food`;
@@ -106,7 +106,9 @@ export function QueueRecipeItem({
       </TouchableOpacity>
     </Animated.View>
   );
-}
+});
+
+QueueRecipeItem.displayName = 'QueueRecipeItem';
 
 const styles = StyleSheet.create({
   container: {

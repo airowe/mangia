@@ -42,13 +42,13 @@ const PLATFORM_CONFIG: Record<
   manual: { icon: "pencil", color: colors.primary, label: "Manual" },
 };
 
-export const RecipeQueueCard: React.FC<RecipeQueueCardProps> = ({
+export const RecipeQueueCard = React.memo<RecipeQueueCardProps>(function RecipeQueueCard({
   recipe,
   onPress,
   onMarkCooked,
   onArchive,
   onDelete,
-}) => {
+}) {
   const sourceType = recipe.source_type || "manual";
   const platform = PLATFORM_CONFIG[sourceType] || PLATFORM_CONFIG.manual;
 
@@ -161,7 +161,9 @@ export const RecipeQueueCard: React.FC<RecipeQueueCardProps> = ({
       </View>
     </TouchableOpacity>
   );
-};
+});
+
+RecipeQueueCard.displayName = 'RecipeQueueCard';
 
 const styles = StyleSheet.create({
   card: {

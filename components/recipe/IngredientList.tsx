@@ -34,7 +34,7 @@ interface IngredientItemProps {
   index: number;
 }
 
-function IngredientItem({ ingredient, scaleFactor, index }: IngredientItemProps) {
+const IngredientItem = React.memo<IngredientItemProps>(function IngredientItem({ ingredient, scaleFactor, index }) {
   const [isChecked, setIsChecked] = useState(false);
   const displayText = getScaledIngredientDisplay(ingredient, scaleFactor);
 
@@ -68,16 +68,18 @@ function IngredientItem({ ingredient, scaleFactor, index }: IngredientItemProps)
       </TouchableOpacity>
     </Animated.View>
   );
-}
+});
+
+IngredientItem.displayName = 'IngredientItem';
 
 const SCALE_OPTIONS = [0.5, 1, 1.5, 2, 3, 4];
 
-export function IngredientList({
+export const IngredientList = React.memo<IngredientListProps>(function IngredientList({
   ingredients,
   scaleFactor = 1,
   onScaleChange,
   originalServings,
-}: IngredientListProps) {
+}) {
   const [scaleModalVisible, setScaleModalVisible] = useState(false);
 
   // Format scale display
@@ -181,7 +183,9 @@ export function IngredientList({
       </Modal>
     </View>
   );
-}
+});
+
+IngredientList.displayName = 'IngredientList';
 
 const styles = StyleSheet.create({
   container: {

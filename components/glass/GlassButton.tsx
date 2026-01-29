@@ -45,7 +45,7 @@ interface GlassButtonProps {
   haptic?: boolean;
 }
 
-export function GlassButton({
+export const GlassButton = React.memo<GlassButtonProps>(function GlassButton({
   children,
   label,
   icon,
@@ -57,7 +57,7 @@ export function GlassButton({
   style,
   labelStyle,
   haptic = true,
-}: GlassButtonProps) {
+}) {
   const { theme, isDark } = useTheme();
   const { colors, spacing, borderRadius, animation } = theme;
 
@@ -207,7 +207,9 @@ export function GlassButton({
       <View style={styles.contentRow}>{content}</View>
     </AnimatedPressable>
   );
-}
+});
+
+GlassButton.displayName = 'GlassButton';
 
 function getSizeStyles(
   size: 'sm' | 'md' | 'lg',

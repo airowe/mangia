@@ -30,11 +30,11 @@ interface CookingStepContentProps {
   ingredients?: RecipeIngredient[];
 }
 
-export function CookingStepContent({
+export const CookingStepContent = React.memo<CookingStepContentProps>(function CookingStepContent({
   stepText,
   stepCategory = 'Cooking',
   ingredients = [],
-}: CookingStepContentProps) {
+}) {
   // Parse the instruction to find ingredient references
   const parsedSegments = useMemo(() => {
     return parseInstructionWithIngredients(stepText, ingredients);
@@ -103,7 +103,9 @@ export function CookingStepContent({
       </ScrollView>
     </View>
   );
-}
+});
+
+CookingStepContent.displayName = 'CookingStepContent';
 
 const styles = StyleSheet.create({
   container: {

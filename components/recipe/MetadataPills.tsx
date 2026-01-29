@@ -28,7 +28,7 @@ interface PillProps {
   delay: number;
 }
 
-function Pill({ icon, label, delay }: PillProps) {
+const Pill = React.memo<PillProps>(function Pill({ icon, label, delay }) {
   return (
     <Animated.View
       entering={FadeInDown.delay(delay).duration(300)}
@@ -38,9 +38,11 @@ function Pill({ icon, label, delay }: PillProps) {
       <Text style={styles.pillText}>{label}</Text>
     </Animated.View>
   );
-}
+});
 
-export function MetadataPills({ cookTime, servings, calories }: MetadataPillsProps) {
+Pill.displayName = 'Pill';
+
+export const MetadataPills = React.memo<MetadataPillsProps>(function MetadataPills({ cookTime, servings, calories }) {
   const pills: { icon: keyof typeof Feather.glyphMap; label: string }[] = [];
 
   if (cookTime && cookTime > 0) {
@@ -73,7 +75,9 @@ export function MetadataPills({ cookTime, servings, calories }: MetadataPillsPro
       ))}
     </ScrollView>
   );
-}
+});
+
+MetadataPills.displayName = 'MetadataPills';
 
 const styles = StyleSheet.create({
   container: {

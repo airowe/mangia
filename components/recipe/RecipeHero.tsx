@@ -38,7 +38,7 @@ interface RecipeHeroProps {
   onMore?: () => void;
 }
 
-export function RecipeHero({
+export const RecipeHero = React.memo<RecipeHeroProps>(function RecipeHero({
   imageUrl,
   title,
   author,
@@ -46,7 +46,7 @@ export function RecipeHero({
   onBack,
   onSave,
   onMore,
-}: RecipeHeroProps) {
+}) {
   return (
     <Animated.View entering={FadeIn.duration(400)} style={styles.container}>
       {/* Hero Image */}
@@ -132,7 +132,9 @@ export function RecipeHero({
       </View>
     </Animated.View>
   );
-}
+});
+
+RecipeHero.displayName = 'RecipeHero';
 
 const styles = StyleSheet.create({
   container: {

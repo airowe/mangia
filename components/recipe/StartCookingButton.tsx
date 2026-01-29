@@ -22,7 +22,7 @@ interface StartCookingButtonProps {
   disabled?: boolean;
 }
 
-export function StartCookingButton({ onPress, disabled }: StartCookingButtonProps) {
+export const StartCookingButton = React.memo<StartCookingButtonProps>(function StartCookingButton({ onPress, disabled }) {
   return (
     <Animated.View
       entering={FadeInUp.delay(400).duration(300)}
@@ -51,7 +51,9 @@ export function StartCookingButton({ onPress, disabled }: StartCookingButtonProp
       </TouchableOpacity>
     </Animated.View>
   );
-}
+});
+
+StartCookingButton.displayName = 'StartCookingButton';
 
 const styles = StyleSheet.create({
   container: {
