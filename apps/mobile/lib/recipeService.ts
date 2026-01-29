@@ -14,10 +14,24 @@ export interface RecipeWithIngredients extends Recipe {
 // API response types
 interface RecipesResponse {
   recipes: RecipeWithIngredients[];
+  total: number;
 }
 
 interface RecipeResponse {
   recipe: RecipeWithIngredients;
+}
+
+export interface RecipeFilterParams {
+  status?: string;
+  minRating?: number;
+  maxTotalTime?: number;
+  minServings?: number;
+  mealType?: string;
+  titleSearch?: string;
+  search?: string;
+  sort?: string;
+  limit?: number;
+  offset?: number;
 }
 
 /**
@@ -41,6 +55,42 @@ export async function fetchRecipesByStatus(
     return response.recipes || [];
   } catch (error) {
     console.error("Error fetching recipes:", error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch recipes with server-side filtering.
+ * All filter logic (rating, time, servings, mealType) is applied on the server.
+ */
+export async function fetchFilteredRecipes(
+  params: RecipeFilterParams = {},
+  options?: RequestOptions,
+): Promise<{ recipes: RecipeWithIngredients[]; total: number }> {
+  if (DEV_BYPASS_AUTH) {
+    await simulateDelay();
+    const recipes = mockApi.getRecipes();
+    return { recipes, total: recipes.length };
+  }
+
+  try {
+    const searchParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null && value !== "") {
+        searchParams.set(key, String(value));
+      }
+    }
+    const qs = searchParams.toString();
+    const url = qs ? `/api/recipes?${qs}` : "/api/recipes";
+    const response = await apiClient.get<RecipesResponse>(url, {
+      signal: options?.signal,
+    });
+    return {
+      recipes: response.recipes || [],
+      total: response.total ?? 0,
+    };
+  } catch (error) {
+    console.error("Error fetching filtered recipes:", error);
     throw error;
   }
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   View,
   ScrollView,
@@ -17,7 +17,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { fetchRecipesByStatus } from "../lib/recipeService";
+import { fetchFilteredRecipes, RecipeFilterParams } from "../lib/recipeService";
 import { Recipe } from "../models/Recipe";
 import { mangiaColors } from "../theme/tokens/colors";
 import { fontFamily } from "../theme/tokens/typography";
@@ -78,35 +78,97 @@ export const RecipesScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [searchFocused, setSearchFocused] = useState(false);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
 
-  const loadRecipes = useCallback(async (signal?: AbortSignal) => {
-    try {
-      // Load all recipes (not filtered by status for the library view)
-      const allRecipes = await fetchRecipesByStatus("want_to_cook", { signal });
-      const cookedRecipes = await fetchRecipesByStatus("cooked", { signal });
-      if (!signal?.aborted) {
-        setRecipes([...allRecipes, ...cookedRecipes]);
+  // Map filter type to server query params
+  const buildFilterParams = useCallback(
+    (filter: FilterType, search: string): RecipeFilterParams => {
+      const base: RecipeFilterParams = {
+        status: "want_to_cook,cooked",
+        sort: "newest",
+      };
+      if (search.trim()) {
+        base.search = search.trim();
       }
-    } catch (err) {
-      if (isAbortError(err)) return;
-      console.error("Failed to load recipes:", err);
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-        setRefreshing(false);
+      switch (filter) {
+        case "favorites":
+          return { ...base, minRating: 4 };
+        case "quick":
+          return { ...base, maxTotalTime: 30 };
+        case "dinner":
+          return { ...base, mealType: "dinner" };
+        case "dessert":
+          return { ...base, mealType: "dessert" };
+        default:
+          return base;
       }
-    }
-  }, []);
+    },
+    []
+  );
 
+  const loadRecipes = useCallback(
+    async (filter: FilterType, search: string, signal?: AbortSignal) => {
+      try {
+        const params = buildFilterParams(filter, search);
+        const result = await fetchFilteredRecipes(params, { signal });
+        if (!signal?.aborted) {
+          setRecipes(result.recipes);
+        }
+      } catch (err) {
+        if (isAbortError(err)) return;
+        console.error("Failed to load recipes:", err);
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    },
+    [buildFilterParams]
+  );
+
+  // Re-fetch when filter changes (immediate).
+  // searchQuery is read but intentionally excluded — search changes are
+  // handled by the debounced handleSearchChange to avoid double-fetching.
   useEffect(() => {
+    setLoading(true);
     const abortController = new AbortController();
-    loadRecipes(abortController.signal);
+    loadRecipes(activeFilter, searchQuery, abortController.signal);
     return () => { abortController.abort(); };
-  }, [loadRecipes]);
+  }, [activeFilter, loadRecipes]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Debounce search input (300ms)
+  const handleSearchChange = useCallback(
+    (text: string) => {
+      setSearchQuery(text);
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+      if (searchAbortRef.current) {
+        searchAbortRef.current.abort();
+      }
+      searchTimerRef.current = setTimeout(() => {
+        const controller = new AbortController();
+        searchAbortRef.current = controller;
+        setLoading(true);
+        loadRecipes(activeFilter, text, controller.signal);
+      }, 300);
+    },
+    [activeFilter, loadRecipes]
+  );
+
+  // Cleanup timer and abort on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      if (searchAbortRef.current) searchAbortRef.current.abort();
+    };
+  }, []);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    loadRecipes();
+    loadRecipes(activeFilter, searchQuery);
   };
 
   const handlePressRecipe = useCallback(
@@ -116,53 +178,6 @@ export const RecipesScreen = () => {
     },
     [navigation]
   );
-
-  // Filter recipes based on search and active filter
-  const filteredRecipes = useMemo(() => {
-    let result = recipes;
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter((r) => r.title.toLowerCase().includes(query));
-    }
-
-    // Apply category filter
-    switch (activeFilter) {
-      case "favorites":
-        // Assuming we have a favorites field or high rating
-        result = result.filter((r) => (r.rating || 0) >= 4);
-        break;
-      case "quick":
-        result = result.filter((r) => {
-          const totalTime = (r.prepTime || 0) + (r.cookTime || 0);
-          return totalTime > 0 && totalTime <= 30;
-        });
-        break;
-      case "dinner":
-        // Filter by meal type if available
-        result = result.filter(
-          (r) =>
-            r.mealType?.toLowerCase().includes("dinner") ||
-            r.servings && r.servings >= 4
-        );
-        break;
-      case "dessert":
-        result = result.filter(
-          (r) =>
-            r.mealType?.toLowerCase().includes("dessert") ||
-            r.title.toLowerCase().includes("dessert") ||
-            r.title.toLowerCase().includes("cake") ||
-            r.title.toLowerCase().includes("cookie")
-        );
-        break;
-      default:
-        // "all" - no additional filtering
-        break;
-    }
-
-    return result;
-  }, [recipes, searchQuery, activeFilter]);
 
   const handleAccountPress = () => {
     // Navigate to account/profile screen
@@ -204,7 +219,7 @@ export const RecipesScreen = () => {
             placeholder="Search for pasta, risotto..."
             placeholderTextColor={mangiaColors.taupe}
             value={searchQuery}
-            onChangeText={setSearchQuery}
+            onChangeText={handleSearchChange}
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
           />
@@ -256,7 +271,7 @@ export const RecipesScreen = () => {
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={mangiaColors.terracotta} />
           </View>
-        ) : filteredRecipes.length === 0 ? (
+        ) : recipes.length === 0 ? (
           <View style={styles.emptyContainer}>
             <MaterialCommunityIcons
               name="book-open-variant"
@@ -276,7 +291,7 @@ export const RecipesScreen = () => {
           </View>
         ) : (
           <View style={styles.grid}>
-            {filteredRecipes.map((recipe, index) => (
+            {recipes.map((recipe, index) => (
               <Animated.View
                 key={recipe.id}
                 entering={FadeInDown.delay(index * 50).duration(300)}

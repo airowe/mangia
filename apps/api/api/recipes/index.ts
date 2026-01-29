@@ -8,7 +8,7 @@ import { createRecipeSchema } from "../../lib/schemas";
 import { checkImportLimit, incrementImportCount } from "../../lib/rate-limit";
 import { handleError } from "../../lib/errors";
 import { db, recipes, ingredients } from "../../db";
-import { eq, desc, asc, and, or, ilike, sql, type SQL } from "drizzle-orm";
+import { eq, desc, asc, and, or, ilike, inArray, gte, lte, sql, type SQL } from "drizzle-orm";
 import { categorizeIngredient } from "../../lib/grocery-generator";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -26,6 +26,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         mealType,
         sourceType,
         search,
+        minRating,
+        maxTotalTime,
+        minServings,
+        titleSearch,
         sort = "newest",
         limit = "50",
         offset = "0",
@@ -34,11 +38,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Build where conditions
       const conditions: SQL[] = [eq(recipes.userId, user.id)];
 
+      // Status supports CSV: "want_to_cook,cooked"
       if (status && typeof status === "string") {
-        conditions.push(eq(recipes.status, status as any));
+        const validStatuses = ["want_to_cook", "cooked", "archived"];
+        const statuses = status.split(",").map(s => s.trim()).filter(s => validStatuses.includes(s));
+        if (statuses.length === 1) {
+          conditions.push(eq(recipes.status, statuses[0] as any));
+        } else if (statuses.length > 1) {
+          conditions.push(inArray(recipes.status, statuses as any));
+        }
       }
       if (mealType && typeof mealType === "string") {
         conditions.push(eq(recipes.mealType, mealType as any));
+      }
+      if (minRating && typeof minRating === "string") {
+        const parsed = parseInt(minRating, 10);
+        if (!isNaN(parsed)) {
+          conditions.push(gte(recipes.rating, parsed));
+        }
+      }
+      if (maxTotalTime && typeof maxTotalTime === "string") {
+        const maxMinutes = parseInt(maxTotalTime, 10);
+        if (!isNaN(maxMinutes)) {
+          conditions.push(
+            or(
+              lte(recipes.totalTime, maxMinutes),
+              and(
+                sql`${recipes.totalTime} IS NULL`,
+                lte(sql`COALESCE(${recipes.prepTime}, 0) + COALESCE(${recipes.cookTime}, 0)`, maxMinutes),
+                sql`COALESCE(${recipes.prepTime}, 0) + COALESCE(${recipes.cookTime}, 0) > 0`
+              )
+            )!
+          );
+        }
+      }
+      if (minServings && typeof minServings === "string") {
+        const parsed = parseInt(minServings, 10);
+        if (!isNaN(parsed)) {
+          conditions.push(gte(recipes.servings, parsed));
+        }
+      }
+      if (titleSearch && typeof titleSearch === "string") {
+        conditions.push(ilike(recipes.title, `%${titleSearch}%`));
       }
       if (sourceType && typeof sourceType === "string") {
         conditions.push(eq(recipes.sourceType, sourceType));
