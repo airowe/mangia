@@ -3,6 +3,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
+import { validateBody } from "../../lib/validation";
+import { createPantryItemSchema } from "../../lib/schemas";
 import { db, pantryItems } from "../../db";
 import { eq, asc } from "drizzle-orm";
 
@@ -31,7 +33,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // POST - Create pantry item
   if (req.method === "POST") {
     try {
-      const body = req.body;
+      const body = validateBody(req.body, createPantryItemSchema, res);
+      if (!body) return;
 
       const [newItem] = await db
         .insert(pantryItems)
@@ -40,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           name: body.name,
           quantity: body.quantity,
           unit: body.unit,
-          category: body.category || "other",
+          category: body.category,
           expiryDate: body.expiryDate ? new Date(body.expiryDate) : null,
           notes: body.notes,
         })

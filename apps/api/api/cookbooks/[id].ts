@@ -3,6 +3,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
+import { validateBody } from "../../lib/validation";
+import { updateCookbookSchema } from "../../lib/schemas";
 import { db, cookbooks } from "../../db";
 import { eq, and } from "drizzle-orm";
 
@@ -45,7 +47,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // PATCH - Update cookbook
   if (req.method === "PATCH") {
     try {
-      const body = req.body;
+      const body = validateBody(req.body, updateCookbookSchema, res);
+      if (!body) return;
 
       // Verify ownership
       const existing = await db.query.cookbooks.findFirst({

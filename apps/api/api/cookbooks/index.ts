@@ -3,6 +3,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
+import { validateBody } from "../../lib/validation";
+import { createCookbookSchema } from "../../lib/schemas";
 import { db, cookbooks } from "../../db";
 import { eq, asc, ilike, or, and } from "drizzle-orm";
 
@@ -54,7 +56,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // POST - Create cookbook
   if (req.method === "POST") {
     try {
-      const body = req.body;
+      const body = validateBody(req.body, createCookbookSchema, res);
+      if (!body) return;
 
       const [newCookbook] = await db
         .insert(cookbooks)

@@ -11,11 +11,11 @@ Every endpoint does `const body = req.body` and directly passes unvalidated fiel
 - No input sanitization
 
 ## Success Criteria
-- [ ] Zod schemas defined for every POST/PATCH endpoint request body
-- [ ] All endpoints validate request bodies with Zod before processing
-- [ ] Invalid requests return 400 with clear error messages (Zod error format)
-- [ ] Shared validation helper function to reduce boilerplate
-- [ ] `pnpm typecheck` passes
+- [x] Zod schemas defined for every POST/PATCH endpoint request body
+- [x] All endpoints validate request bodies with Zod before processing
+- [x] Invalid requests return 400 with clear error messages (Zod error format)
+- [x] Shared validation helper function to reduce boilerplate
+- [x] `pnpm typecheck` passes
 
 ## Technical Approach
 

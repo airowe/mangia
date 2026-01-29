@@ -3,6 +3,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
+import { validateBody } from "../../lib/validation";
+import { updatePantryItemSchema } from "../../lib/schemas";
 import { db, pantryItems } from "../../db";
 import { eq, and } from "drizzle-orm";
 
@@ -22,7 +24,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // PATCH - Update pantry item
   if (req.method === "PATCH") {
     try {
-      const body = req.body;
+      const body = validateBody(req.body, updatePantryItemSchema, res);
+      if (!body) return;
 
       const [updatedItem] = await db
         .update(pantryItems)

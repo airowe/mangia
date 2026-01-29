@@ -3,6 +3,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../../../lib/auth";
+import { validateBody } from "../../../../lib/validation";
+import { createRecipeNoteSchema } from "../../../../lib/schemas";
 import { db, recipeNotes, recipes } from "../../../../db";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -46,19 +48,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // POST - Create note
   if (req.method === "POST") {
     try {
-      const { note, cooked_at } = req.body;
-
-      if (!note) {
-        return res.status(400).json({ error: "Note content is required" });
-      }
+      const body = validateBody(req.body, createRecipeNoteSchema, res);
+      if (!body) return;
 
       const [newNote] = await db
         .insert(recipeNotes)
         .values({
           recipeId,
           userId: user.id,
-          note,
-          cookedAt: cooked_at || new Date().toISOString().split("T")[0],
+          note: body.note,
+          cookedAt: body.cookedAt || new Date().toISOString().split("T")[0],
         })
         .returning();
 

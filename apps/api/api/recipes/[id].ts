@@ -3,6 +3,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
+import { validateBody } from "../../lib/validation";
+import { updateRecipeSchema } from "../../lib/schemas";
 import { db, recipes, ingredients } from "../../db";
 import { eq, and } from "drizzle-orm";
 
@@ -43,7 +45,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // PATCH - Update recipe
   if (req.method === "PATCH") {
     try {
-      const body = req.body;
+      const body = validateBody(req.body, updateRecipeSchema, res);
+      if (!body) return;
 
       // Update recipe
       const [updatedRecipe] = await db
@@ -80,14 +83,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Insert new ingredients
         if (body.ingredients.length > 0) {
           await db.insert(ingredients).values(
-            body.ingredients.map((ing: any, index: number) => ({
+            body.ingredients.map((ing, index) => ({
               recipeId: id,
               name: ing.name,
               quantity: ing.quantity,
               unit: ing.unit,
-              category: ing.category || "other",
+              category: ing.category,
               notes: ing.notes,
-              isOptional: ing.isOptional || false,
+              isOptional: ing.isOptional,
               orderIndex: index,
             }))
           );

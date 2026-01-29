@@ -3,6 +3,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
+import { validateBody } from "../../lib/validation";
+import { createCollectionSchema } from "../../lib/schemas";
 import { db, collections, recipeCollections, recipes } from "../../db";
 import { eq, asc, sql } from "drizzle-orm";
 
@@ -46,7 +48,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // POST - Create collection
   if (req.method === "POST") {
     try {
-      const body = req.body;
+      const body = validateBody(req.body, createCollectionSchema, res);
+      if (!body) return;
 
       const [newCollection] = await db
         .insert(collections)

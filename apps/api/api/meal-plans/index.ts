@@ -3,6 +3,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
+import { validateBody } from "../../lib/validation";
+import { createMealPlanSchema } from "../../lib/schemas";
 import { db, mealPlans } from "../../db";
 import { eq, and, gte, lte } from "drizzle-orm";
 
@@ -43,18 +45,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // POST - Create meal plan
   if (req.method === "POST") {
     try {
-      const { date, meal_type, recipe_id, title, notes } = req.body;
-
-      if (!date || !meal_type) {
-        return res.status(400).json({ error: "date and meal_type are required" });
-      }
+      const body = validateBody(req.body, createMealPlanSchema, res);
+      if (!body) return;
 
       // Check if meal already exists for this slot
       const existing = await db.query.mealPlans.findFirst({
         where: and(
           eq(mealPlans.userId, user.id),
-          eq(mealPlans.date, date),
-          eq(mealPlans.mealType, meal_type)
+          eq(mealPlans.date, body.date),
+          eq(mealPlans.mealType, body.mealType)
         ),
       });
 
@@ -63,9 +62,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const [updated] = await db
           .update(mealPlans)
           .set({
-            recipeId: recipe_id || null,
-            title: title || null,
-            notes: notes || null,
+            recipeId: body.recipeId || null,
+            title: body.title || null,
+            notes: body.notes || null,
           })
           .where(eq(mealPlans.id, existing.id))
           .returning();
@@ -83,11 +82,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .insert(mealPlans)
         .values({
           userId: user.id,
-          date,
-          mealType: meal_type,
-          recipeId: recipe_id || null,
-          title: title || null,
-          notes: notes || null,
+          date: body.date,
+          mealType: body.mealType,
+          recipeId: body.recipeId || null,
+          title: body.title || null,
+          notes: body.notes || null,
         })
         .returning();
 

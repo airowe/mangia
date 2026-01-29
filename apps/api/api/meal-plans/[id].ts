@@ -3,6 +3,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../../lib/auth";
+import { validateBody } from "../../lib/validation";
+import { updateMealPlanSchema } from "../../lib/schemas";
 import { db, mealPlans } from "../../db";
 import { eq, and } from "drizzle-orm";
 
@@ -22,15 +24,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // PATCH - Update meal plan
   if (req.method === "PATCH") {
     try {
-      const { recipe_id, title, notes, completed } = req.body;
+      const body = validateBody(req.body, updateMealPlanSchema, res);
+      if (!body) return;
 
       const [updated] = await db
         .update(mealPlans)
         .set({
-          ...(recipe_id !== undefined && { recipeId: recipe_id }),
-          ...(title !== undefined && { title }),
-          ...(notes !== undefined && { notes }),
-          ...(completed !== undefined && { completed }),
+          ...(body.recipeId !== undefined && { recipeId: body.recipeId }),
+          ...(body.title !== undefined && { title: body.title }),
+          ...(body.notes !== undefined && { notes: body.notes }),
+          ...(body.completed !== undefined && { completed: body.completed }),
         })
         .where(and(eq(mealPlans.id, id), eq(mealPlans.userId, user.id)))
         .returning();
