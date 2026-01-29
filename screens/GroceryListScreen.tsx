@@ -79,6 +79,7 @@ export default function GroceryListScreen() {
       total_quantity: 1,
       unit: "",
       category: "other" as IngredientCategory,
+      from_recipes: [],
       in_pantry: false,
       pantry_quantity: 0,
       need_to_buy: 1,

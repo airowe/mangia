@@ -15,10 +15,9 @@ import {
   Dimensions,
   TouchableOpacity,
   Image,
-  FlatList,
   Platform,
-  ViewToken,
 } from 'react-native';
+import { FlashList, ViewToken } from '@shopify/flash-list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -42,7 +41,7 @@ interface OnboardingScreenProps {
 export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const insets = useSafeAreaInsets();
   const [currentPage, setCurrentPage] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+  const flashListRef = useRef<any>(null);
 
   const handleSkip = useCallback(async () => {
     await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
@@ -51,18 +50,18 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   const handleNext = useCallback(() => {
     if (currentPage < 2) {
-      flatListRef.current?.scrollToIndex({ index: currentPage + 1, animated: true });
+      flashListRef.current?.scrollToIndex({ index: currentPage + 1, animated: true });
     }
   }, [currentPage]);
 
   const handleBack = useCallback(() => {
     if (currentPage > 0) {
-      flatListRef.current?.scrollToIndex({ index: currentPage - 1, animated: true });
+      flashListRef.current?.scrollToIndex({ index: currentPage - 1, animated: true });
     }
   }, [currentPage]);
 
   const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    ({ viewableItems }: { viewableItems: ViewToken<number>[] }) => {
       if (viewableItems.length > 0 && viewableItems[0].index !== null) {
         setCurrentPage(viewableItems[0].index);
       }
@@ -84,8 +83,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        ref={flatListRef}
+      <FlashList
+        ref={flashListRef}
         data={[0, 1, 2]}
         renderItem={renderPage}
         horizontal
@@ -94,12 +93,6 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
         scrollEnabled={true}
-        bounces={false}
-        getItemLayout={(_, index) => ({
-          length: SCREEN_WIDTH,
-          offset: SCREEN_WIDTH * index,
-          index,
-        })}
       />
     </View>
   );

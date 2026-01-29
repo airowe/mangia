@@ -8,10 +8,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  FlatList,
   Alert,
   ActivityIndicator,
 } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button } from "react-native-paper";
 import { colors } from "../theme/colors";
@@ -244,7 +244,7 @@ export function RecipeRatingNotes({
             style={styles.loader}
           />
         ) : notes.length > 0 ? (
-          <FlatList
+          <FlashList
             data={notes}
             renderItem={renderNote}
             keyExtractor={(item) => item.id}

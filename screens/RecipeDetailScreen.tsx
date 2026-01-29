@@ -16,10 +16,10 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
-  FlatList,
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import {
   useRoute,
   useNavigation,
@@ -587,10 +587,9 @@ export default function RecipeDetailScreen() {
             </View>
           ) : (
             <>
-              <FlatList
+              <FlashList
                 data={collections}
                 keyExtractor={(item) => item.id}
-                style={styles.collectionList}
                 renderItem={({ item }) => {
                   const isInCollection = recipeCollections.includes(item.id);
                   return (
@@ -629,6 +628,7 @@ export default function RecipeDetailScreen() {
                     </TouchableOpacity>
                   );
                 }}
+                contentContainerStyle={{ paddingBottom: 8 }}
               />
 
               <View style={styles.modalActions}>

@@ -20,11 +20,11 @@ import {
   View,
   Text,
   Dimensions,
-  FlatList,
   Alert,
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
@@ -67,7 +67,7 @@ export default function CookingModeScreen() {
   const route = useRoute<RouteProp<RouteParams, 'params'>>();
   const navigation = useNavigation<NavigationProp>();
   const { recipeId } = route.params;
-  const flatListRef = useRef<FlatList>(null);
+  const flashListRef = useRef<any>(null);
 
   // Core state
   const [recipe, setRecipe] = useState<RecipeWithIngredients | null>(null);
@@ -167,7 +167,7 @@ export default function CookingModeScreen() {
     if (currentStep < totalSteps - 1) {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
-      flatListRef.current?.scrollToIndex({ index: nextStep, animated: true });
+      flashListRef.current?.scrollToIndex({ index: nextStep, animated: true });
     }
   }, [currentStep, totalSteps]);
 
@@ -175,7 +175,7 @@ export default function CookingModeScreen() {
     if (currentStep > 0) {
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
-      flatListRef.current?.scrollToIndex({ index: prevStep, animated: true });
+      flashListRef.current?.scrollToIndex({ index: prevStep, animated: true });
     }
   }, [currentStep]);
 
@@ -370,8 +370,8 @@ export default function CookingModeScreen() {
           entering={FadeIn.duration(300)}
           style={styles.stepsContainer}
         >
-          <FlatList
-            ref={flatListRef}
+          <FlashList
+            ref={flashListRef}
             data={recipe.instructions || []}
             renderItem={renderStep}
             keyExtractor={(_, index) => index.toString()}
@@ -380,11 +380,6 @@ export default function CookingModeScreen() {
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={handleScrollEnd}
             initialScrollIndex={currentStep}
-            getItemLayout={(_, index) => ({
-              length: SCREEN_WIDTH,
-              offset: SCREEN_WIDTH * index,
-              index,
-            })}
           />
         </Animated.View>
       )}

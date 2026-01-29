@@ -7,13 +7,13 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   RefreshControl,
   Image,
   TextInput,
   ScrollView,
 } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -242,13 +242,12 @@ export const WhatCanIMakeScreen: React.FC = () => {
         </TouchableOpacity>
       </ReanimatedAnimated.View>
 
-      <FlatList
+      <FlashList
         data={matches}
         renderItem={renderRecipeCard}
         keyExtractor={(item) => item.recipe.id}
         numColumns={2}
-        contentContainerStyle={[styles.listContent, { paddingBottom: 100 + insets.bottom }]}
-        columnWrapperStyle={styles.columnWrapper}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <>
@@ -347,13 +346,8 @@ export const WhatCanIMakeScreen: React.FC = () => {
             </ReanimatedAnimated.View>
           )
         }
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={mangiaColors.terracotta}
-          />
-        }
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
       />
     </Screen>
   );

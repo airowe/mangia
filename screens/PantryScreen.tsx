@@ -6,7 +6,6 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   StyleSheet,
-  FlatList,
   RefreshControl,
   Alert,
   ActivityIndicator,

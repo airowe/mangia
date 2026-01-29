@@ -4,11 +4,11 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
-  FlatList,
   RefreshControl,
   Alert,
   TouchableOpacity,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { Text, FAB, Portal, Modal, TextInput, Button } from 'react-native-paper';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -348,23 +348,14 @@ export default function CollectionsScreen() {
 
   return (
     <Screen style={styles.container}>
-      <FlatList
+      <FlashList
         data={collections}
         keyExtractor={(item) => item.id}
         renderItem={renderCollection}
-        contentContainerStyle={[
-          styles.listContent,
-          collections.length === 0 && styles.emptyListContent,
-        ]}
+        contentContainerStyle={styles.listContent}
         ListEmptyComponent={!isLoading ? renderEmpty : null}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
-          />
-        }
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
       />
 
       <FAB

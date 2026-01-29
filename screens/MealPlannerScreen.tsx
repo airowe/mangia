@@ -7,10 +7,10 @@ import {
   SafeAreaView,
   ScrollView,
   Modal,
-  FlatList,
   Image,
   Alert,
 } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import { WeekCalendar } from "react-native-calendars";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -638,7 +638,7 @@ const MealPlannerScreen: React.FC = () => {
               </Text>
             </Animated.View>
           ) : (
-            <FlatList
+            <FlashList
               data={recipes}
               renderItem={renderRecipeItem}
               keyExtractor={(item) => item.id}

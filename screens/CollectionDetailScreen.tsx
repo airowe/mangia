@@ -4,12 +4,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
-  FlatList,
   RefreshControl,
   Alert,
   TouchableOpacity,
   Image,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { Text, IconButton, Menu, Divider } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -373,24 +373,15 @@ export default function CollectionDetailScreen() {
 
   return (
     <Screen style={styles.container}>
-      <FlatList
+      <FlashList
         data={collection?.recipes || []}
         keyExtractor={(item) => item.id}
         renderItem={renderRecipe}
-        contentContainerStyle={[
-          styles.listContent,
-          (!collection || collection.recipes.length === 0) && styles.emptyListContent,
-        ]}
+        contentContainerStyle={styles.listContent}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={!isLoading ? renderEmpty : null}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
-          />
-        }
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
       />
     </Screen>
   );

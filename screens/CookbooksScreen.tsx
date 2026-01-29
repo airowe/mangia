@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   RefreshControl,
   Image,
   Alert,
 } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import {
   Text,
   Searchbar,
@@ -320,19 +320,14 @@ export default function CookbooksScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={cookbooks}
           renderItem={renderCookbook}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={renderEmptyState}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={handleRefresh}
-              colors={[colors.primary]}
-            />
-          }
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
         />
       )}
 
