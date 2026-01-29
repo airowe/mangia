@@ -10,14 +10,14 @@ The collections API only has GET (list) and POST (create). Missing:
 - The `recipeCollections` junction table exists but has no endpoints to manage it
 
 ## Success Criteria
-- [ ] `GET /collections/[id]` - Get single collection with its recipes
-- [ ] `PATCH /collections/[id]` - Update collection name/description/color/icon
-- [ ] `DELETE /collections/[id]` - Delete collection (cascades to junction table)
-- [ ] `POST /collections/[id]/recipes` - Add recipe to collection
-- [ ] `DELETE /collections/[id]/recipes` - Remove recipe from collection
-- [ ] All new endpoints have Zod validation (using schemas from API-002)
-- [ ] All new endpoints enforce user ownership
-- [ ] `pnpm typecheck` passes
+- [x] `GET /collections/[id]` - Get single collection with its recipes
+- [x] `PATCH /collections/[id]` - Update collection name/description/color/icon
+- [x] `DELETE /collections/[id]` - Delete collection (cascades to junction table)
+- [x] `POST /collections/[id]/recipes` - Add recipe to collection
+- [x] `DELETE /collections/[id]/recipes` - Remove recipe from collection
+- [x] All new endpoints have Zod validation (using schemas from API-002)
+- [x] All new endpoints enforce user ownership
+- [x] `pnpm typecheck` passes
 
 ## Technical Approach
 

@@ -70,6 +70,12 @@ export const createCollectionSchema = z.object({
   icon: z.string().max(100).optional().nullable(),
 });
 
+export const updateCollectionSchema = createCollectionSchema.partial();
+
+export const collectionRecipeSchema = z.object({
+  recipeId: z.string().uuid("Invalid recipe ID"),
+});
+
 // --- Cookbooks ---
 
 export const createCookbookSchema = z.object({
