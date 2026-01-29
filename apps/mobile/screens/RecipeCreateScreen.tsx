@@ -15,10 +15,8 @@ import { addRecipe } from "../lib/recipes";
 import { RecipeIngredient } from "../models/Recipe";
 import { Screen } from "../components/Screen";
 import { useTheme } from "../theme";
-import { extractRecipeFromUrl, mapToRecipeFormat } from "../lib/firecrawl";
+import { importRecipeFromUrl } from "../lib/recipeService";
 import { Button } from "react-native-paper";
-
-const apiKey = process.env.EXPO_PUBLIC_FIRECRAWL_API_KEY;
 
 export default function RecipeCreateScreen({ navigation }: any) {
   const { theme } = useTheme();
@@ -33,11 +31,6 @@ export default function RecipeCreateScreen({ navigation }: any) {
   const [importUrl, setImportUrl] = useState("");
   const [isImporting, setIsImporting] = useState(false);
 
-  if (!apiKey) {
-    Alert.alert("Error", "No API key found");
-    return;
-  }
-
   const handleImportRecipe = async () => {
     if (!importUrl.trim()) {
       Alert.alert("Error", "Please enter a valid URL");
@@ -46,19 +39,18 @@ export default function RecipeCreateScreen({ navigation }: any) {
 
     try {
       setIsImporting(true);
-      const recipeData = await extractRecipeFromUrl(importUrl, apiKey);
-      const mappedRecipe = mapToRecipeFormat(recipeData);
+      const recipe = await importRecipeFromUrl(importUrl);
 
-      setTitle(mappedRecipe.title);
-      setInstructions(mappedRecipe.instructions);
+      setTitle(recipe.title);
+      setInstructions(recipe.instructions || []);
 
       const formattedIngredients: RecipeIngredient[] =
-        mappedRecipe.ingredients.map((ing) => ({
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        (recipe.ingredients || []).map((ing) => ({
+          id: ing.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
           name: ing.name,
-          quantity: 0,
-          unit: "",
-          recipeId: "",
+          quantity: ing.quantity || 0,
+          unit: ing.unit || "",
+          recipeId: recipe.id || "",
         }));
 
       setIngredients(formattedIngredients);

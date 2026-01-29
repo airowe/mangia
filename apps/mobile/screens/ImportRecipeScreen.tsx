@@ -26,14 +26,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme";
 import { mangiaColors } from "../theme/tokens/colors";
 import { fontFamily, editorialTextStyles } from "../theme/tokens/typography";
-import {
-  parseRecipeFromUrl,
-  parseRecipeFromText,
-  detectUrlType,
-  UrlType,
-} from "../lib/recipeParser";
-import { ParsedRecipe, Recipe } from "../models/Recipe";
-import { createRecipe, getRecentRecipes } from "../lib/recipeService";
+import { Recipe } from "../models/Recipe";
+import { importRecipeFromUrl, getRecentRecipes } from "../lib/recipeService";
 import { useRecipeLimit } from "../hooks/useRecipeLimit";
 
 type RootStackParamList = {
@@ -132,37 +126,10 @@ export const ImportRecipeScreen: React.FC = () => {
     setError(null);
 
     try {
-      const platform = detectUrlType(url);
-      const recipe = await parseRecipeFromUrl(url);
+      // Server handles parsing, AI extraction, and DB insert in one call
+      await importRecipeFromUrl(url);
 
-      // Prepare ingredients for API (ParsedRecipe has string quantities)
-      const ingredientData = recipe.ingredients.map(
-        (ing: { name: string; quantity: string; unit: string }, index: number) => ({
-          name: ing.name,
-          quantity: parseFloat(ing.quantity) || 0,
-          unit: ing.unit || "",
-          orderIndex: index,
-        })
-      );
-
-      // Create recipe with ingredients via API
-      const createdRecipe = await createRecipe(
-        {
-          title: recipe.title,
-          description: recipe.description,
-          instructions: recipe.instructions,
-          prepTime: recipe.prepTime,
-          cookTime: recipe.cookTime,
-          servings: recipe.servings,
-          imageUrl: recipe.imageUrl,
-          sourceUrl: url,
-          sourceType: platform || "blog",
-          status: "want_to_cook",
-        },
-        ingredientData
-      );
-
-      // Increment usage count for free users
+      // Increment local usage count for free users
       await incrementUsage();
 
       Alert.alert("Recipe Saved!", 'Added to your "Want to Cook" list', [

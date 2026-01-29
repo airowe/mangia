@@ -268,6 +268,25 @@ export async function updateRecipe(
 }
 
 /**
+ * Import a recipe from a URL via the server-side parsing endpoint.
+ * The server handles transcript fetching, AI extraction, and DB insert.
+ */
+export async function importRecipeFromUrl(
+  url: string,
+): Promise<RecipeWithIngredients> {
+  try {
+    const response = await apiClient.post<RecipeResponse>(
+      "/api/recipes/import",
+      { url },
+    );
+    return response.recipe;
+  } catch (error) {
+    console.error("Error importing recipe from URL:", error);
+    throw error;
+  }
+}
+
+/**
  * Simulate network delay for more realistic dev experience
  */
 function simulateDelay(ms: number = 300): Promise<void> {
