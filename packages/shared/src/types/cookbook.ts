@@ -1,3 +1,5 @@
+// Cookbook shared types
+
 export interface Cookbook {
   id: string;
   user_id: string;

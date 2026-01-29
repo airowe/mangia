@@ -1,2 +1,4 @@
+// Shared constants
+
 export const STORAGE_CATEGORIES = ['Fridge', 'Freezer', 'Pantry', 'Spice Drawer'] as const;
-// export type StorageCategory = typeof STORAGE_CATEGORIES[number];
+export type StorageCategory = typeof STORAGE_CATEGORIES[number];

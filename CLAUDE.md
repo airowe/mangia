@@ -25,7 +25,15 @@ This saves tokens and ensures accurate understanding of the codebase.
 
 ## Project Overview
 
-**Mangia** is a React Native / Expo recipe management app with:
+**Mangia** is a pnpm workspace monorepo containing:
+
+| Package | Path | Description |
+|---------|------|-------------|
+| `@mangia/mobile` | `apps/mobile/` | React Native / Expo mobile app |
+| `@mangia/api` | `apps/api/` | Vercel serverless API (Drizzle + Neon) |
+| `@mangia/shared` | `packages/shared/` | Shared TypeScript types and constants |
+
+Features:
 - Recipe import from URLs (TikTok, YouTube, blogs)
 - Pantry inventory tracking
 - Smart grocery lists
@@ -37,8 +45,10 @@ This saves tokens and ensures accurate understanding of the codebase.
 - **Framework**: React Native 0.81.5 + Expo SDK 54
 - **Language**: TypeScript 5.9
 - **Auth**: Clerk
-- **Backend**: Supabase
+- **Backend**: Vercel serverless + Neon PostgreSQL (Drizzle ORM)
 - **Monetization**: RevenueCat
+- **Build Orchestrator**: Turborepo
+- **Package Manager**: pnpm (workspaces)
 
 ## Design System
 
@@ -53,9 +63,20 @@ Typography: Georgia serif for headlines, system fonts for body.
 ## Quick Commands
 
 ```bash
-pnpm start              # Start Expo dev server
+# From monorepo root
+pnpm start:mobile       # Start Expo dev server
 pnpm ios                # Run on iOS simulator
 pnpm android            # Run on Android emulator
+pnpm dev:api            # Start Vercel dev server
+pnpm typecheck          # Typecheck all packages
+pnpm lint               # Lint all packages
+
+# From apps/mobile
+pnpm start              # Start Expo dev server
+
+# From apps/api
+pnpm dev                # Start Vercel dev server
+pnpm db:migrate         # Run database migrations
 ```
 
 ## Important Rules

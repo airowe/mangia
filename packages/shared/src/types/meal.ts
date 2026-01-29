@@ -1,7 +1,8 @@
-import { Recipe } from "./Recipe";
+// Meal planning shared types
 
-// Forward declaration of ShoppingListItem to avoid circular dependency
-type ShoppingListItem = {
+import { Recipe } from './recipe';
+
+export type ShoppingListItem = {
   id: string;
   name: string;
   amount: number;
@@ -48,3 +49,4 @@ export interface MealPlanResponse {
   days: MealPlanDay[];
   shoppingList: ShoppingListItem[];
 }
+

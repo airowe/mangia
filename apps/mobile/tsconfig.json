@@ -11,5 +11,9 @@
     "**/*.ts",
     "**/*.tsx",
     "src/types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "scripts"
   ]
 }
