@@ -30,7 +30,7 @@ const validateAndCleanProduct = (product: any): Product | null => {
     ...(product.EAN13 && { EAN13: product.EAN13 }),
     ...(product.UPCA && { UPCA: product.UPCA }),
     ...(product.expiryDate && { expiryDate: product.expiryDate }),
-    ...(product.user_id && { user_id: product.user_id }),
+    ...(product.userId && { userId: product.userId }),
   };
 
   return cleanProduct;
@@ -41,7 +41,7 @@ const validateAndCleanProduct = (product: any): Product | null => {
  * @param productData The product data to create
  * @returns The created product
  */
-export const createProduct = async (productData: Omit<Product, 'id' | 'created_at'>): Promise<Product> => {
+export const createProduct = async (productData: Omit<Product, 'id' | 'createdAt'>): Promise<Product> => {
   try {
     const response = await apiClient.post<Product>('/api/products', productData);
     const product = validateAndCleanProduct(response);
@@ -61,7 +61,7 @@ export const createProduct = async (productData: Omit<Product, 'id' | 'created_a
  * @param updates The fields to update
  * @returns The updated product
  */
-export const updateProduct = async (id: string, updates: Partial<Omit<Product, 'id' | 'created_at'>>): Promise<Product> => {
+export const updateProduct = async (id: string, updates: Partial<Omit<Product, 'id' | 'createdAt'>>): Promise<Product> => {
   try {
     const response = await apiClient.put<Product>(`/api/products/${id}`, updates);
     const product = validateAndCleanProduct(response);

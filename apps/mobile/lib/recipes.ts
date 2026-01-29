@@ -47,13 +47,13 @@ export interface MealPlanResponse {
 
 export const recipeApi = {
   // Save a new recipe
-  async saveRecipe(recipe: Omit<Recipe, 'id' | 'user_id' | 'created_at'>): Promise<Recipe> {
+  async saveRecipe(recipe: Omit<Recipe, 'id' | 'userId' | 'createdAt'>): Promise<Recipe> {
     const response = await apiClient.post<{ data: Recipe }>('/recipes/add', recipe);
     return response.data;
   },
 
   // Add a recipe (alias for saveRecipe for backward compatibility)
-  async addRecipe(recipe: Omit<Recipe, 'id' | 'user_id'>): Promise<Recipe> {
+  async addRecipe(recipe: Omit<Recipe, 'id' | 'userId'>): Promise<Recipe> {
     return this.saveRecipe(recipe);
   },
 
@@ -70,8 +70,8 @@ export const recipeApi = {
   },
 
   // Get user's saved meal plans
-  async getMealPlans(): Promise<{ id: string; created_at: string }[]> {
-    const response = await apiClient.get<{ data: { id: string; created_at: string }[] }>('/meal-planner/current');
+  async getMealPlans(): Promise<{ id: string; createdAt: string }[]> {
+    const response = await apiClient.get<{ data: { id: string; createdAt: string }[] }>('/meal-planner/current');
     return response.data || [];
   },
 
@@ -93,9 +93,9 @@ export const recipeApi = {
 
   // Fetch recipes with optional filters and pagination
   async fetchRecipes(params: { 
-    search?: string; 
-    user_id?: string; 
-    meal_type?: string;
+    search?: string;
+    userId?: string;
+    mealType?: string;
     page?: number;
     limit?: number;
   } = {}): Promise<PaginatedResponse<Recipe>> {
@@ -104,8 +104,8 @@ export const recipeApi = {
       
       // Add search filters
       if (params.search) queryParams.append('search', params.search);
-      if (params.meal_type) queryParams.append('meal_type', params.meal_type);
-      if (params.user_id) queryParams.append('user_id', params.user_id);
+      if (params.mealType) queryParams.append('mealType', params.mealType);
+      if (params.userId) queryParams.append('userId', params.userId);
       
       // Add pagination parameters
       const page = params.page || 1;
@@ -169,9 +169,9 @@ export const recipeApi = {
 
   // Search recipes with optional filters and pagination
   async searchRecipes(params: { 
-    query?: string; 
-    meal_type?: string;
-    user_id?: string;
+    query?: string;
+    mealType?: string;
+    userId?: string;
     page?: number;
     limit?: number;
   } = {}): Promise<PaginatedResponse<Recipe>> {
@@ -180,8 +180,8 @@ export const recipeApi = {
       
       // Add search filters
       if (params.query) queryParams.append('query', params.query);
-      if (params.meal_type) queryParams.append('meal_type', params.meal_type);
-      if (params.user_id) queryParams.append('user_id', params.user_id);
+      if (params.mealType) queryParams.append('mealType', params.mealType);
+      if (params.userId) queryParams.append('userId', params.userId);
       
       // Add pagination parameters
       const page = params.page || 1;
@@ -204,7 +204,7 @@ export const recipeApi = {
 // Export types for backward compatibility
 export interface AddRecipeResponse extends Recipe {
   id: string;
-  user_id: string;
+  userId: string;
 }
 
 // Export individual functions for backward compatibility

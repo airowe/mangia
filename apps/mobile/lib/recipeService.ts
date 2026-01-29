@@ -217,11 +217,11 @@ export async function getRecentRecipes(
   if (DEV_BYPASS_AUTH) {
     await simulateDelay();
     const allRecipes = mockApi.getRecipes();
-    // Sort by created_at descending and take the first N
+    // Sort by createdAt descending and take the first N
     return allRecipes
       .sort((a, b) => {
-        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dateB - dateA;
       })
       .slice(0, limit);

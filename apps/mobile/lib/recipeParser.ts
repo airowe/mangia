@@ -60,10 +60,10 @@ async function parseBlogRecipe(url: string): Promise<ParsedRecipe> {
       unit: "",
     })),
     instructions: firecrawlRecipe.instructions || [],
-    prep_time: parseTime(firecrawlRecipe.prepTime),
-    cook_time: parseTime(firecrawlRecipe.cookTime),
+    prepTime: parseTime(firecrawlRecipe.prepTime),
+    cookTime: parseTime(firecrawlRecipe.cookTime),
     servings: firecrawlRecipe.servings,
-    image_url: firecrawlRecipe.image,
+    imageUrl: firecrawlRecipe.image,
   };
 }
 
@@ -121,8 +121,8 @@ async function parseVideoRecipe(
   const recipe = await extractIngredientsWithClaude(content);
 
   // Include thumbnail if available
-  if (thumbnailUrl && !recipe.image_url) {
-    recipe.image_url = thumbnailUrl;
+  if (thumbnailUrl && !recipe.imageUrl) {
+    recipe.imageUrl = thumbnailUrl;
   }
 
   return recipe;

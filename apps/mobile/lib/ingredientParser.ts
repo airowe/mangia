@@ -226,13 +226,13 @@ function normalizeRecipe(raw: Record<string, unknown>): ParsedRecipe {
       typeof raw.description === "string" ? raw.description : undefined,
     ingredients,
     instructions,
-    prep_time:
+    prepTime:
       typeof raw.prep_time === "number" ? Math.round(raw.prep_time) : undefined,
-    cook_time:
+    cookTime:
       typeof raw.cook_time === "number" ? Math.round(raw.cook_time) : undefined,
     servings:
       typeof raw.servings === "number" ? Math.round(raw.servings) : undefined,
-    image_url: typeof raw.image_url === "string" ? raw.image_url : undefined,
+    imageUrl: typeof raw.image_url === "string" ? raw.image_url : undefined,
   };
 }
 

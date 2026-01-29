@@ -324,8 +324,8 @@ export default function CookingModeScreen() {
           recipeName={recipe.title}
           ingredients={recipe.ingredients || []}
           totalSteps={totalSteps}
-          prepTime={recipe.prep_time}
-          cookTime={recipe.cook_time}
+          prepTime={recipe.prepTime}
+          cookTime={recipe.cookTime}
           onStartCooking={handleStartCooking}
           onClose={() => navigation.goBack()}
         />

@@ -13,23 +13,25 @@ export interface Product {
   imageUrl?: string;
   location?: string;
   brand?: string;
-  created_at?: string;
+  createdAt?: string;
 }
 
 export interface PantryItem {
   id: string;
-  user_id?: string;
+  userId?: string;
+  name?: string;
   title: string;
   quantity?: number;
   unit?: string;
   category?: IngredientCategory | string;
-  expiry_date?: string;
+  expiryDate?: string;
+  notes?: string;
   location?: string;
   imageUrl?: string;
   image?: string;
   price?: number;
   description?: string;
   brand?: string;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

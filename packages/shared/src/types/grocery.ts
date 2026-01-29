@@ -4,37 +4,37 @@ import { IngredientCategory } from './recipe';
 
 export interface GroceryList {
   id: string;
-  user_id: string;
+  userId: string;
   name: string;
-  created_at: string;
-  completed_at?: string;
+  createdAt: string;
+  completedAt?: string;
 }
 
 export interface GroceryItem {
   id: string;
-  list_id: string;
+  listId: string;
   name: string;
   quantity: number;
   unit: string;
   category: IngredientCategory;
-  recipe_ids: string[];
-  in_pantry: boolean;
-  pantry_quantity?: number;
-  need_to_buy: number;
+  recipeIds: string[];
+  inPantry: boolean;
+  pantryQuantity?: number;
+  needToBuy: number;
   checked: boolean;
 }
 
 export interface ConsolidatedIngredient {
   name: string;
-  total_quantity: number;
+  totalQuantity: number;
   unit: string;
   category: IngredientCategory;
-  from_recipes: Array<{
-    recipe_id: string;
-    recipe_title: string;
+  fromRecipes: Array<{
+    recipeId: string;
+    recipeTitle: string;
     quantity: number;
   }>;
-  in_pantry: boolean;
-  pantry_quantity: number;
-  need_to_buy: number;
+  inPantry: boolean;
+  pantryQuantity: number;
+  needToBuy: number;
 }

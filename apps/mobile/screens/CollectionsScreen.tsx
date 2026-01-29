@@ -320,7 +320,7 @@ export default function CollectionsScreen() {
               </Text>
             )}
             <Text style={styles.recipeCount}>
-              {item.recipe_count} recipe{item.recipe_count !== 1 ? 's' : ''}
+              {item.recipeCount} recipe{item.recipeCount !== 1 ? 's' : ''}
             </Text>
           </View>
           <MaterialCommunityIcons

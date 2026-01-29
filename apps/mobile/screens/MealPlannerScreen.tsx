@@ -64,8 +64,8 @@ const MealPlannerScreen: React.FC = () => {
   // Get unique recipe IDs from current week's meal plans
   const weekRecipeIds = useMemo(() => {
     const ids = mealPlans
-      .filter((mp) => mp.recipe_id !== null)
-      .map((mp) => mp.recipe_id as string);
+      .filter((mp) => mp.recipeId !== null)
+      .map((mp) => mp.recipeId as string);
     return [...new Set(ids)]; // Remove duplicates
   }, [mealPlans]);
 
@@ -137,12 +137,12 @@ const MealPlannerScreen: React.FC = () => {
 
     dayPlans.forEach((plan) => {
       if (
-        plan.meal_type !== "snack" &&
-        (plan.meal_type === "breakfast" ||
-          plan.meal_type === "lunch" ||
-          plan.meal_type === "dinner")
+        plan.mealType !== "snack" &&
+        (plan.mealType === "breakfast" ||
+          plan.mealType === "lunch" ||
+          plan.mealType === "dinner")
       ) {
-        meals[plan.meal_type] = plan;
+        meals[plan.mealType] = plan;
       }
     });
 
@@ -179,13 +179,13 @@ const MealPlannerScreen: React.FC = () => {
     try {
       // Check if a meal already exists for this slot
       const existingMeal = mealPlans.find(
-        (mp) => mp.date === selectedDate && mp.meal_type === selectedMealType,
+        (mp) => mp.date === selectedDate && mp.mealType === selectedMealType,
       );
 
       if (existingMeal) {
         // Update existing meal
         await updateMealPlan(existingMeal.id, {
-          recipe_id: recipe.id,
+          recipeId: recipe.id,
           title: recipe.title,
         });
       } else {
@@ -448,9 +448,9 @@ const MealPlannerScreen: React.FC = () => {
 
           {meal ? (
             <View style={styles.mealContent}>
-              {recipe?.image_url && (
+              {recipe?.imageUrl && (
                 <Image
-                  source={{ uri: recipe.image_url }}
+                  source={{ uri: recipe.imageUrl }}
                   style={styles.mealImage}
                 />
               )}
@@ -458,14 +458,14 @@ const MealPlannerScreen: React.FC = () => {
                 <Text style={styles.mealName} numberOfLines={2}>
                   {meal.title || recipe?.title}
                 </Text>
-                {recipe?.cook_time && (
+                {recipe?.cookTime && (
                   <Text style={styles.mealMeta}>
                     <MaterialCommunityIcons
                       name="clock-outline"
                       size={12}
                       color={colors.textSecondary}
                     />{" "}
-                    {recipe.cook_time} min
+                    {recipe.cookTime} min
                   </Text>
                 )}
               </View>
@@ -498,8 +498,8 @@ const MealPlannerScreen: React.FC = () => {
         onPress={() => handleAddMealToPlan(item)}
         disabled={saving}
       >
-        {item.image_url ? (
-          <Image source={{ uri: item.image_url }} style={styles.recipeImage} />
+        {item.imageUrl ? (
+          <Image source={{ uri: item.imageUrl }} style={styles.recipeImage} />
         ) : (
           <View style={[styles.recipeImage, styles.recipePlaceholder]}>
             <MaterialCommunityIcons
@@ -514,14 +514,14 @@ const MealPlannerScreen: React.FC = () => {
             {item.title}
           </Text>
           <View style={styles.recipeMeta}>
-            {item.cook_time && (
+            {item.cookTime && (
               <Text style={styles.recipeMetaText}>
                 <MaterialCommunityIcons
                   name="clock-outline"
                   size={12}
                   color={colors.textSecondary}
                 />{" "}
-                {item.cook_time} min
+                {item.cookTime} min
               </Text>
             )}
             {item.servings && (

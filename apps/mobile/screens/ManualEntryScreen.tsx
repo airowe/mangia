@@ -163,7 +163,7 @@ export const ManualEntryScreen = ({
         location: product.location || "Pantry",
         description: product.description || "",
         image: product.image,
-        created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       };
 
       const { data, error } = await addToPantry(newProduct);

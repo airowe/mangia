@@ -15,7 +15,7 @@ export interface SampleRecipe {
   cookTime: number;
   servings: number;
   instructions: string[];
-  ingredients: Omit<RecipeIngredient, 'id' | 'recipe_id'>[];
+  ingredients: Omit<RecipeIngredient, 'id' | 'recipeId'>[];
   sourceType: 'manual';
 }
 

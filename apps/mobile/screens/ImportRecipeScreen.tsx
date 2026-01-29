@@ -141,7 +141,7 @@ export const ImportRecipeScreen: React.FC = () => {
           name: ing.name,
           quantity: parseFloat(ing.quantity) || 0,
           unit: ing.unit || "",
-          display_order: index,
+          orderIndex: index,
         })
       );
 
@@ -151,12 +151,12 @@ export const ImportRecipeScreen: React.FC = () => {
           title: recipe.title,
           description: recipe.description,
           instructions: recipe.instructions,
-          prep_time: recipe.prep_time,
-          cook_time: recipe.cook_time,
+          prepTime: recipe.prepTime,
+          cookTime: recipe.cookTime,
           servings: recipe.servings,
-          image_url: recipe.image_url,
-          source_url: url,
-          source_type: platform || "blog",
+          imageUrl: recipe.imageUrl,
+          sourceUrl: url,
+          sourceType: platform || "blog",
           status: "want_to_cook",
         },
         ingredientData
@@ -341,9 +341,9 @@ export const ImportRecipeScreen: React.FC = () => {
                       activeOpacity={0.85}
                     >
                       <View style={styles.recipeImageContainer}>
-                        {recipe.image_url ? (
+                        {recipe.imageUrl ? (
                           <Image
-                            source={{ uri: recipe.image_url }}
+                            source={{ uri: recipe.imageUrl }}
                             style={styles.recipeImage}
                             contentFit="cover"
                           />

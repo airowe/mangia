@@ -71,7 +71,7 @@ export async function createCollection(
  */
 export async function updateCollection(
   id: string,
-  updates: Partial<Pick<RecipeCollection, 'name' | 'description' | 'icon' | 'color' | 'display_order'>>
+  updates: Partial<Pick<RecipeCollection, 'name' | 'description' | 'icon' | 'color'>>
 ): Promise<RecipeCollection> {
   try {
     const data = await apiClient.patch<RecipeCollection>(`/api/collections/${id}`, updates);

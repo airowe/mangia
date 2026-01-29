@@ -26,13 +26,13 @@ export async function generateGroceryList(
 
     const inPantry = !!pantryItem;
     const pantryQuantity = pantryItem?.quantity || 0;
-    const needToBuy = Math.max(0, item.total_quantity - pantryQuantity);
+    const needToBuy = Math.max(0, item.totalQuantity - pantryQuantity);
 
     return {
       ...item,
-      in_pantry: inPantry,
-      pantry_quantity: pantryQuantity,
-      need_to_buy: needToBuy,
+      inPantry,
+      pantryQuantity,
+      needToBuy,
     };
   });
 
@@ -69,10 +69,10 @@ function consolidateIngredients(recipes: Recipe[]): ConsolidatedIngredient[] {
       if (ingredientMap.has(key)) {
         // Add to existing
         const existing = ingredientMap.get(key)!;
-        existing.total_quantity += ingredient.quantity || 0;
-        existing.from_recipes.push({
-          recipe_id: recipe.id,
-          recipe_title: recipe.title,
+        existing.totalQuantity += ingredient.quantity || 0;
+        existing.fromRecipes.push({
+          recipeId: recipe.id,
+          recipeTitle: recipe.title,
           quantity: ingredient.quantity || 0,
         });
       } else {
@@ -80,17 +80,17 @@ function consolidateIngredients(recipes: Recipe[]): ConsolidatedIngredient[] {
         const category = ingredient.category as IngredientCategory || categorizeIngredient(ingredient.name);
         ingredientMap.set(key, {
           name: ingredient.name,
-          total_quantity: ingredient.quantity || 0,
+          totalQuantity: ingredient.quantity || 0,
           unit: ingredient.unit || '',
           category,
-          from_recipes: [{
-            recipe_id: recipe.id,
-            recipe_title: recipe.title,
+          fromRecipes: [{
+            recipeId: recipe.id,
+            recipeTitle: recipe.title,
             quantity: ingredient.quantity || 0,
           }],
-          in_pantry: false,
-          pantry_quantity: 0,
-          need_to_buy: 0,
+          inPantry: false,
+          pantryQuantity: 0,
+          needToBuy: 0,
         });
       }
     }
@@ -117,14 +117,14 @@ export function normalizeIngredientName(name: string): string {
  * Filter to only items that need to be purchased
  */
 export function getItemsToBuy(items: ConsolidatedIngredient[]): ConsolidatedIngredient[] {
-  return items.filter(item => item.need_to_buy > 0);
+  return items.filter(item => item.needToBuy > 0);
 }
 
 /**
  * Filter to items user already has
  */
 export function getItemsInPantry(items: ConsolidatedIngredient[]): ConsolidatedIngredient[] {
-  return items.filter(item => item.in_pantry);
+  return items.filter(item => item.inPantry);
 }
 
 /**
@@ -136,14 +136,14 @@ export async function createGroceryList(
 ): Promise<GroceryList> {
   try {
     const groceryItems = items
-      .filter(item => item.need_to_buy > 0)
+      .filter(item => item.needToBuy > 0)
       .map(item => ({
         name: item.name,
-        quantity: item.need_to_buy,
+        quantity: item.needToBuy,
         unit: item.unit,
         category: item.category,
         checked: false,
-        recipe_ids: item.from_recipes.map(r => r.recipe_id),
+        recipeIds: item.fromRecipes.map(r => r.recipeId),
       }));
 
     const data = await apiClient.post<GroceryList>('/api/grocery-lists', {
@@ -216,7 +216,7 @@ export async function toggleGroceryItem(itemId: string, checked: boolean): Promi
 export async function completeGroceryList(listId: string): Promise<void> {
   try {
     await apiClient.patch(`/api/grocery-lists/${listId}`, {
-      completed_at: new Date().toISOString()
+      completedAt: new Date().toISOString()
     });
   } catch (error) {
     console.error('Error completing grocery list:', error);

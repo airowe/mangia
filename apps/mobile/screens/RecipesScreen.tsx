@@ -52,7 +52,7 @@ const FILTERS: FilterPill[] = [
 
 // Get difficulty label based on cook time
 const getDifficulty = (recipe: Recipe): string => {
-  const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
+  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   if (totalTime <= 30) return "Easy";
   if (totalTime <= 60) return "Medium";
   return "Hard";
@@ -60,7 +60,7 @@ const getDifficulty = (recipe: Recipe): string => {
 
 // Format time display
 const formatTime = (recipe: Recipe): string => {
-  const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
+  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   if (totalTime === 0) return "";
   if (totalTime < 60) return `${totalTime} min`;
   const hours = Math.floor(totalTime / 60);
@@ -135,7 +135,7 @@ export const RecipesScreen = () => {
         break;
       case "quick":
         result = result.filter((r) => {
-          const totalTime = (r.prep_time || 0) + (r.cook_time || 0);
+          const totalTime = (r.prepTime || 0) + (r.cookTime || 0);
           return totalTime > 0 && totalTime <= 30;
         });
         break;
@@ -143,14 +143,14 @@ export const RecipesScreen = () => {
         // Filter by meal type if available
         result = result.filter(
           (r) =>
-            r.meal_type?.toLowerCase().includes("dinner") ||
+            r.mealType?.toLowerCase().includes("dinner") ||
             r.servings && r.servings >= 4
         );
         break;
       case "dessert":
         result = result.filter(
           (r) =>
-            r.meal_type?.toLowerCase().includes("dessert") ||
+            r.mealType?.toLowerCase().includes("dessert") ||
             r.title.toLowerCase().includes("dessert") ||
             r.title.toLowerCase().includes("cake") ||
             r.title.toLowerCase().includes("cookie")
@@ -292,9 +292,9 @@ export const RecipesScreen = () => {
                   activeOpacity={0.85}
                 >
                   <View style={styles.imageContainer}>
-                    {recipe.image_url ? (
+                    {recipe.imageUrl ? (
                       <Image
-                        source={{ uri: recipe.image_url }}
+                        source={{ uri: recipe.imageUrl }}
                         style={styles.image}
                         contentFit="cover"
                       />

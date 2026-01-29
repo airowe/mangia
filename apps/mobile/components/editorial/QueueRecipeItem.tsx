@@ -41,11 +41,11 @@ export const QueueRecipeItem = React.memo<QueueRecipeItemProps>(function QueueRe
   onStartCooking,
 }) {
   const imageUrl =
-    recipe.image_url ||
+    recipe.imageUrl ||
     `https://source.unsplash.com/featured/?${encodeURIComponent(recipe.title)},food`;
 
   // Calculate total time
-  const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
+  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
 
   const handleActionPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -82,7 +82,7 @@ export const QueueRecipeItem = React.memo<QueueRecipeItemProps>(function QueueRe
             </Text>
             <View style={styles.dot} />
             <Text style={styles.metaText}>
-              {recipe.meal_type || 'Recipe'}
+              {recipe.mealType || 'Recipe'}
             </Text>
           </View>
         </View>

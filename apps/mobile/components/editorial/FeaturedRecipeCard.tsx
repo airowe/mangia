@@ -43,17 +43,17 @@ export const FeaturedRecipeCard = React.memo<FeaturedRecipeCardProps>(function F
   const { theme } = useTheme();
 
   const imageUrl =
-    recipe.image_url ||
+    recipe.imageUrl ||
     `https://source.unsplash.com/featured/?${encodeURIComponent(recipe.title)},food`;
 
   // Calculate total time
-  const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
+  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
 
-  // Get tags from meal_type and source_type
+  // Get tags from mealType and sourceType
   const tags: string[] = [];
-  if (recipe.meal_type) tags.push(recipe.meal_type);
-  if (recipe.source_type && recipe.source_type !== 'manual') {
-    tags.push(recipe.source_type.charAt(0).toUpperCase() + recipe.source_type.slice(1));
+  if (recipe.mealType) tags.push(recipe.mealType);
+  if (recipe.sourceType && recipe.sourceType !== 'manual') {
+    tags.push(recipe.sourceType.charAt(0).toUpperCase() + recipe.sourceType.slice(1));
   }
 
   return (

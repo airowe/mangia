@@ -2,12 +2,12 @@
 
 export interface Cookbook {
   id: string;
-  user_id: string;
+  userId: string;
   title: string;
   author?: string;
-  cover_image_url?: string;
+  coverImageUrl?: string;
   isbn?: string;
   notes?: string;
-  created_at: string;
-  updated_at?: string;
+  createdAt: string;
+  updatedAt?: string;
 }

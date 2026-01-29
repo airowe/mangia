@@ -10,8 +10,8 @@ export type MealTypeDB = "breakfast" | "lunch" | "dinner" | "snack";
 export interface MealPlan {
   id: string;
   date: string;
-  meal_type: MealTypeDB;
-  recipe_id: string | null;
+  mealType: MealTypeDB;
+  recipeId: string | null;
   title: string | null;
   notes: string | null;
   recipe?: Recipe;
@@ -67,8 +67,8 @@ export async function addMealToPlan(
   try {
     const data = await apiClient.post<MealPlan>("/api/meal-plans", {
       date,
-      meal_type: mealType,
-      recipe_id: recipeId,
+      mealType,
+      recipeId,
       title,
     });
     return data;
@@ -83,7 +83,7 @@ export async function addMealToPlan(
  */
 export async function updateMealPlan(
   mealPlanId: string,
-  updates: { recipe_id?: string; title?: string; notes?: string },
+  updates: { recipeId?: string; title?: string; notes?: string },
 ): Promise<MealPlan> {
   try {
     const data = await apiClient.patch<MealPlan>(

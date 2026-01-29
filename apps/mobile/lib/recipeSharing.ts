@@ -12,8 +12,8 @@ export function formatRecipeForSharing(recipe: RecipeWithIngredients): string {
 
   // Timing info
   const times: string[] = [];
-  if (recipe.prep_time) times.push(`Prep: ${recipe.prep_time} min`);
-  if (recipe.cook_time) times.push(`Cook: ${recipe.cook_time} min`);
+  if (recipe.prepTime) times.push(`Prep: ${recipe.prepTime} min`);
+  if (recipe.cookTime) times.push(`Cook: ${recipe.cookTime} min`);
   if (times.length > 0) text += `⏱️ ${times.join(" | ")}\n`;
 
   if (recipe.servings) text += `👥 Serves ${recipe.servings}\n`;
@@ -41,8 +41,8 @@ export function formatRecipeForSharing(recipe: RecipeWithIngredients): string {
   }
 
   // Source
-  if (recipe.source_url) {
-    text += `📌 Source: ${recipe.source_url}\n`;
+  if (recipe.sourceUrl) {
+    text += `📌 Source: ${recipe.sourceUrl}\n`;
   }
 
   text += "\n— Shared from Mangia 🍝";

@@ -173,8 +173,8 @@ export default function RecipeDetailScreen() {
   };
 
   const openSourceLink = () => {
-    if (recipe?.source_url) {
-      Linking.openURL(recipe.source_url);
+    if (recipe?.sourceUrl) {
+      Linking.openURL(recipe.sourceUrl);
     }
   };
 
@@ -324,8 +324,8 @@ export default function RecipeDetailScreen() {
 
   // Get category for display
   const getCategory = () => {
-    if (recipe?.meal_type) {
-      return recipe.meal_type.charAt(0).toUpperCase() + recipe.meal_type.slice(1);
+    if (recipe?.mealType) {
+      return recipe.mealType.charAt(0).toUpperCase() + recipe.mealType.slice(1);
     }
     return 'Recipe';
   };
@@ -358,7 +358,7 @@ export default function RecipeDetailScreen() {
   const isWantToCook = recipe.status === 'want_to_cook';
   const isCooked = recipe.status === 'cooked';
   const isArchived = recipe.status === 'archived';
-  const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
+  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const hasInstructions = recipe.instructions && recipe.instructions.length > 0;
 
   return (
@@ -370,9 +370,9 @@ export default function RecipeDetailScreen() {
       >
         {/* Hero Image Section */}
         <RecipeHero
-          imageUrl={recipe.image_url}
+          imageUrl={recipe.imageUrl}
           title={recipe.title}
-          author={recipe.source_type === 'manual' ? 'My Recipe' : undefined}
+          author={recipe.sourceType === 'manual' ? 'My Recipe' : undefined}
           category={getCategory()}
           onBack={handleBack}
           onSave={handleOpenCollectionModal}
@@ -552,7 +552,7 @@ export default function RecipeDetailScreen() {
             <Text style={styles.menuItemText}>Share Recipe</Text>
           </TouchableOpacity>
 
-          {recipe.source_url && (
+          {recipe.sourceUrl && (
             <TouchableOpacity style={styles.menuItem} onPress={() => {
               setMoreMenuVisible(false);
               openSourceLink();
@@ -622,7 +622,7 @@ export default function RecipeDetailScreen() {
                       <View style={styles.collectionInfo}>
                         <Text style={styles.collectionName}>{item.name}</Text>
                         <Text style={styles.collectionCount}>
-                          {item.recipe_count} recipe{item.recipe_count !== 1 ? 's' : ''}
+                          {item.recipeCount} recipe{item.recipeCount !== 1 ? 's' : ''}
                         </Text>
                       </View>
                       {isInCollection ? (

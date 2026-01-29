@@ -1,12 +1,12 @@
 // Subscription shared types
 
 export interface UserSubscription {
-  user_id: string;
-  is_premium: boolean;
-  plan_type?: 'monthly' | 'yearly';
-  expires_at?: string;
-  revenuecat_customer_id?: string;
-  updated_at: string;
+  userId: string;
+  isPremium: boolean;
+  planType?: 'monthly' | 'yearly';
+  expiresAt?: string;
+  revenuecatCustomerId?: string;
+  updatedAt: string;
 }
 
 export const ENTITLEMENTS = {

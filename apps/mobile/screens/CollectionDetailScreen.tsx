@@ -291,8 +291,8 @@ export default function CollectionDetailScreen() {
           onPress={() => navigation.navigate('RecipeDetail', { id: item.id })}
           activeOpacity={0.7}
         >
-          {item.image_url ? (
-            <Image source={{ uri: item.image_url }} style={styles.recipeImage} />
+          {item.imageUrl ? (
+            <Image source={{ uri: item.imageUrl }} style={styles.recipeImage} />
           ) : (
             <View style={styles.recipePlaceholder}>
               <MaterialCommunityIcons
@@ -306,7 +306,7 @@ export default function CollectionDetailScreen() {
             <Text style={styles.recipeTitle} numberOfLines={2}>
               {item.title}
             </Text>
-            {(item.prep_time || item.cook_time) && (
+            {(item.prepTime || item.cookTime) && (
               <View style={styles.timeBadge}>
                 <MaterialCommunityIcons
                   name="clock-outline"
@@ -314,7 +314,7 @@ export default function CollectionDetailScreen() {
                   color={colors.textSecondary}
                 />
                 <Text style={styles.timeText}>
-                  {(item.prep_time || 0) + (item.cook_time || 0)} min
+                  {(item.prepTime || 0) + (item.cookTime || 0)} min
                 </Text>
               </View>
             )}

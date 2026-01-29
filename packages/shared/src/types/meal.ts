@@ -49,4 +49,3 @@ export interface MealPlanResponse {
   days: MealPlanDay[];
   shoppingList: ShoppingListItem[];
 }
-

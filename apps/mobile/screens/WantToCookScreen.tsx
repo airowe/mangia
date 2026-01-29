@@ -134,12 +134,12 @@ export const WantToCookScreen: React.FC = () => {
           {
             title: sample.title,
             description: sample.description,
-            image_url: sample.imageUrl,
-            prep_time: sample.prepTime,
-            cook_time: sample.cookTime,
+            imageUrl: sample.imageUrl,
+            prepTime: sample.prepTime,
+            cookTime: sample.cookTime,
             servings: sample.servings,
             instructions: sample.instructions,
-            source_type: sample.sourceType,
+            sourceType: sample.sourceType,
             status: 'want_to_cook',
           },
           sample.ingredients as RecipeIngredient[]

@@ -34,7 +34,7 @@ export async function addRecipeNote(
       `/api/recipes/${recipeId}/notes`,
       {
         note,
-        cooked_at: cookedAt || new Date().toISOString().split("T")[0],
+        cookedAt: cookedAt || new Date().toISOString().split("T")[0],
       },
     );
     return data;

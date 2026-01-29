@@ -77,13 +77,13 @@ export default function GroceryListScreen() {
 
     const newItem: GroceryItemWithChecked = {
       name: trimmed,
-      total_quantity: 1,
+      totalQuantity: 1,
       unit: "",
       category: "other" as IngredientCategory,
-      from_recipes: [],
-      in_pantry: false,
-      pantry_quantity: 0,
-      need_to_buy: 1,
+      fromRecipes: [],
+      inPantry: false,
+      pantryQuantity: 0,
+      needToBuy: 1,
       checked: false,
     };
 
@@ -168,12 +168,12 @@ export default function GroceryListScreen() {
   }, []);
 
   const itemsToBuy = useMemo(
-    () => items.filter((item) => item.need_to_buy > 0 || !item.in_pantry),
+    () => items.filter((item) => item.needToBuy > 0 || !item.inPantry),
     [items]
   );
 
   const itemsInPantry = useMemo(
-    () => items.filter((item) => item.in_pantry && item.need_to_buy === 0),
+    () => items.filter((item) => item.inPantry && item.needToBuy === 0),
     [items]
   );
 
@@ -228,7 +228,7 @@ export default function GroceryListScreen() {
       shareText += `${section.title}:\n`;
       for (const item of section.data) {
         const checked = item.checked ? "✓" : "☐";
-        const qty = item.need_to_buy > 0 ? item.need_to_buy : item.total_quantity;
+        const qty = item.needToBuy > 0 ? item.needToBuy : item.totalQuantity;
         const unit = item.unit ? ` ${item.unit}` : "";
         shareText += `${checked} ${qty}${unit} ${item.name}\n`;
       }
@@ -269,7 +269,7 @@ export default function GroceryListScreen() {
               {item.name}
             </Text>
             <Text style={styles.itemQuantity}>
-              {item.need_to_buy > 0 ? item.need_to_buy : item.total_quantity}
+              {item.needToBuy > 0 ? item.needToBuy : item.totalQuantity}
               {item.unit ? ` ${item.unit}` : ""}
             </Text>
           </View>
@@ -330,9 +330,9 @@ export default function GroceryListScreen() {
                 />
                 <Text style={styles.alreadyHaveItemText}>
                   {item.name}
-                  {item.pantry_quantity > 0 && (
+                  {item.pantryQuantity > 0 && (
                     <Text style={styles.pantryQuantity}>
-                      {" "}({item.pantry_quantity} {item.unit})
+                      {" "}({item.pantryQuantity} {item.unit})
                     </Text>
                   )}
                 </Text>

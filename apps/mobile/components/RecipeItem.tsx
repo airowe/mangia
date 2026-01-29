@@ -17,7 +17,7 @@ export const RecipeItem = React.memo<RecipeItemProps>(function RecipeItem({
   showMealType = true,
   isSelected = false,
 }) {
-  const imageUrl = recipe.image_url;
+  const imageUrl = recipe.imageUrl;
 
   return (
     <TouchableOpacity
@@ -52,12 +52,12 @@ export const RecipeItem = React.memo<RecipeItemProps>(function RecipeItem({
             {recipe.description}
           </Text>
         )}
-        {(recipe.cook_time || recipe.servings) && (
+        {(recipe.cookTime || recipe.servings) && (
           <Text style={styles.recipeMeta}>
-            {recipe.cook_time && `${recipe.cook_time} min`}
-            {recipe.cook_time && recipe.servings && " • "}
+            {recipe.cookTime && `${recipe.cookTime} min`}
+            {recipe.cookTime && recipe.servings && " • "}
             {recipe.servings && `${recipe.servings} servings`}
-            {showMealType && recipe.meal_type && ` • ${recipe.meal_type}`}
+            {showMealType && recipe.mealType && ` • ${recipe.mealType}`}
           </Text>
         )}
       </View>

@@ -78,13 +78,13 @@ export default function RecipeSearchScreen() {
         // Only search if there's a search query
         const response = await searchRecipes({
           query: searchText,
-          meal_type: mealFilter
+          mealType: mealFilter
         });
         data = response.data;
       } else {
         // Otherwise, fetch all recipes (optionally filtered by meal type)
         const response = await fetchRecipes({
-          meal_type: mealFilter
+          mealType: mealFilter
         });
         data = response.data;
       }
@@ -180,7 +180,7 @@ export default function RecipeSearchScreen() {
     return recipes.filter((recipe) => {
       // Cook time filter
       if (filters.cookTime !== 'any') {
-        const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
+        const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
 
         if (filters.cookTime === 'quick' && totalTime > 30) return false;
         if (filters.cookTime === 'medium' && (totalTime < 30 || totalTime > 60)) return false;
@@ -195,7 +195,7 @@ export default function RecipeSearchScreen() {
 
       // Source type filter
       if (filters.sourceType !== 'any') {
-        if (recipe.source_type !== filters.sourceType) return false;
+        if (recipe.sourceType !== filters.sourceType) return false;
       }
 
       return true;
@@ -228,8 +228,8 @@ export default function RecipeSearchScreen() {
 
     // Otherwise, group by meal type
     return filteredRecipes.reduce<Record<string, Recipe[]>>((acc, recipe) => {
-      const category = (recipe.meal_type && recipe.meal_type.length > 0)
-        ? recipe.meal_type.charAt(0).toUpperCase() + recipe.meal_type.slice(1)
+      const category = (recipe.mealType && recipe.mealType.length > 0)
+        ? recipe.mealType.charAt(0).toUpperCase() + recipe.mealType.slice(1)
         : 'Other';
       if (!acc[category]) {
         acc[category] = [];

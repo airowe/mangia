@@ -2,36 +2,33 @@
 
 export interface RecipeCollection {
   id: string;
-  user_id: string;
+  userId: string;
   name: string;
   description?: string;
   icon: string;
   color: string;
-  is_default: boolean;
-  display_order: number;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface RecipeCollectionItem {
   id: string;
-  collection_id: string;
-  recipe_id: string;
-  added_at: string;
-  display_order: number;
+  collectionId: string;
+  recipeId: string;
+  addedAt: string;
 }
 
 export interface CollectionWithCount extends RecipeCollection {
-  recipe_count: number;
+  recipeCount: number;
 }
 
 export interface CollectionWithRecipes extends RecipeCollection {
   recipes: {
     id: string;
     title: string;
-    image_url?: string;
-    cook_time?: number;
-    prep_time?: number;
+    imageUrl?: string;
+    cookTime?: number;
+    prepTime?: number;
   }[];
 }
 

@@ -49,11 +49,11 @@ export const RecipeQueueCard = React.memo<RecipeQueueCardProps>(function RecipeQ
   onArchive,
   onDelete,
 }) {
-  const sourceType = recipe.source_type || "manual";
+  const sourceType = recipe.sourceType || "manual";
   const platform = PLATFORM_CONFIG[sourceType] || PLATFORM_CONFIG.manual;
 
   // Calculate total time
-  const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
+  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const timeDisplay = totalTime > 0 ? `${totalTime} min` : null;
 
   return (
@@ -64,9 +64,9 @@ export const RecipeQueueCard = React.memo<RecipeQueueCardProps>(function RecipeQ
     >
       {/* Recipe Image */}
       <View style={styles.imageContainer}>
-        {recipe.image_url ? (
+        {recipe.imageUrl ? (
           <Image
-            source={{ uri: recipe.image_url }}
+            source={{ uri: recipe.imageUrl }}
             style={styles.image}
             contentFit="cover"
             transition={200}

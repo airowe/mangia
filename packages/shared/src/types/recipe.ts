@@ -16,47 +16,49 @@ export type IngredientCategory =
 
 export interface RecipeIngredient {
   id?: string;
-  recipe_id?: string;
+  recipeId?: string;
   name: string;
   quantity: number;
   unit: string;
   category?: IngredientCategory;
-  display_order?: number;
+  notes?: string;
+  isOptional?: boolean;
+  orderIndex?: number;
 }
 
 export interface Recipe {
   id: string;
-  user_id?: string;
+  userId?: string;
   title: string;
   description?: string;
   instructions: string[];
   ingredients: RecipeIngredient[];
-  prep_time?: number;
-  cook_time?: number;
+  prepTime?: number;
+  cookTime?: number;
+  totalTime?: number;
   servings?: number;
-  image_url?: string;
-  source_url?: string;
-  source_type?: RecipeSourceType;
+  calories?: number;
+  imageUrl?: string;
+  sourceUrl?: string;
+  sourceType?: RecipeSourceType;
   status?: RecipeStatus;
   rating?: number;
-  times_cooked?: number;
-  last_cooked_at?: string;
-  created_at?: string;
-  updated_at?: string;
-  meal_type?: string;
-  dietary_restrictions?: string[];
-  is_ai_generated?: boolean;
-  source?: string;
+  cookCount?: number;
+  lastCookedAt?: string;
+  notes?: string;
+  mealType?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface RecipeNote {
   id: string;
-  recipe_id: string;
-  user_id: string;
+  recipeId: string;
+  userId: string;
   note: string;
-  cooked_at?: string;
-  created_at: string;
-  updated_at: string;
+  cookedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ParsedRecipe {
@@ -68,10 +70,10 @@ export interface ParsedRecipe {
     unit: string;
   }>;
   instructions: string[];
-  prep_time?: number;
-  cook_time?: number;
+  prepTime?: number;
+  cookTime?: number;
   servings?: number;
-  image_url?: string;
+  imageUrl?: string;
 }
 
 export interface FirecrawlRecipe {

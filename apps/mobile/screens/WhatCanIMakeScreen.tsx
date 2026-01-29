@@ -141,9 +141,9 @@ export const WhatCanIMakeScreen: React.FC = () => {
         >
           {/* Image Container */}
           <View style={[styles.imageContainer, shape, { aspectRatio }]}>
-            {item.recipe.image_url ? (
+            {item.recipe.imageUrl ? (
               <Image
-                source={{ uri: item.recipe.image_url }}
+                source={{ uri: item.recipe.imageUrl }}
                 style={styles.recipeImage}
               />
             ) : (
@@ -183,12 +183,12 @@ export const WhatCanIMakeScreen: React.FC = () => {
                   color={mangiaColors.terracotta}
                 />
                 <Text style={styles.timeText}>
-                  {item.recipe.cook_time || item.recipe.prep_time || 30} min
+                  {item.recipe.cookTime || item.recipe.prepTime || 30} min
                 </Text>
               </View>
               <Text style={styles.metaDot}>•</Text>
               <Text style={styles.categoryText}>
-                {item.recipe.meal_type || "Recipe"}
+                {item.recipe.mealType || "Recipe"}
               </Text>
             </View>
             <Text style={styles.recipeTitle} numberOfLines={2}>

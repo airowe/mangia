@@ -145,9 +145,9 @@ export function RecipeRatingNotes({
             color={colors.textSecondary}
           />
           <Text style={styles.noteDate}>
-            {item.cooked_at
-              ? new Date(item.cooked_at).toLocaleDateString()
-              : new Date(item.created_at).toLocaleDateString()}
+            {item.cookedAt
+              ? new Date(item.cookedAt).toLocaleDateString()
+              : new Date(item.createdAt).toLocaleDateString()}
           </Text>
         </View>
         <TouchableOpacity onPress={() => handleDeleteNote(item.id)}>

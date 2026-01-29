@@ -181,9 +181,9 @@ export default function CookbooksScreen() {
     <Surface style={styles.cookbookCard} elevation={1}>
       <View style={styles.cookbookContent}>
         {/* Cover image or placeholder */}
-        {item.cover_image_url ? (
+        {item.coverImageUrl ? (
           <Image
-            source={{ uri: item.cover_image_url }}
+            source={{ uri: item.coverImageUrl }}
             style={styles.coverImage}
           />
         ) : (

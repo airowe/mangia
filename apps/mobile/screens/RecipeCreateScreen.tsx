@@ -58,7 +58,7 @@ export default function RecipeCreateScreen({ navigation }: any) {
           name: ing.name,
           quantity: 0,
           unit: "",
-          recipe_id: "",
+          recipeId: "",
         }));
 
       setIngredients(formattedIngredients);
@@ -84,7 +84,7 @@ export default function RecipeCreateScreen({ navigation }: any) {
           name: currentName,
           quantity: parseFloat(currentQuantity) || 0,
           unit: currentUnit,
-          recipe_id: "",
+          recipeId: "",
         },
       ]);
       setCurrentName("");
@@ -100,7 +100,7 @@ export default function RecipeCreateScreen({ navigation }: any) {
         instructions,
         ingredients,
         description: "",
-        image_url: "",
+        imageUrl: "",
       });
       navigation.goBack();
     } catch (e) {
