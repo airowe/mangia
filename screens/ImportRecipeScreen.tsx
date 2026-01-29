@@ -5,13 +5,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  Image,
   TouchableOpacity,
   TextInput,
   Dimensions,
   StyleSheet,
   Text,
 } from "react-native";
+import { Image } from "expo-image";
 import * as Clipboard from "expo-clipboard";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -345,7 +345,7 @@ export const ImportRecipeScreen: React.FC = () => {
                           <Image
                             source={{ uri: recipe.image_url }}
                             style={styles.recipeImage}
-                            resizeMode="cover"
+                            contentFit="cover"
                           />
                         ) : (
                           <View style={styles.placeholderImage}>

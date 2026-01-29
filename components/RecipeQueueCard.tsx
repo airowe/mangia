@@ -6,10 +6,10 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   Dimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import { IconButton } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Recipe, RecipeSourceType } from "../models/Recipe";
@@ -68,7 +68,9 @@ export const RecipeQueueCard: React.FC<RecipeQueueCardProps> = ({
           <Image
             source={{ uri: recipe.image_url }}
             style={styles.image}
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
           />
         ) : (
           <View style={styles.placeholderImage}>

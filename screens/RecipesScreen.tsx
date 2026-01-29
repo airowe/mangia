@@ -7,10 +7,10 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
   StyleSheet,
   Dimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -288,7 +288,7 @@ export const RecipesScreen = () => {
                       <Image
                         source={{ uri: recipe.image_url }}
                         style={styles.image}
-                        resizeMode="cover"
+                        contentFit="cover"
                       />
                     ) : (
                       <View style={styles.placeholderImage}>

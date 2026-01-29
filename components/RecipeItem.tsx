@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Image } from "expo-image";
 import { Recipe } from "../models/Recipe";
 import { colors } from "../theme/colors";
 
@@ -28,14 +29,17 @@ export const RecipeItem: React.FC<RecipeItemProps> = ({
         <Image
           source={{ uri: imageUrl }}
           style={styles.recipeImage}
-          resizeMode="cover"
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
         />
       ) : (
         <View style={styles.placeholderImage}>
           <Image
             source={{ uri: "https://loremflickr.com/320/240" }}
             style={styles.recipeImage}
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
           />
         </View>
       )}

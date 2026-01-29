@@ -7,9 +7,9 @@ import {
   SafeAreaView,
   ScrollView,
   Modal,
-  Image,
   Alert,
 } from "react-native";
+import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import { WeekCalendar } from "react-native-calendars";
 import { MaterialCommunityIcons } from "@expo/vector-icons";

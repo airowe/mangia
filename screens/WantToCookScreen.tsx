@@ -15,8 +15,8 @@ import {
   ActivityIndicator,
   StyleSheet,
   Pressable,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Feather } from '@expo/vector-icons';

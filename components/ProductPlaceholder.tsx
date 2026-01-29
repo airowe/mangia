@@ -1,5 +1,6 @@
 import React from "react";
-import { View, StyleSheet, ViewStyle, Image } from "react-native";
+import { View, StyleSheet, ViewStyle } from "react-native";
+import { Image } from "expo-image";
 
 // Keep these for future use
 const getIconForCategory = (category: string = "") => {
@@ -82,7 +83,8 @@ export const ProductPlaceholder: React.FC<ProductPlaceholderProps> = ({
       <Image
         source={{ uri: imageSource }}
         style={styles.image}
-        resizeMode="cover"
+        contentFit="cover"
+        transition={200}
       />
     </View>
   );

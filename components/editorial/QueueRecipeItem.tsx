@@ -16,10 +16,10 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   StyleSheet,
   Pressable,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -64,7 +64,9 @@ export function QueueRecipeItem({
           <Image
             source={{ uri: imageUrl }}
             style={styles.thumbnail}
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
           />
         </View>
 

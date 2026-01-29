@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Image, Animated } from 'react-native';
+import { View, StyleSheet, Animated } from 'react-native';
+import { Image } from 'expo-image';
 import { ActivityIndicator } from 'react-native-paper';
 import { colors } from '../theme/colors';
 
@@ -11,7 +12,7 @@ const SplashScreen = () => {
           <Image
             source={require('../../assets/icon.png')}
             style={styles.logo}
-            resizeMode="contain"
+            contentFit="contain"
           />
         </Animated.View>
       </View>

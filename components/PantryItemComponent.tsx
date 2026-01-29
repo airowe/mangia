@@ -1,5 +1,6 @@
 import React from "react";
-import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { Image } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Portal, Dialog, Button, Text } from "react-native-paper";
 import { PantryItem } from "../models/Product";
@@ -46,12 +47,11 @@ const PantryItemComponent: React.FC<PantryItemProps> = ({
         {product.imageUrl ? (
           <View style={[styles.imageContainer, styles.imageFallback]}>
             <Image
-              source={{
-                uri: product.imageUrl,
-                cache: "force-cache" as const,
-              }}
+              source={{ uri: product.imageUrl }}
               style={styles.image}
-              resizeMode="cover"
+              contentFit="cover"
+              transition={200}
+              cachePolicy="memory-disk"
             />
           </View>
         ) : (

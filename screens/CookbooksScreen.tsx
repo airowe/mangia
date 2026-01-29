@@ -4,9 +4,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
-  Image,
   Alert,
 } from "react-native";
+import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import {
   Text,

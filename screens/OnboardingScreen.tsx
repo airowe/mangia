@@ -14,9 +14,9 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
-  Image,
   Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { FlashList, ViewToken } from '@shopify/flash-list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -134,7 +134,7 @@ function ProblemSolutionPage({
           <Image
             source={{ uri: 'https://media.screensdesign.com/gasset/c03e7860-f9b6-4826-b435-601e0ca84c9f.png' }}
             style={styles.posterImage}
-            resizeMode="cover"
+            contentFit="cover"
           />
           {/* Sticker Badge */}
           <View style={styles.stickerBadge}>
@@ -252,7 +252,7 @@ function FeaturesPage({
           <Image
             source={{ uri: 'https://media.screensdesign.com/gasset/372908e5-d724-4ad4-9306-ff82eec26ffe.png' }}
             style={styles.bottomImage}
-            resizeMode="cover"
+            contentFit="cover"
           />
         </View>
       </View>
@@ -285,7 +285,7 @@ function GetStartedPage({
         <Image
           source={{ uri: 'https://media.screensdesign.com/gasset/52b78b4b-80a2-4886-90ed-2b9b46a257f5.png' }}
           style={styles.heroImage}
-          resizeMode="cover"
+          contentFit="cover"
         />
         <LinearGradient
           colors={['rgba(0,0,0,0.1)', mangiaColors.terracotta]}

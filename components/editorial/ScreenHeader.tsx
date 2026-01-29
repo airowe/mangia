@@ -6,7 +6,8 @@
  */
 
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Image, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
@@ -150,7 +151,13 @@ export function ScreenHeader({ onAvatarPress, showDevTools = __DEV__ }: ScreenHe
 
         <Pressable onPress={onAvatarPress} style={styles.avatar}>
           {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+            <Image
+              source={{ uri: avatarUrl }}
+              style={styles.avatarImage}
+              contentFit="cover"
+              transition={200}
+              cachePolicy="memory-disk"
+            />
           ) : (
             <View style={styles.avatarFallback}>
               <Text style={styles.avatarInitials}>{initials}</Text>

@@ -12,12 +12,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Alert,
   ActivityIndicator,
   Platform,
   Dimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
@@ -170,7 +170,7 @@ export default function SubscriptionScreen() {
           <Image
             source={require('../assets/paywall-hero.png')}
             style={styles.heroImage}
-            resizeMode="cover"
+            contentFit="cover"
           />
           <View style={styles.heroOverlay} />
 

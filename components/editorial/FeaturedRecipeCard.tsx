@@ -17,10 +17,10 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useTheme } from '../../theme';
@@ -60,7 +60,13 @@ export function FeaturedRecipeCard({ recipe, onPress, variant = 'standard' }: Fe
     <TouchableOpacity activeOpacity={0.98} onPress={() => onPress(recipe)}>
       <Animated.View entering={FadeIn.duration(400)} style={styles.container}>
         {/* Recipe Image */}
-        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.image}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
+        />
 
         {/* Sticker Badge (time) */}
         {totalTime > 0 && (

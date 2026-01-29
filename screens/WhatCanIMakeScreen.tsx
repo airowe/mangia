@@ -9,10 +9,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
-  Image,
   TextInput,
   ScrollView,
 } from "react-native";
+import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";

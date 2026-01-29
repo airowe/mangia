@@ -8,8 +8,8 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
 } from "react-native";
+import { Image } from "expo-image";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import ReanimatedAnimated, { FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -76,6 +76,8 @@ export function ExpiringNotificationCard({
               <Image
                 source={{ uri: items[0].imageUrl }}
                 style={styles.thumbnailImage}
+                contentFit="cover"
+                transition={200}
               />
             ) : (
               <View style={styles.thumbnailPlaceholder}>

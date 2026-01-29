@@ -9,9 +9,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
   Alert,
 } from "react-native";
+import { Image } from "expo-image";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import ReanimatedAnimated, { FadeIn, FadeInDown, FadeInRight } from "react-native-reanimated";

@@ -6,7 +6,8 @@
  */
 
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity, Image, ViewStyle, ImageStyle, TextStyle } from 'react-native';
+import { View, TouchableOpacity, ViewStyle, ImageStyle, TextStyle } from 'react-native';
+import { Image } from 'expo-image';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
@@ -114,7 +115,13 @@ export function EditorialCard({
     <Animated.View entering={FadeIn.duration(300)} style={[styles.container, style]}>
       {imageUrl && (
         <View style={styles.imageContainer}>
-          <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+          <Image
+            source={{ uri: imageUrl }}
+            style={styles.image}
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
+          />
           {variant === 'featured' && (
             <LinearGradient
               colors={['transparent', 'rgba(0,0,0,0.7)']}

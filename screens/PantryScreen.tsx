@@ -10,10 +10,10 @@ import {
   Alert,
   ActivityIndicator,
   TouchableOpacity,
-  Image,
   ScrollView,
   TextInput,
 } from "react-native";
+import { Image } from "expo-image";
 import {
   Text,
   Portal,
