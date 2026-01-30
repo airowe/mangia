@@ -26,8 +26,9 @@ A recipe management iOS app that helps users import recipes from any URL (blogs,
 | Navigation | React Navigation 7.x (bottom tabs + native stack) |
 | State | React Context + custom hooks |
 | Auth | Clerk (`@clerk/clerk-expo`) |
-| Backend API | Custom API server (Vercel) |
-| Database | Supabase (PostgreSQL) - via API |
+| Backend API | Vercel serverless (`apps/api`) with Drizzle ORM |
+| Database | Neon PostgreSQL (via Drizzle ORM) |
+| Vision AI | Gemini 2.5 Flash-Lite (pantry scanning) |
 | Monetization | RevenueCat (`react-native-purchases`) |
 | Animations | React Native Reanimated 4.x |
 | UI Effects | `@callstack/liquid-glass`, `expo-blur` |
@@ -112,12 +113,41 @@ mangia/
 │   ├── parseInstructionIngredients.ts
 │   ├── recipeScaling.ts       # Adjust servings
 │   └── id.ts                  # UUID generation
-└── website/                   # Marketing website (Vercel)
-    ├── index.html             # Landing page
-    ├── privacy.html           # Privacy policy
-    ├── terms.html             # Terms of service
-    ├── support.html           # FAQ/support
-    └── vercel.json            # Deployment config
+├── website/                   # Marketing website (Vercel)
+│   ├── index.html             # Landing page
+│   ├── privacy.html           # Privacy policy
+│   ├── terms.html             # Terms of service
+│   ├── support.html           # FAQ/support
+│   └── vercel.json            # Deployment config
+└── apps/api/                  # Vercel serverless API
+    ├── api/                   # API route handlers (Vercel convention)
+    │   ├── pantry/            # Pantry CRUD + AI scan endpoints
+    │   │   ├── index.ts       # GET (list), POST (create)
+    │   │   ├── [id].ts        # PATCH (update), DELETE (remove)
+    │   │   ├── scan.ts        # POST AI vision scan (Gemini)
+    │   │   ├── scan-compare.ts # POST vision model comparison
+    │   │   └── alerts.ts      # GET expiry alerts
+    │   ├── recipes/           # Recipe CRUD + import
+    │   ├── grocery-lists/     # Grocery list generation
+    │   └── collections/       # Recipe collections
+    ├── db/                    # Drizzle ORM schema + client
+    │   └── schema.ts          # PostgreSQL table definitions
+    ├── lib/                   # Shared server utilities
+    │   ├── auth.ts            # Clerk JWT verification
+    │   ├── errors.ts          # ApiError class + handleError
+    │   ├── validation.ts      # Zod schema validation
+    │   ├── pantry-scanner.ts  # Gemini 2.5 Flash-Lite vision
+    │   ├── grocery-generator.ts # Ingredient categorization
+    │   ├── stock-status.ts    # Pantry stock level computation
+    │   └── vision-compare/    # Multi-model comparison harness
+    │       ├── index.ts       # Orchestrator (Promise.allSettled)
+    │       ├── types.ts       # ScannedItem, ModelResult types
+    │       ├── prompt.ts      # Shared vision prompt
+    │       └── providers/     # Per-model API adapters
+    │           ├── gemini.ts  # Gemini 2.0/2.5 Flash/Pro
+    │           └── claude.ts  # Claude Sonnet 4
+    └── scripts/
+        └── compare-vision.ts  # CLI comparison tool
 ```
 
 ## Key Screens
@@ -231,6 +261,12 @@ EXPO_PUBLIC_CLOUDFLARE_ACCOUNT_ID=...    # AI extraction (free tier)
 EXPO_PUBLIC_CLOUDFLARE_API_TOKEN=...
 EXPO_PUBLIC_GEMINI_API_KEY=...           # AI fallback
 EXPO_PUBLIC_RAPIDAPI_KEY=...             # TikTok/YouTube transcripts
+
+# API Server (apps/api/.env.local)
+CLERK_SECRET_KEY=sk_test_...             # Clerk backend auth
+DATABASE_URL=postgresql://...            # Neon PostgreSQL
+GEMINI_API_KEY=...                       # Gemini Vision AI
+ANTHROPIC_API_KEY=sk-ant-...             # Claude (comparison harness only)
 ```
 
 ## App Store / Fastlane
@@ -352,8 +388,17 @@ cd fastlane && bundle exec fastlane beta  # Build & TestFlight
 4. Move purchased items to pantry
 
 ### Pantry Scanning Flow
-1. Open AI Scanner from Pantry screen
-2. Point camera at pantry/fridge
-3. AI identifies items
-4. Confirm/edit items on `ConfirmScannedItemsScreen`
-5. Items added to pantry with optional expiry dates
+1. Open AI Scanner from Pantry screen (premium only)
+2. Point camera at pantry/fridge (expo-camera, 0.7 quality JPEG)
+3. `POST /api/pantry/scan` → Gemini 2.5 Flash-Lite vision API
+4. AI returns items with name, quantity, unit, expiry date
+5. Items auto-categorized via `categorizeIngredient()`
+6. Confirm/edit items on `ConfirmScannedItemsScreen`
+7. Each selected item → `POST /api/pantry` to create
+
+### Vision Model Comparison (Dev Tool)
+- CLI: `npx tsx scripts/compare-vision.ts <image>`
+- API: `POST /api/pantry/scan-compare`
+- Models: Gemini 2.0 Flash, 2.5 Flash, 2.5 Flash-Lite, 2.5 Pro, Claude Sonnet
+- Runs all models in parallel, returns side-by-side results
+- Used to evaluate model quality (Flash-Lite won: fastest, cheapest, highest confidence)

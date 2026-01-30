@@ -275,3 +275,111 @@ export const recipeNotesRelations = relations(recipeNotes, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// ──────────────────────── Barcode Products Cache ────────────────────────
+
+export const barcodeProducts = pgTable("barcode_products", {
+  barcode: text("barcode").primaryKey(),
+  name: text("name").notNull(),
+  brand: text("brand"),
+  quantity: real("quantity"),
+  unit: text("unit"),
+  category: ingredientCategoryEnum("category").default("other"),
+  imageUrl: text("image_url"),
+  source: text("source").default("openfoodfacts"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+// ──────────────────────── Pantry Events (for Predictive Reordering) ────────────────────────
+
+export const pantryEventTypeEnum = pgEnum("pantry_event_type", [
+  "added",
+  "deducted",
+  "removed",
+]);
+
+export const pantryEvents = pgTable("pantry_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  itemName: text("item_name").notNull(),
+  eventType: pantryEventTypeEnum("event_type").notNull(),
+  quantity: real("quantity"),
+  unit: text("unit"),
+  source: text("source"), // 'grocery_transfer' | 'barcode' | 'receipt' | 'voice' | 'scan' | 'manual' | 'cooking_deduction'
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const pantryEventsRelations = relations(pantryEvents, ({ one }) => ({
+  user: one(users, {
+    fields: [pantryEvents.userId],
+    references: [users.id],
+  }),
+}));
+
+// ──────────────────────── Households (Shared Pantry) ────────────────────────
+
+export const households = pgTable("households", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().default("My Household"),
+  ownerId: uuid("owner_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  inviteCode: text("invite_code").notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const householdMembers = pgTable("household_members", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  role: text("role").notNull().default("member"),
+  joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow(),
+});
+
+export const householdsRelations = relations(households, ({ one, many }) => ({
+  owner: one(users, {
+    fields: [households.ownerId],
+    references: [users.id],
+  }),
+  members: many(householdMembers),
+}));
+
+export const householdMembersRelations = relations(householdMembers, ({ one }) => ({
+  household: one(households, {
+    fields: [householdMembers.householdId],
+    references: [households.id],
+  }),
+  user: one(users, {
+    fields: [householdMembers.userId],
+    references: [users.id],
+  }),
+}));
+
+// ──────────────────────── Loyalty Connections ────────────────────────
+
+export const loyaltyConnections = pgTable("loyalty_connections", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const loyaltyConnectionsRelations = relations(loyaltyConnections, ({ one }) => ({
+  user: one(users, {
+    fields: [loyaltyConnections.userId],
+    references: [users.id],
+  }),
+}));
