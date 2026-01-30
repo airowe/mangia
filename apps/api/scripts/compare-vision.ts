@@ -8,8 +8,8 @@ import { readFileSync, statSync } from "fs";
 import { runComparison } from "../lib/vision-compare";
 import type { ModelResult } from "../lib/vision-compare/types";
 
-// Load .env.local from the api directory
-config({ path: resolve(__dirname, "../.env.local") });
+// Load .env.local from the api directory (process.cwd() since tsx sets __dirname to ".")
+config({ path: resolve(process.cwd(), ".env.local") });
 
 function formatCost(cost: number): string {
   return `$${cost.toFixed(4)}`;
@@ -170,7 +170,7 @@ async function main(): Promise<void> {
 
   console.log(`${BOLD}Vision Model Comparison Harness${RESET}`);
   console.log(`Image: ${fullPath} (${(fileStat.size / 1024).toFixed(0)} KB)`);
-  console.log(`Models: gemini-2.0-flash, gemini-2.5-flash, gpt-4o`);
+  console.log(`Models: gemini-2.0-flash, gemini-2.5-flash, claude-sonnet`);
   console.log(`Running comparison...\n`);
 
   const imageBuffer = readFileSync(fullPath);

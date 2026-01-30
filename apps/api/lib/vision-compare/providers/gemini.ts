@@ -51,10 +51,10 @@ export async function callGemini(
         ],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
         },
       }),
-      signal: AbortSignal.timeout(25000),
+      signal: AbortSignal.timeout(30000),
     },
   );
 
@@ -72,14 +72,14 @@ export async function callGemini(
     throw new Error(`No response from Gemini API (${modelId})`);
   }
 
-  const jsonMatch = rawResponse.match(/\{[\s\S]{0,50000}?\}/);
-  if (!jsonMatch) {
+  const jsonStr = extractJson(rawResponse);
+  if (!jsonStr) {
     throw new Error(
       `Could not parse JSON from Gemini response (${modelId})`,
     );
   }
 
-  const parsed = JSON.parse(jsonMatch[0]) as { items: ScannedItem[] };
+  const parsed = JSON.parse(jsonStr) as { items: ScannedItem[] };
 
   if (!Array.isArray(parsed.items)) {
     return { items: [], rawResponse };
@@ -95,6 +95,19 @@ export async function callGemini(
   }));
 
   return { items, rawResponse };
+}
+
+/** Extract the outermost JSON object from a string that may contain markdown fences. */
+function extractJson(text: string): string | null {
+  const start = text.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0;
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === "{") depth++;
+    else if (text[i] === "}") depth--;
+    if (depth === 0) return text.slice(start, i + 1);
+  }
+  return null;
 }
 
 function normalizeConfidence(

@@ -3,23 +3,23 @@
 
 import type { ModelResult, ComparisonResult, ScannedItem } from "./types";
 import { callGemini } from "./providers/gemini";
-import { callOpenAI } from "./providers/openai";
+import { callClaude } from "./providers/claude";
 
 // Cost per 1M input tokens (USD)
 const COST_PER_MILLION_INPUT: Record<string, number> = {
   "gemini-2.0-flash": 0.08,
   "gemini-2.5-flash": 0.15,
-  "gpt-4o": 2.5,
+  "claude-sonnet": 3.0,
 };
 
 // Approximate image tokens (varies by resolution, these are rough estimates)
 const ESTIMATED_IMAGE_TOKENS: Record<string, number> = {
   "gemini-2.0-flash": 1000,
   "gemini-2.5-flash": 1000,
-  "gpt-4o": 1100, // GPT-4o high-detail image ~1100 tokens
+  "claude-sonnet": 1600, // Anthropic charges ~1600 tokens for a high-res image
 };
 
-const ALL_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash", "gpt-4o"] as const;
+const ALL_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash", "claude-sonnet"] as const;
 
 type ModelId = (typeof ALL_MODELS)[number];
 
@@ -35,8 +35,8 @@ async function callModel(
     case "gemini-2.0-flash":
     case "gemini-2.5-flash":
       return callGemini(imageBase64, modelId);
-    case "gpt-4o":
-      return callOpenAI(imageBase64);
+    case "claude-sonnet":
+      return callClaude(imageBase64);
     default:
       throw new Error(`Unknown model: ${modelId}`);
   }
