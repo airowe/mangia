@@ -24,6 +24,7 @@ import { fontFamily } from "../theme/tokens/typography";
 import { RecipeLibraryStackParamList } from "../navigation/RecipeLibraryStack";
 import { RecipeWithIngredients } from "../lib/recipeService";
 import { isAbortError } from "../hooks/useAbortableEffect";
+import { apiClient } from "../lib/api/client";
 
 type RecipesScreenNavigationProp = NativeStackNavigationProp<
   RecipeLibraryStackParamList,
@@ -35,23 +36,24 @@ const CARD_GAP = 16;
 const CARD_WIDTH = (SCREEN_WIDTH - 24 * 2 - CARD_GAP) / 2;
 const CARD_HEIGHT = (CARD_WIDTH * 4) / 3;
 
-type FilterType = "all" | "favorites" | "quick" | "dinner" | "dessert";
-
-interface FilterPill {
-  id: FilterType;
+interface FilterPreset {
+  id: string;
   label: string;
+  params: Record<string, string | number>;
 }
 
-const FILTERS: FilterPill[] = [
-  { id: "all", label: "All" },
-  { id: "favorites", label: "Favorites" },
-  { id: "quick", label: "Quick & Easy" },
-  { id: "dinner", label: "Dinner Party" },
-  { id: "dessert", label: "Dessert" },
-];
+interface FilterPresetsResponse {
+  presets: FilterPreset[];
+}
 
-// Difficulty and formatted time are now computed server-side
-// Use recipe.difficulty and recipe.formattedTotalTime from API response
+// Fallback presets used until server responds
+const DEFAULT_PRESETS: FilterPreset[] = [
+  { id: "all", label: "All", params: {} },
+  { id: "favorites", label: "Favorites", params: { minRating: 4 } },
+  { id: "quick", label: "Quick & Easy", params: { maxTotalTime: 30 } },
+  { id: "dinner", label: "Dinner Party", params: { mealType: "dinner" } },
+  { id: "dessert", label: "Dessert", params: { mealType: "dessert" } },
+];
 
 export const RecipesScreen = () => {
   const navigation = useNavigation<RecipesScreenNavigationProp>();
@@ -61,14 +63,39 @@ export const RecipesScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [filterPresets, setFilterPresets] = useState<FilterPreset[]>(DEFAULT_PRESETS);
+  const filterPresetsRef = useRef<FilterPreset[]>(DEFAULT_PRESETS);
   const [searchFocused, setSearchFocused] = useState(false);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
 
-  // Map filter type to server query params
+  // Fetch filter presets from server on mount
+  useEffect(() => {
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const response = await apiClient.get<FilterPresetsResponse>(
+          "/api/recipes/filter-presets",
+          { signal: controller.signal }
+        );
+        if (!controller.signal.aborted) {
+          filterPresetsRef.current = response.presets;
+          setFilterPresets(response.presets);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.warn("Failed to fetch filter presets, using defaults:", error);
+        }
+      }
+    })();
+    return () => { controller.abort(); };
+  }, []);
+
+  // Build filter params by merging server preset params with base params.
+  // Uses ref to avoid dependency chain that would cause double recipe fetch.
   const buildFilterParams = useCallback(
-    (filter: FilterType, search: string): RecipeFilterParams => {
+    (filterId: string, search: string): RecipeFilterParams => {
       const base: RecipeFilterParams = {
         status: "want_to_cook,cooked",
         sort: "newest",
@@ -76,24 +103,17 @@ export const RecipesScreen = () => {
       if (search.trim()) {
         base.search = search.trim();
       }
-      switch (filter) {
-        case "favorites":
-          return { ...base, minRating: 4 };
-        case "quick":
-          return { ...base, maxTotalTime: 30 };
-        case "dinner":
-          return { ...base, mealType: "dinner" };
-        case "dessert":
-          return { ...base, mealType: "dessert" };
-        default:
-          return base;
+      const preset = filterPresetsRef.current.find((p) => p.id === filterId);
+      if (preset) {
+        return { ...base, ...preset.params };
       }
+      return base;
     },
     []
   );
 
   const loadRecipes = useCallback(
-    async (filter: FilterType, search: string, signal?: AbortSignal) => {
+    async (filter: string, search: string, signal?: AbortSignal) => {
       try {
         const params = buildFilterParams(filter, search);
         const result = await fetchFilteredRecipes(params, { signal });
@@ -218,22 +238,22 @@ export const RecipesScreen = () => {
         contentContainerStyle={styles.filterContainer}
         style={styles.filterScroll}
       >
-        {FILTERS.map((filter) => (
+        {filterPresets.map((preset) => (
           <TouchableOpacity
-            key={filter.id}
+            key={preset.id}
             style={[
               styles.filterPill,
-              activeFilter === filter.id && styles.filterPillActive,
+              activeFilter === preset.id && styles.filterPillActive,
             ]}
-            onPress={() => setActiveFilter(filter.id)}
+            onPress={() => setActiveFilter(preset.id)}
           >
             <Text
               style={[
                 styles.filterText,
-                activeFilter === filter.id && styles.filterTextActive,
+                activeFilter === preset.id && styles.filterTextActive,
               ]}
             >
-              {filter.label}
+              {preset.label}
             </Text>
           </TouchableOpacity>
         ))}

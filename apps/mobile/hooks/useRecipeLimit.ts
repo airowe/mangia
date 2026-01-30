@@ -5,9 +5,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { apiClient } from "../lib/api/client";
 
-// Free tier limits
-const FREE_MONTHLY_IMPORTS = 3;
-
 interface UseRecipeLimitReturn {
   // State
   importsUsed: number;
@@ -23,54 +20,37 @@ interface UseRecipeLimitReturn {
   refreshUsage: () => Promise<void>;
 }
 
-interface ImportCountResponse {
-  count: number;
+interface ImportQuotaResponse {
+  used: number;
+  remaining: number;
+  limit: number;
+  isLimitReached: boolean;
+  isPremium: boolean;
 }
 
 /**
- * Hook to manage recipe import limits
- * Free users get 3 imports per month
- * Premium users have unlimited imports
+ * Hook to manage recipe import limits.
+ * Fetches quota from server — all limit logic is computed server-side.
  */
 export function useRecipeLimit(): UseRecipeLimitReturn {
   const { isPremium, isLoading: subscriptionLoading } = useSubscription();
-  const [importsUsed, setImportsUsed] = useState(0);
+  const [quota, setQuota] = useState<ImportQuotaResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Calculate remaining imports
-  const importsRemaining = isPremium
-    ? Infinity
-    : Math.max(0, FREE_MONTHLY_IMPORTS - importsUsed);
-
-  const isLimitReached = !isPremium && importsUsed >= FREE_MONTHLY_IMPORTS;
-
-  // Fetch current month's import count
   const refreshUsage = useCallback(async () => {
-    if (isPremium) {
-      setImportsUsed(0);
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      // Get start of current month
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-      // Call API to get import count for this month
-      const response = await apiClient.get<ImportCountResponse>(
-        `/api/recipes/import-count?since=${startOfMonth.toISOString()}`
+      const response = await apiClient.get<ImportQuotaResponse>(
+        "/api/recipes/import-quota"
       );
-
-      setImportsUsed(response.count || 0);
+      setQuota(response);
     } catch (error) {
       console.error("Failed to check import usage:", error);
-      // On error, assume 0 imports to not block the user
-      setImportsUsed(0);
+      // On error, assume no limit to not block the user
+      setQuota(null);
     } finally {
       setIsLoading(false);
     }
-  }, [isPremium]);
+  }, []);
 
   // Load usage on mount and when premium status changes
   useEffect(() => {
@@ -82,21 +62,27 @@ export function useRecipeLimit(): UseRecipeLimitReturn {
   // Check if user can import another recipe
   const canImport = useCallback((): boolean => {
     if (isPremium) return true;
-    return importsUsed < FREE_MONTHLY_IMPORTS;
-  }, [isPremium, importsUsed]);
+    if (!quota) return true; // Fallback: don't block if quota fetch failed
+    return !quota.isLimitReached;
+  }, [isPremium, quota]);
 
-  // Increment usage count after successful import
+  // Increment usage count after successful import (optimistic update)
   const incrementUsage = useCallback(async (): Promise<void> => {
-    if (!isPremium) {
-      setImportsUsed((prev) => prev + 1);
+    if (!isPremium && quota) {
+      setQuota({
+        ...quota,
+        used: quota.used + 1,
+        remaining: Math.max(0, quota.remaining - 1),
+        isLimitReached: quota.used + 1 >= quota.limit,
+      });
     }
-  }, [isPremium]);
+  }, [isPremium, quota]);
 
   return {
-    importsUsed,
-    importsRemaining,
-    monthlyLimit: FREE_MONTHLY_IMPORTS,
-    isLimitReached,
+    importsUsed: quota?.used ?? 0,
+    importsRemaining: isPremium ? Infinity : (quota?.remaining ?? 0),
+    monthlyLimit: quota?.limit ?? 0,
+    isLimitReached: !isPremium && (quota?.isLimitReached ?? false),
     isLoading: isLoading || subscriptionLoading,
     isPremium,
     canImport,

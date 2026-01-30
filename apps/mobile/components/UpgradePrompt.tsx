@@ -11,7 +11,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useTheme } from "../theme";
 import {
   PremiumFeature,
-  PREMIUM_FEATURES,
+  getFeatureInfo,
 } from "../hooks/usePremiumFeature";
 
 type RootStackParamList = {
@@ -44,7 +44,7 @@ export function UpgradePrompt({
   const { colors, spacing, borderRadius, typography } = theme;
 
   // Get feature info if provided
-  const featureInfo = feature ? PREMIUM_FEATURES[feature] : null;
+  const featureInfo = feature ? getFeatureInfo(feature) : null;
   const displayTitle = title || featureInfo?.title || "Premium Feature";
   const displayDescription =
     description ||
@@ -216,7 +216,7 @@ export function UpgradeBanner({
   const { theme } = useTheme();
   const { colors, spacing, borderRadius, typography } = theme;
 
-  const featureInfo = feature ? PREMIUM_FEATURES[feature] : null;
+  const featureInfo = feature ? getFeatureInfo(feature) : null;
   const displayMessage =
     message || `Unlock ${featureInfo?.title || "this feature"} with Premium`;
 
