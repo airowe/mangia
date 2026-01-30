@@ -119,7 +119,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Store undo snapshot (60s TTL)
     const undoToken = randomUUID();
-    setUndoEntry(undoToken, {
+    await setUndoEntry(undoToken, {
       userId: user.id,
       snapshot,
       expiresAt: Date.now() + 60_000,

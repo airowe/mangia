@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body = validateBody(req.body, undoSchema, res);
     if (!body) return;
 
-    const entry = getUndoEntry(body.undoToken);
+    const entry = await getUndoEntry(body.undoToken);
 
     if (!entry || entry.userId !== user.id) {
       return res.status(404).json({ error: "Undo token expired or not found" });
@@ -50,7 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Items deleted during deduction (qty=0) can't be fully restored without more data
     }
 
-    removeUndoEntry(body.undoToken);
+    await removeUndoEntry(body.undoToken);
 
     return res.status(200).json({ restored });
   } catch (error) {

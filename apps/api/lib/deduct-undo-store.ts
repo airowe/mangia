@@ -1,6 +1,8 @@
 // lib/deduct-undo-store.ts
-// In-memory undo store for pantry deductions
-// In production with multiple serverless instances, use Redis or a DB table instead.
+// DB-backed undo store for pantry deductions (serverless-safe)
+
+import { db, deductUndoSnapshots } from "../db";
+import { eq, and, gt } from "drizzle-orm";
 
 export interface UndoEntry {
   userId: string;
@@ -8,25 +10,32 @@ export interface UndoEntry {
   expiresAt: number;
 }
 
-const store = new Map<string, UndoEntry>();
-
-function cleanExpired() {
-  const now = Date.now();
-  for (const [key, entry] of store) {
-    if (entry.expiresAt < now) store.delete(key);
-  }
+export async function setUndoEntry(token: string, entry: UndoEntry): Promise<void> {
+  await db.insert(deductUndoSnapshots).values({
+    token,
+    userId: entry.userId,
+    snapshot: entry.snapshot,
+    expiresAt: new Date(entry.expiresAt),
+  });
 }
 
-export function setUndoEntry(token: string, entry: UndoEntry): void {
-  cleanExpired();
-  store.set(token, entry);
+export async function getUndoEntry(token: string): Promise<UndoEntry | undefined> {
+  const row = await db.query.deductUndoSnapshots.findFirst({
+    where: and(
+      eq(deductUndoSnapshots.token, token),
+      gt(deductUndoSnapshots.expiresAt, new Date()),
+    ),
+  });
+
+  if (!row) return undefined;
+
+  return {
+    userId: row.userId,
+    snapshot: row.snapshot as { id: string; quantity: number | null }[],
+    expiresAt: new Date(row.expiresAt).getTime(),
+  };
 }
 
-export function getUndoEntry(token: string): UndoEntry | undefined {
-  cleanExpired();
-  return store.get(token);
-}
-
-export function removeUndoEntry(token: string): void {
-  store.delete(token);
+export async function removeUndoEntry(token: string): Promise<void> {
+  await db.delete(deductUndoSnapshots).where(eq(deductUndoSnapshots.token, token));
 }

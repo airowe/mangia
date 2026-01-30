@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "",
+  "buildCommand": "cd ../../packages/shared && npx tsc",
   "outputDirectory": ".",
   "functions": {
     "api/recipes/import.ts": {
@@ -8,6 +8,15 @@
     },
     "api/pantry/scan.ts": {
       "maxDuration": 30
+    },
+    "api/pantry/scan-compare.ts": {
+      "maxDuration": 60
+    },
+    "api/pantry/scan-batch.ts": {
+      "maxDuration": 60
+    },
+    "api/pantry/email-receipts.ts": {
+      "maxDuration": 60
     }
   }
 }

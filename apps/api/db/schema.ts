@@ -319,6 +319,25 @@ export const pantryEventsRelations = relations(pantryEvents, ({ one }) => ({
   }),
 }));
 
+// ──────────────────────── Deduct Undo Snapshots ────────────────────────
+
+export const deductUndoSnapshots = pgTable("deduct_undo_snapshots", {
+  token: uuid("token").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  snapshot: jsonb("snapshot").notNull(), // { id: string; quantity: number | null }[]
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const deductUndoSnapshotsRelations = relations(deductUndoSnapshots, ({ one }) => ({
+  user: one(users, {
+    fields: [deductUndoSnapshots.userId],
+    references: [users.id],
+  }),
+}));
+
 // ──────────────────────── Households (Shared Pantry) ────────────────────────
 
 export const households = pgTable("households", {
