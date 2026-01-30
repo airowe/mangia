@@ -14,7 +14,7 @@ const scanCompareSchema = z.object({
     .max(5_500_000, "Image too large. Maximum size is approximately 4MB."),
   models: z
     .array(
-      z.enum(["gemini-2.0-flash", "gemini-2.5-flash", "claude-sonnet"]),
+      z.enum(["gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro", "claude-sonnet"]),
     )
     .optional(),
 });

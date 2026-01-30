@@ -1,5 +1,5 @@
 // lib/pantry-scanner.ts
-// Vision AI integration for pantry scanning using Gemini 2.0 Flash
+// Vision AI integration for pantry scanning using Gemini 2.5 Flash-Lite
 
 import { categorizeIngredient } from "./grocery-generator";
 import type { IngredientCategory } from "@mangia/shared";
@@ -82,7 +82,7 @@ export async function scanPantryImage(
   const prompt = extractExpiry ? SCAN_PROMPT : SCAN_PROMPT_NO_EXPIRY;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -102,7 +102,7 @@ export async function scanPantryImage(
         ],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
         },
       }),
       signal: AbortSignal.timeout(25000),
@@ -121,12 +121,12 @@ export async function scanPantryImage(
   }
 
   // Parse JSON from response (may be wrapped in markdown code blocks)
-  const jsonMatch = rawText.match(/\{[\s\S]{0,50000}?\}/);
-  if (!jsonMatch) {
+  const jsonStr = extractJson(rawText);
+  if (!jsonStr) {
     throw new Error("Could not parse JSON from Gemini response");
   }
 
-  const parsed = JSON.parse(jsonMatch[0]) as { items: GeminiRawItem[] };
+  const parsed = JSON.parse(jsonStr) as { items: GeminiRawItem[] };
 
   if (!Array.isArray(parsed.items)) {
     return [];
@@ -147,4 +147,17 @@ export async function scanPantryImage(
       requiresReview: confidence < CONFIDENCE_THRESHOLD,
     };
   });
+}
+
+/** Extract the outermost JSON object from a string that may contain markdown fences. */
+function extractJson(text: string): string | null {
+  const start = text.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0;
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === "{") depth++;
+    else if (text[i] === "}") depth--;
+    if (depth === 0) return text.slice(start, i + 1);
+  }
+  return null;
 }

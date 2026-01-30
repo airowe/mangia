@@ -9,6 +9,8 @@ import { callClaude } from "./providers/claude";
 const COST_PER_MILLION_INPUT: Record<string, number> = {
   "gemini-2.0-flash": 0.08,
   "gemini-2.5-flash": 0.15,
+  "gemini-2.5-flash-lite": 0.075,
+  "gemini-2.5-pro": 1.25,
   "claude-sonnet": 3.0,
 };
 
@@ -16,10 +18,18 @@ const COST_PER_MILLION_INPUT: Record<string, number> = {
 const ESTIMATED_IMAGE_TOKENS: Record<string, number> = {
   "gemini-2.0-flash": 1000,
   "gemini-2.5-flash": 1000,
+  "gemini-2.5-flash-lite": 1000,
+  "gemini-2.5-pro": 1000,
   "claude-sonnet": 1600, // Anthropic charges ~1600 tokens for a high-res image
 };
 
-const ALL_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash", "claude-sonnet"] as const;
+const ALL_MODELS = [
+  "gemini-2.0-flash",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-pro",
+  "claude-sonnet",
+] as const;
 
 type ModelId = (typeof ALL_MODELS)[number];
 
@@ -34,6 +44,8 @@ async function callModel(
   switch (modelId) {
     case "gemini-2.0-flash":
     case "gemini-2.5-flash":
+    case "gemini-2.5-flash-lite":
+    case "gemini-2.5-pro":
       return callGemini(imageBase64, modelId);
     case "claude-sonnet":
       return callClaude(imageBase64);

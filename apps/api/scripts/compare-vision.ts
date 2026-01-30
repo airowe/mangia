@@ -170,7 +170,7 @@ async function main(): Promise<void> {
 
   console.log(`${BOLD}Vision Model Comparison Harness${RESET}`);
   console.log(`Image: ${fullPath} (${(fileStat.size / 1024).toFixed(0)} KB)`);
-  console.log(`Models: gemini-2.0-flash, gemini-2.5-flash, claude-sonnet`);
+  console.log(`Models: gemini-2.0-flash, gemini-2.5-flash, gemini-2.5-flash-lite, gemini-2.5-pro, claude-sonnet`);
   console.log(`Running comparison...\n`);
 
   const imageBuffer = readFileSync(fullPath);
