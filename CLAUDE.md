@@ -1,87 +1,58 @@
-# Mangia - Project Instructions
+# Mangia
 
-## CRITICAL: Read Codebase Context First
+Recipe management app: import recipes from URLs, track pantry inventory, generate grocery lists, cook step-by-step with voice. React Native/Expo mobile + Vercel serverless API.
 
-**BEFORE using Glob, Grep, or exploring the codebase, you MUST:**
+## Monorepo
 
-1. Read `.claude/codebase-context.md` - contains pre-built project context
-2. Run `.claude/check-context-freshness.sh` - verify context is current
+pnpm workspaces + Turborepo. Two packages:
 
-**DO NOT** use file search tools (Glob, Grep, Task with Explore agent) until you have read the context file. The context file contains:
-- Complete directory structure with file purposes
-- Key files organized by feature
-- Patterns, conventions, and code style
-- Database schema and domain concepts
-- Quick commands and common gotchas
+- `apps/mobile` — React Native / Expo SDK 54 mobile app
+- `apps/api` — Vercel serverless API (Drizzle ORM + Neon PostgreSQL)
 
-If the freshness check returns "STALE", regenerate context before proceeding:
-```
-/codebase-context
-```
+See each package's `CLAUDE.md` for package-specific guidance.
 
-This saves tokens and ensures accurate understanding of the codebase.
-
----
-
-## Project Overview
-
-**Mangia** is a pnpm workspace monorepo containing:
-
-| Package | Path | Description |
-|---------|------|-------------|
-| `@mangia/mobile` | `apps/mobile/` | React Native / Expo mobile app |
-| `@mangia/api` | `apps/api/` | Vercel serverless API (Drizzle + Neon) |
-| `@mangia/shared` | `packages/shared/` | Shared TypeScript types and constants |
-
-Features:
-- Recipe import from URLs (TikTok, YouTube, blogs)
-- Pantry inventory tracking
-- Smart grocery lists
-- Cooking mode with voice control
-- Meal planning
-
-## Tech Stack
-
-- **Framework**: React Native 0.81.5 + Expo SDK 54
-- **Language**: TypeScript 5.9
-- **Auth**: Clerk
-- **Backend**: Vercel serverless + Neon PostgreSQL (Drizzle ORM)
-- **Monetization**: RevenueCat
-- **Build Orchestrator**: Turborepo
-- **Package Manager**: pnpm (workspaces)
-
-## Design System
-
-Brand colors (editorial/magazine aesthetic):
-- **Terracotta**: `#D97742` (primary)
-- **Sage**: `#A8BCA0` (secondary)
-- **Cream**: `#FBF9F5` (background)
-- **Editorial Dark**: `#3A322C` (text)
-
-Typography: Georgia serif for headlines, system fonts for body.
-
-## Quick Commands
+## Commands
 
 ```bash
-# From monorepo root
-pnpm start:mobile       # Start Expo dev server
-pnpm ios                # Run on iOS simulator
-pnpm android            # Run on Android emulator
-pnpm dev:api            # Start Vercel dev server
 pnpm typecheck          # Typecheck all packages
 pnpm lint               # Lint all packages
-
-# From apps/mobile
-pnpm start              # Start Expo dev server
-
-# From apps/api
-pnpm dev                # Start Vercel dev server
-pnpm db:migrate         # Run database migrations
+pnpm start:mobile       # Expo dev server
+pnpm dev:api            # Vercel dev server (port 3001)
+pnpm ios                # iOS simulator
 ```
 
-## Important Rules
+## Rules
 
-- Do not commit changes without running QCHECK first
-- Always ask for approval before committing
-- Let user run terminals for app and server to view logs
-- Never commit code without explicit user approval
+- Never commit without explicit user approval — run QCHECK first
+- Let user run terminals for app/server so they can view logs
+
+## Shortcuts
+
+### QCHECK
+Skeptical senior engineer analysis for every major code change:
+
+1. **Functions** — Score (0-10): Readability, Complexity, Data structures, No unused params, Testability, No hidden deps, Good naming
+2. **Tests** — Score (0-10): Parameterized inputs, Tests real defects, Clear descriptions, Pre-computed expectations, Style rules, Edge cases
+3. **Implementation** — Score (0-10): Clarifying questions, Critical thinking, Approach confirmed, Consistent naming, Simple functions, Minimal comments, Isolated changes, No TODOs
+4. **Tooling** — Run: `pnpm typecheck && pnpm lint`
+5. **Quality Score** — Average all scores (target: >= 92/100)
+6. **Must** ask for confirmation before committing
+
+### QPLAN
+Analyze similar parts of the codebase. Ensure plan is consistent, minimal, and reuses existing code.
+
+### QCODE
+Implement plan and verify tests pass. Run: `pnpm typecheck && pnpm lint`
+
+### QGIT
+Stage, commit (Conventional Commits), push. Must achieve QCHECK >= 92 first.
+
+## Domain Concepts
+
+| Term | Meaning |
+|------|---------|
+| Recipe Queue | Recipes marked "Want to Cook" |
+| Cooking Mode | Step-by-step guided cooking with voice/timers |
+| Smart Grocery | List that auto-deducts pantry items |
+| What Can I Make | Recipes filtered by available pantry ingredients |
+| Collections | User-created recipe folders |
