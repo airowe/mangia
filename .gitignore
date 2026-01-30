@@ -57,3 +57,12 @@ build-*
 
 # Package manager
 package-lock.json
+
+# Fastlane
+**/fastlane/report.xml
+
+# Test images
+*.png
+!apps/mobile/assets/**/*.png
+!apps/mobile/marketing/**/*.png
+!apps/mobile/fastlane/screenshots/**/*.png
