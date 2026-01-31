@@ -162,11 +162,11 @@ export const fetchPantryItems = async (
 
   console.log('[Pantry] Fetching from API...');
   try {
-    const response = await apiClient.get<PantryItem[]>(
+    const response = await apiClient.get<{ items: PantryItem[] }>(
       "/api/pantry",
       { signal: options?.signal }
     );
-    return response || [];
+    return response.items || [];
   } catch (error) {
     console.error("Error fetching pantry items:", error);
     throw new Error(
