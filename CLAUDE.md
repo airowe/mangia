@@ -10,6 +10,7 @@ pnpm workspaces + Turborepo. Two packages:
 - `apps/api` — Vercel serverless API (Drizzle ORM + Neon PostgreSQL)
 
 See each package's `CLAUDE.md` for package-specific guidance.
+For full project structure and workflows, see `.claude/codebase-context.md`.
 
 ## Commands
 
