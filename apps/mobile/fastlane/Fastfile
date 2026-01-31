@@ -75,7 +75,47 @@ platform :ios do
       xcodeproj: "ios/Mangia.xcodeproj"
     )
 
-    # Build the app with manual code signing
+    # Fetch certificates and provisioning profiles via match
+    match(
+      type: "appstore",
+      api_key: api_key,
+      readonly: true
+    )
+
+    main_profile_name = ENV["sigh_com.airowe.mangia_appstore_profile-name"]
+    share_profile_name = ENV["sigh_com.airowe.mangia.share-extension_appstore_profile-name"]
+    live_activity_profile_name = ENV["sigh_com.airowe.mangia.MangiaLiveActivity_appstore_profile-name"]
+
+    # Switch all targets to manual signing with distribution profiles
+    # (expo prebuild --clean resets to automatic signing)
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/Mangia.xcodeproj",
+      team_id: "7WWYCV9VT8",
+      code_sign_identity: "Apple Distribution",
+      profile_name: main_profile_name,
+      targets: ["Mangia"]
+    )
+
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/Mangia.xcodeproj",
+      team_id: "7WWYCV9VT8",
+      code_sign_identity: "Apple Distribution",
+      profile_name: share_profile_name,
+      targets: ["ShareExtension"]
+    )
+
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/Mangia.xcodeproj",
+      team_id: "7WWYCV9VT8",
+      code_sign_identity: "Apple Distribution",
+      profile_name: live_activity_profile_name,
+      targets: ["MangiaLiveActivity"]
+    )
+
+    # Build the app
     build_app(
       workspace: "ios/Mangia.xcworkspace",
       scheme: "Mangia",
@@ -84,7 +124,9 @@ platform :ios do
       output_name: "Mangia.ipa",
       export_options: {
         provisioningProfiles: {
-          "com.airowe.mangia" => "Mangia App Store"
+          "com.airowe.mangia" => main_profile_name,
+          "com.airowe.mangia.share-extension" => share_profile_name,
+          "com.airowe.mangia.MangiaLiveActivity" => live_activity_profile_name
         }
       }
     )

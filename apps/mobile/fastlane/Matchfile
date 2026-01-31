@@ -1,0 +1,9 @@
+git_url("git@github.com:airowe/mangia-certs.git")
+
+storage_mode("git")
+
+type("appstore")
+
+app_identifier(["com.airowe.mangia", "com.airowe.mangia.share-extension", "com.airowe.mangia.MangiaLiveActivity"])
+
+team_id("7WWYCV9VT8")
