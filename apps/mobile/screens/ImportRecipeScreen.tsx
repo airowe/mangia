@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import * as Clipboard from "expo-clipboard";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Animated, {
@@ -32,7 +32,7 @@ import { useRecipeLimit } from "../hooks/useRecipeLimit";
 
 type RootStackParamList = {
   HomeScreen: undefined;
-  ImportRecipeScreen: undefined;
+  ImportRecipeScreen: { sharedUrl?: string } | undefined;
   ManualEntryScreen: undefined;
   SubscriptionScreen: undefined;
   RecipeDetailScreen: { recipeId: string };
@@ -46,6 +46,7 @@ const CARD_HEIGHT = (CARD_WIDTH * 4) / 3; // 3:4 aspect ratio
 
 export const ImportRecipeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<RouteProp<RootStackParamList, "ImportRecipeScreen">>();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { colors, spacing } = theme;
@@ -65,6 +66,14 @@ export const ImportRecipeScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [recentRecipes, setRecentRecipes] = useState<Recipe[]>([]);
   const [isFocused, setIsFocused] = useState(false);
+
+  // Pre-fill URL from share extension
+  const sharedUrl = route.params?.sharedUrl;
+  useEffect(() => {
+    if (sharedUrl) {
+      setUrl(sharedUrl);
+    }
+  }, [sharedUrl]);
 
   // Load recently added recipes
   useEffect(() => {

@@ -5,9 +5,9 @@
  * Includes onboarding flow for new users.
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { ActivityIndicator, StyleSheet, View, Text } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
 import { tokenCache } from './lib/clerk';
@@ -23,6 +23,7 @@ import {
   MD3DarkTheme,
 } from 'react-native-paper';
 import { SubscriptionProvider, DevSubscriptionProvider } from './contexts/SubscriptionContext';
+import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 import { ThemeProvider, useTheme } from './theme';
 import TabNavigator from './navigation/TabNavigator';
 import { DEV_BYPASS_AUTH } from './lib/devConfig';
@@ -186,14 +187,118 @@ function ThemedPaperProvider({ children }: { children: React.ReactNode }) {
   return <PaperProvider theme={paperTheme}>{children}</PaperProvider>;
 }
 
+// Deep linking configuration for share extension
+const linking = {
+  prefixes: ['mangia://'],
+  config: {
+    screens: {
+      MainTabs: {
+        screens: {
+          Home: {
+            screens: {
+              ImportRecipeScreen: 'import',
+            },
+          },
+        },
+      },
+    },
+  },
+};
+
+// Navigate to ImportRecipeScreen with a shared URL
+function navigateToImport(nav: NavigationContainerRef<any>, url: string) {
+  nav.navigate('MainTabs', {
+    screen: 'Home',
+    params: {
+      screen: 'ImportRecipeScreen',
+      params: { sharedUrl: url },
+    },
+  });
+}
+
+// Handles shared URLs from the iOS Share Extension.
+// When isAuthenticated is always true (dev bypass), pending URL queuing is skipped.
+function ShareIntentHandler({ navigationRef, isAuthenticated }: {
+  navigationRef: React.RefObject<NavigationContainerRef<any> | null>;
+  isAuthenticated: boolean;
+}) {
+  const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntentContext();
+  const pendingUrlRef = useRef<string | null>(null);
+
+  // Process a shared URL, or queue it if nav isn't ready yet
+  const processSharedUrl = useCallback((url: string) => {
+    const nav = navigationRef.current;
+    if (nav?.isReady()) {
+      navigateToImport(nav, url);
+      return;
+    }
+    // Nav not ready — wait for it via state listener
+    pendingUrlRef.current = url;
+  }, [navigationRef]);
+
+  // When navigation becomes ready, flush any pending URL
+  useEffect(() => {
+    const nav = navigationRef.current;
+    if (!nav || !pendingUrlRef.current) return;
+    if (nav.isReady()) {
+      const url = pendingUrlRef.current;
+      pendingUrlRef.current = null;
+      navigateToImport(nav, url);
+      return;
+    }
+    const unsubscribe = nav.addListener('state', () => {
+      if (nav.isReady() && pendingUrlRef.current) {
+        const url = pendingUrlRef.current;
+        pendingUrlRef.current = null;
+        navigateToImport(nav, url);
+        unsubscribe();
+      }
+    });
+    return unsubscribe;
+  }, [navigationRef, isAuthenticated]);
+
+  // When a share intent arrives, either process or queue it
+  useEffect(() => {
+    if (!hasShareIntent || shareIntent.type !== 'weburl' || !shareIntent.webUrl) return;
+
+    const url = shareIntent.webUrl;
+    if (isAuthenticated) {
+      processSharedUrl(url);
+    } else {
+      pendingUrlRef.current = url;
+    }
+    resetShareIntent();
+  }, [hasShareIntent, shareIntent, isAuthenticated, processSharedUrl, resetShareIntent]);
+
+  // Process queued URL after sign-in
+  useEffect(() => {
+    if (isAuthenticated && pendingUrlRef.current) {
+      processSharedUrl(pendingUrlRef.current);
+    }
+  }, [isAuthenticated, processSharedUrl]);
+
+  return null;
+}
+
+// Auth-aware wrapper that reads sign-in state from Clerk
+function AuthShareIntentHandler({ navigationRef }: { navigationRef: React.RefObject<NavigationContainerRef<any> | null> }) {
+  const { isSignedIn } = useAuth();
+  return <ShareIntentHandler navigationRef={navigationRef} isAuthenticated={!!isSignedIn} />;
+}
+
 // Main app content with navigation
 function AppContent() {
+  const navigationRef = useRef<NavigationContainerRef<any>>(null);
+
   return (
     <ClerkTokenProvider>
       <SubscriptionProvider>
-        <NavigationContainer>
-          <RootNavigator />
-        </NavigationContainer>
+        <ShareIntentProvider>
+          <NavigationContainer ref={navigationRef} linking={linking}>
+            <AuthShareIntentHandler navigationRef={navigationRef} />
+            <RootNavigator />
+          </NavigationContainer>
+        </ShareIntentProvider>
       </SubscriptionProvider>
     </ClerkTokenProvider>
   );
@@ -219,11 +324,16 @@ function ErrorScreen() {
 
 // Dev bypass app content (no Clerk)
 function DevBypassAppContent() {
+  const navigationRef = useRef<NavigationContainerRef<any>>(null);
+
   return (
     <DevSubscriptionProvider>
-      <NavigationContainer>
-        <DevBypassNavigator />
-      </NavigationContainer>
+      <ShareIntentProvider>
+        <NavigationContainer ref={navigationRef} linking={linking}>
+          <ShareIntentHandler navigationRef={navigationRef} isAuthenticated={true} />
+          <DevBypassNavigator />
+        </NavigationContainer>
+      </ShareIntentProvider>
     </DevSubscriptionProvider>
   );
 }

@@ -2,6 +2,7 @@
   "expo": {
     "name": "Mangia",
     "slug": "mangia",
+    "scheme": "mangia",
     "owner": "airowe",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -62,6 +63,15 @@
         "expo-camera",
         {
           "cameraPermission": "Allow Mangia to access your camera to scan recipes and ingredients."
+        }
+      ],
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+            "NSExtensionActivationSupportsWebPageWithMaxCount": 1
+          }
         }
       ]
     ],

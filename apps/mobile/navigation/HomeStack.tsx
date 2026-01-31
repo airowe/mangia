@@ -19,7 +19,7 @@ import RecipeImportProgressScreen from "../screens/RecipeImportProgressScreen";
 export type RootStackParamList = {
   WantToCookScreen: undefined;
   ManualEntryScreen: undefined;
-  ImportRecipeScreen: undefined;
+  ImportRecipeScreen: { sharedUrl?: string } | undefined;
   RecipeImportProgressScreen: {
     progress: number;
     statusText: string;
