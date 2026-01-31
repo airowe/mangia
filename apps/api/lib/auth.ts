@@ -76,38 +76,3 @@ export async function authenticateRequest(
     return null;
   }
 }
-
-/**
- * Helper to create authenticated API handler
- */
-export function withAuth<T>(
-  handler: (user: AuthUser, req: Request) => Promise<T>
-) {
-  return async (req: Request): Promise<Response> => {
-    const user = await authenticateRequest(req.headers.get("authorization"));
-
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    try {
-      const result = await handler(user, req);
-      return new Response(JSON.stringify(result), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    } catch (error: any) {
-      console.error("API error:", error);
-      return new Response(
-        JSON.stringify({ error: error.message || "Internal server error" }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-  };
-}

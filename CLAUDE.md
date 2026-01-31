@@ -7,7 +7,7 @@ Recipe management app: import recipes from URLs, track pantry inventory, generat
 pnpm workspaces + Turborepo. Two packages:
 
 - `apps/mobile` — React Native / Expo SDK 54 mobile app
-- `apps/api` — Vercel serverless API (Drizzle ORM + Neon PostgreSQL)
+- `apps/api` — Hono API deployed to Vercel (Drizzle ORM + Neon PostgreSQL)
 
 See each package's `CLAUDE.md` for package-specific guidance.
 For full project structure and workflows, see `.claude/codebase-context.md`.
@@ -18,14 +18,13 @@ For full project structure and workflows, see `.claude/codebase-context.md`.
 pnpm typecheck          # Typecheck all packages
 pnpm lint               # Lint all packages
 pnpm start:mobile       # Expo dev server
-pnpm dev:api            # Vercel dev server (port 3001)
+pnpm dev:api            # Hono dev server (port 3001)
 pnpm ios                # iOS simulator
 ```
 
 ## Rules
 
 - Never commit without explicit user approval — run QCHECK first
-- Let user run terminals for app/server so they can view logs
 
 ## Shortcuts
 
