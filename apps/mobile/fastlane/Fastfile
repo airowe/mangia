@@ -21,7 +21,7 @@ platform :ios do
     app_store_connect_api_key(
       key_id: "GZH428625Q",
       issuer_id: "166b49fe-7da6-45ec-b392-0aa2f5d391a2",
-      key_filepath: File.expand_path("~/Documents/mangia/AuthKey_GZH428625Q.p8"),
+      key_filepath: File.join(__dir__, "AuthKey_GZH428625Q.p8"),
     )
   end
 

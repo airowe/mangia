@@ -25,7 +25,18 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import ReanimatedAnimated, { FadeIn, FadeInDown, FadeInRight } from "react-native-reanimated";
+import ReanimatedAnimated, {
+  FadeIn,
+  FadeInDown,
+  FadeInRight,
+  FadeOutLeft,
+  SlideOutLeft,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  Layout,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Screen } from "../components/Screen";
@@ -75,6 +86,129 @@ const MARKET_SHAPES = [
   { borderTopLeftRadius: 24, borderTopRightRadius: 24, borderBottomLeftRadius: 0, borderBottomRightRadius: 24 },   // BL cut
   { borderTopLeftRadius: 24, borderTopRightRadius: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 0 },   // BR cut
 ] as const;
+
+// Animation 7: Animated category pill with spring press feedback
+const AnimatedCategoryPill = React.memo(({
+  category,
+  index,
+  isSelected,
+  onSelect,
+}: {
+  category: Category;
+  index: number;
+  isSelected: boolean;
+  onSelect: (category: Category) => void;
+}) => {
+  const scale = useSharedValue(1);
+  const pillStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <ReanimatedAnimated.View
+      key={category}
+      entering={FadeInRight.delay(index * 50).duration(300)}
+      style={pillStyle}
+    >
+      <TouchableOpacity
+        onPress={() => onSelect(category)}
+        onPressIn={() => { scale.value = withSpring(0.93, { damping: 15 }); }}
+        onPressOut={() => { scale.value = withSpring(isSelected ? 1.05 : 1, { damping: 12 }); }}
+        style={[
+          styles.categoryPill,
+          isSelected && styles.categoryPillSelected,
+        ]}
+        activeOpacity={0.7}
+      >
+        <Text style={[
+          styles.categoryPillText,
+          isSelected && styles.categoryPillTextSelected,
+        ]}>
+          {category}
+        </Text>
+      </TouchableOpacity>
+    </ReanimatedAnimated.View>
+  );
+});
+
+// Animation 9: Animated quantity button with spring scale
+const AnimatedQuantityButton = React.memo(({
+  icon,
+  onPress: onPressHandler,
+}: {
+  icon: "minus" | "plus";
+  onPress: () => void;
+}) => {
+  const btnScale = useSharedValue(1);
+  const btnStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: btnScale.value }],
+  }));
+  return (
+    <ReanimatedAnimated.View style={btnStyle}>
+      <TouchableOpacity
+        style={styles.quantityButton}
+        onPressIn={() => { btnScale.value = withSpring(0.8, { damping: 15 }); }}
+        onPressOut={() => { btnScale.value = withSpring(1, { damping: 10 }); }}
+        onPress={onPressHandler}
+      >
+        <MaterialCommunityIcons name={icon} size={14} color={mangiaColors.taupe} />
+      </TouchableOpacity>
+    </ReanimatedAnimated.View>
+  );
+});
+
+// Animation 4: Animated stock bar with smooth width transition
+const AnimatedStockBar = React.memo(({
+  progress,
+  color,
+}: {
+  progress: number;
+  color: string;
+}) => {
+  const barWidth = useSharedValue(progress);
+  React.useEffect(() => {
+    barWidth.value = withTiming(progress, { duration: 400 });
+  }, [progress, barWidth]);
+  const barStyle = useAnimatedStyle(() => ({
+    width: `${barWidth.value * 100}%`,
+    backgroundColor: color,
+    height: '100%',
+    borderRadius: 3,
+  }));
+  return (
+    <View style={styles.stockBar}>
+      <ReanimatedAnimated.View style={barStyle} />
+    </View>
+  );
+});
+
+// Animation 9: Animated quantity text with pop on change
+const AnimatedQuantityText = React.memo(({
+  quantity,
+  unit,
+}: {
+  quantity: number;
+  unit?: string;
+}) => {
+  const textScale = useSharedValue(1);
+  React.useEffect(() => {
+    textScale.value = withSpring(1.15, { damping: 12 });
+    const timer = setTimeout(() => {
+      textScale.value = withSpring(1, { damping: 12 });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [quantity, textScale]);
+  const textStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: textScale.value }],
+  }));
+  return (
+    <ReanimatedAnimated.View style={textStyle}>
+      <Text style={styles.quantityText}>
+        {quantity}{unit ? unit.charAt(0) : ''}
+      </Text>
+    </ReanimatedAnimated.View>
+  );
+});
 
 export default function PantryScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -263,34 +397,8 @@ export default function PantryScreen() {
     }
   }, [loadPantry]);
 
-  // Render category pill
-  const renderCategoryPill = useCallback((category: Category, index: number) => {
-    const isSelected = selectedCategory === category;
-    return (
-      <ReanimatedAnimated.View
-        key={category}
-        entering={FadeInRight.delay(index * 50).duration(300)}
-      >
-        <TouchableOpacity
-          onPress={() => setSelectedCategory(category)}
-          style={[
-            styles.categoryPill,
-            isSelected && styles.categoryPillSelected,
-          ]}
-          activeOpacity={0.7}
-        >
-          <Text style={[
-            styles.categoryPillText,
-            isSelected && styles.categoryPillTextSelected,
-          ]}>
-            {category}
-          </Text>
-        </TouchableOpacity>
-      </ReanimatedAnimated.View>
-    );
-  }, [selectedCategory]);
-
   // Render pantry item card (market-shape style)
+  // Animation 1: FadeOutLeft + SlideOutLeft on deletion
   const renderItemCard = useCallback((item: PantryItem, index: number) => {
     const shapeIndex = index % MARKET_SHAPES.length;
     const shape = MARKET_SHAPES[shapeIndex];
@@ -302,6 +410,8 @@ export default function PantryScreen() {
       <ReanimatedAnimated.View
         key={item.id}
         entering={FadeInDown.delay(index * 50).duration(300)}
+        exiting={SlideOutLeft.duration(300).withCallback(() => {})}
+        layout={Layout.springify().damping(15)}
       >
         <TouchableOpacity
           style={[styles.itemCard, shape]}
@@ -337,34 +447,20 @@ export default function PantryScreen() {
             </View>
 
             <View style={styles.itemFooter}>
-              {/* Quantity Controls */}
+              {/* Quantity Controls — Animation 9 */}
               <View style={styles.quantityControls}>
-                <TouchableOpacity
-                  style={styles.quantityButton}
+                <AnimatedQuantityButton
+                  icon="minus"
                   onPress={() => handleQuantityChange(item.id, -1)}
-                >
-                  <MaterialCommunityIcons
-                    name="minus"
-                    size={14}
-                    color={mangiaColors.taupe}
-                  />
-                </TouchableOpacity>
-                <Text style={styles.quantityText}>
-                  {item.quantity || 1}{item.unit ? item.unit.charAt(0) : ''}
-                </Text>
-                <TouchableOpacity
-                  style={styles.quantityButton}
+                />
+                <AnimatedQuantityText quantity={item.quantity || 1} unit={item.unit} />
+                <AnimatedQuantityButton
+                  icon="plus"
                   onPress={() => handleQuantityChange(item.id, 1)}
-                >
-                  <MaterialCommunityIcons
-                    name="plus"
-                    size={14}
-                    color={mangiaColors.taupe}
-                  />
-                </TouchableOpacity>
+                />
               </View>
 
-              {/* Stock Indicator */}
+              {/* Stock Indicator — Animation 4 */}
               {stockStatus === 'critical' || stockStatus === 'low' ? (
                 <View style={[styles.stockBadge, { backgroundColor: `${stockColor}15` }]}>
                   <Text style={[styles.stockBadgeText, { color: stockColor }]}>
@@ -372,14 +468,7 @@ export default function PantryScreen() {
                   </Text>
                 </View>
               ) : (
-                <View style={styles.stockBar}>
-                  <View
-                    style={[
-                      styles.stockBarFill,
-                      { width: `${stockProgress * 100}%`, backgroundColor: stockColor },
-                    ]}
-                  />
-                </View>
+                <AnimatedStockBar progress={stockProgress} color={stockColor} />
               )}
             </View>
           </View>
@@ -517,7 +606,15 @@ export default function PantryScreen() {
           contentContainerStyle={styles.categoriesContainer}
           style={styles.categoriesScroll}
         >
-          {CATEGORIES.map(renderCategoryPill)}
+          {CATEGORIES.map((cat, i) => (
+            <AnimatedCategoryPill
+              key={cat}
+              category={cat}
+              index={i}
+              isSelected={selectedCategory === cat}
+              onSelect={setSelectedCategory}
+            />
+          ))}
         </ScrollView>
 
         {/* What Can I Make Button */}

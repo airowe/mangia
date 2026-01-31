@@ -6,9 +6,14 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
   Dimensions,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { Image } from "expo-image";
 import { IconButton } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -51,17 +56,31 @@ export const RecipeQueueCard = React.memo<RecipeQueueCardProps>(function RecipeQ
 }) {
   const sourceType = recipe.sourceType || "manual";
   const platform = PLATFORM_CONFIG[sourceType] || PLATFORM_CONFIG.manual;
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.97, { damping: 15, stiffness: 400 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 12, stiffness: 300 });
+  };
 
   // Calculate total time
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const timeDisplay = totalTime > 0 ? `${totalTime} min` : null;
 
   return (
-    <TouchableOpacity
-      style={styles.card}
+    <Pressable
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       onPress={() => onPress(recipe)}
-      activeOpacity={0.7}
     >
+      <Animated.View style={[styles.card, animatedStyle]}>
       {/* Recipe Image */}
       <View style={styles.imageContainer}>
         {recipe.imageUrl ? (
@@ -159,7 +178,8 @@ export const RecipeQueueCard = React.memo<RecipeQueueCardProps>(function RecipeQ
           />
         )}
       </View>
-    </TouchableOpacity>
+      </Animated.View>
+    </Pressable>
   );
 });
 

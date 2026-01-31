@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons } from "@expo/vector-icons";
 import { BottomSheetView } from "@gorhom/bottom-sheet";
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 type AddToPantrySheetProps = {
   onManualPress: () => void;
@@ -13,10 +14,14 @@ export const AddToPantrySheet = ({
   return (
     <BottomSheetView style={styles.container}>
       <View style={styles.sheetContainer}>
-        <Text style={styles.sheetTitle}>Add to Pantry</Text>
-        <Text style={styles.sheetSubtitle}>Add items you have at home</Text>
+        <Animated.Text entering={FadeInDown.delay(50).duration(250)} style={styles.sheetTitle}>
+          Add to Pantry
+        </Animated.Text>
+        <Animated.Text entering={FadeInDown.delay(100).duration(250)} style={styles.sheetSubtitle}>
+          Add items you have at home
+        </Animated.Text>
 
-        <View style={styles.buttonsContainer}>
+        <Animated.View entering={FadeInDown.delay(150).duration(300).springify().damping(14)} style={styles.buttonsContainer}>
           <View style={styles.buttonRow}>
             <TouchableOpacity
               style={[styles.optionButton, styles.manualButton]}
@@ -26,7 +31,7 @@ export const AddToPantrySheet = ({
               <Text style={styles.optionButtonText}>Add Item</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
       </View>
     </BottomSheetView>
   );

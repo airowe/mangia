@@ -14,7 +14,13 @@ import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { fetchFilteredRecipes, RecipeFilterParams } from "../lib/recipeService";
@@ -54,6 +60,125 @@ const DEFAULT_PRESETS: FilterPreset[] = [
   { id: "dinner", label: "Dinner Party", params: { mealType: "dinner" } },
   { id: "dessert", label: "Dessert", params: { mealType: "dessert" } },
 ];
+
+// Animated filter pill with spring press feedback
+const AnimatedFilterPill = React.memo(({
+  preset,
+  isActive,
+  onPress,
+}: {
+  preset: FilterPreset;
+  isActive: boolean;
+  onPress: () => void;
+}) => {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <TouchableOpacity
+        style={[styles.filterPill, isActive && styles.filterPillActive]}
+        onPressIn={() => {
+          scale.value = withSpring(0.93, { damping: 15, stiffness: 400 });
+        }}
+        onPressOut={() => {
+          scale.value = withSpring(1, { damping: 12, stiffness: 300 });
+        }}
+        onPress={onPress}
+      >
+        <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
+          {preset.label}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+});
+
+// Animated recipe card with scale press feedback
+const AnimatedRecipeCard = React.memo(({
+  recipe,
+  index,
+  onPress,
+}: {
+  recipe: RecipeWithIngredients;
+  index: number;
+  onPress: (recipe: Recipe) => void;
+}) => {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(index * 50).duration(300)}
+      style={[
+        styles.cardWrapper,
+        index % 2 === 1 && styles.cardWrapperOffset,
+        animatedStyle,
+      ]}
+    >
+      <TouchableOpacity
+        style={styles.card}
+        onPressIn={() => {
+          scale.value = withSpring(0.96, { damping: 15, stiffness: 400 });
+        }}
+        onPressOut={() => {
+          scale.value = withSpring(1, { damping: 12, stiffness: 300 });
+        }}
+        onPress={() => onPress(recipe)}
+        activeOpacity={1}
+      >
+        <View style={styles.imageContainer}>
+          {recipe.imageUrl ? (
+            <Image
+              source={{ uri: recipe.imageUrl }}
+              style={styles.image}
+              contentFit="cover"
+            />
+          ) : (
+            <View style={styles.placeholderImage}>
+              <MaterialCommunityIcons
+                name="food"
+                size={48}
+                color={mangiaColors.taupe}
+              />
+            </View>
+          )}
+          <TouchableOpacity style={styles.favoriteButton}>
+            <MaterialCommunityIcons
+              name={(recipe.rating || 0) >= 4 ? "heart" : "heart-outline"}
+              size={20}
+              color={mangiaColors.white}
+            />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {recipe.title}
+          </Text>
+          <View style={styles.cardMeta}>
+            {recipe.formattedTotalTime ? (
+              <>
+                <Text style={styles.cardMetaText}>
+                  {recipe.formattedTotalTime}
+                </Text>
+                <View style={styles.metaDot} />
+              </>
+            ) : null}
+            <Text style={styles.cardMetaText}>
+              {recipe.difficulty || "Easy"}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+});
 
 export const RecipesScreen = () => {
   const navigation = useNavigation<RecipesScreenNavigationProp>();
@@ -239,23 +364,12 @@ export const RecipesScreen = () => {
         style={styles.filterScroll}
       >
         {filterPresets.map((preset) => (
-          <TouchableOpacity
+          <AnimatedFilterPill
             key={preset.id}
-            style={[
-              styles.filterPill,
-              activeFilter === preset.id && styles.filterPillActive,
-            ]}
+            preset={preset}
+            isActive={activeFilter === preset.id}
             onPress={() => setActiveFilter(preset.id)}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                activeFilter === preset.id && styles.filterTextActive,
-              ]}
-            >
-              {preset.label}
-            </Text>
-          </TouchableOpacity>
+          />
         ))}
       </ScrollView>
 
@@ -297,69 +411,12 @@ export const RecipesScreen = () => {
         ) : (
           <View style={styles.grid}>
             {recipes.map((recipe, index) => (
-              <Animated.View
+              <AnimatedRecipeCard
                 key={recipe.id}
-                entering={FadeInDown.delay(index * 50).duration(300)}
-                style={[
-                  styles.cardWrapper,
-                  // Staggered layout: odd columns offset
-                  index % 2 === 1 && styles.cardWrapperOffset,
-                ]}
-              >
-                <TouchableOpacity
-                  style={styles.card}
-                  onPress={() => handlePressRecipe(recipe)}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.imageContainer}>
-                    {recipe.imageUrl ? (
-                      <Image
-                        source={{ uri: recipe.imageUrl }}
-                        style={styles.image}
-                        contentFit="cover"
-                      />
-                    ) : (
-                      <View style={styles.placeholderImage}>
-                        <MaterialCommunityIcons
-                          name="food"
-                          size={48}
-                          color={mangiaColors.taupe}
-                        />
-                      </View>
-                    )}
-                    {/* Favorite button */}
-                    <TouchableOpacity style={styles.favoriteButton}>
-                      <MaterialCommunityIcons
-                        name={
-                          (recipe.rating || 0) >= 4
-                            ? "heart"
-                            : "heart-outline"
-                        }
-                        size={20}
-                        color={mangiaColors.white}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.cardContent}>
-                    <Text style={styles.cardTitle} numberOfLines={2}>
-                      {recipe.title}
-                    </Text>
-                    <View style={styles.cardMeta}>
-                      {recipe.formattedTotalTime ? (
-                        <>
-                          <Text style={styles.cardMetaText}>
-                            {recipe.formattedTotalTime}
-                          </Text>
-                          <View style={styles.metaDot} />
-                        </>
-                      ) : null}
-                      <Text style={styles.cardMetaText}>
-                        {recipe.difficulty || "Easy"}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              </Animated.View>
+                recipe={recipe}
+                index={index}
+                onPress={handlePressRecipe}
+              />
             ))}
           </View>
         )}

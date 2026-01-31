@@ -46,6 +46,20 @@ export function CookingHeader({
   isListening = false,
   showMiseEnPlace = false,
 }: CookingHeaderProps) {
+  // Step indicator bounce animation on step change
+  const stepScale = useSharedValue(1);
+
+  useEffect(() => {
+    stepScale.value = withSequence(
+      withTiming(1.15, { duration: 120 }),
+      withTiming(1, { duration: 200 })
+    );
+  }, [currentStep, stepScale]);
+
+  const stepAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: stepScale.value }],
+  }));
+
   // Pulsing animation for voice indicator
   const pulseValue = useSharedValue(1);
 
@@ -81,11 +95,11 @@ export function CookingHeader({
 
       {/* Step Indicator */}
       {!showMiseEnPlace && (
-        <View style={styles.stepIndicator}>
+        <Animated.View style={[styles.stepIndicator, stepAnimatedStyle]}>
           <Text style={styles.stepText}>
             Step {currentStep + 1} of {totalSteps}
           </Text>
-        </View>
+        </Animated.View>
       )}
 
       {/* Right side buttons */}

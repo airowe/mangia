@@ -20,7 +20,15 @@ import {
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import ReanimatedAnimated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
+import ReanimatedAnimated, {
+  FadeIn,
+  FadeInDown,
+  SlideInRight,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -50,6 +58,7 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 interface GroceryItemWithChecked extends ConsolidatedIngredient {
   checked: boolean;
+  _isNew?: boolean;
 }
 
 interface Section {
@@ -57,6 +66,67 @@ interface Section {
   category: IngredientCategory;
   data: GroceryItemWithChecked[];
 }
+
+// Animated checkbox with spring scale + checkmark fade
+const AnimatedCheckbox = React.memo(({ checked }: { checked: boolean }) => {
+  const scale = useSharedValue(1);
+  const checkOpacity = useSharedValue(checked ? 1 : 0);
+
+  React.useEffect(() => {
+    scale.value = withSpring(0.8, { damping: 12, stiffness: 400 });
+    setTimeout(() => {
+      scale.value = withSpring(1, { damping: 10, stiffness: 300 });
+    }, 80);
+    checkOpacity.value = withTiming(checked ? 1 : 0, { duration: 150 });
+  }, [checked]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const checkmarkStyle = useAnimatedStyle(() => ({
+    opacity: checkOpacity.value,
+  }));
+
+  return (
+    <ReanimatedAnimated.View
+      style={[
+        styles.checkbox,
+        checked && styles.checkboxChecked,
+        animatedStyle,
+      ]}
+    >
+      <ReanimatedAnimated.View style={checkmarkStyle}>
+        <MaterialCommunityIcons name="check" size={14} color={mangiaColors.white} />
+      </ReanimatedAnimated.View>
+    </ReanimatedAnimated.View>
+  );
+});
+
+// Animated strikethrough text for checked items
+const AnimatedItemName = React.memo(({ name, checked }: { name: string; checked: boolean }) => {
+  const strikeProgress = useSharedValue(checked ? 1 : 0);
+
+  React.useEffect(() => {
+    strikeProgress.value = withTiming(checked ? 1 : 0, { duration: 250 });
+  }, [checked]);
+
+  const textStyle = useAnimatedStyle(() => ({
+    opacity: 1 - strikeProgress.value * 0.4,
+  }));
+
+  return (
+    <ReanimatedAnimated.Text
+      style={[
+        styles.itemName,
+        checked && styles.itemNameChecked,
+        textStyle,
+      ]}
+    >
+      {name}
+    </ReanimatedAnimated.Text>
+  );
+});
 
 export default function GroceryListScreen() {
   const route = useRoute<GroceryListScreenRouteProp>();
@@ -101,9 +171,16 @@ export default function GroceryListScreen() {
       checked: false,
     };
 
-    setItems((prev) => [...prev, newItem]);
+    setItems((prev) => [...prev, { ...newItem, _isNew: true }]);
     setNewItemText("");
     Keyboard.dismiss();
+
+    // Clear the _isNew flag after animation completes
+    setTimeout(() => {
+      setItems((prev) =>
+        prev.map((i) => (i.name === trimmed ? { ...i, _isNew: undefined } : i))
+      );
+    }, 500);
   }, [newItemText]);
 
   // Load recipes and generate grocery list
@@ -260,28 +337,24 @@ export default function GroceryListScreen() {
 
   const renderItem = useCallback(
     ({ item, index }: { item: GroceryItemWithChecked; index: number }) => (
-      <ReanimatedAnimated.View entering={FadeInDown.delay(index * 30).duration(300)}>
+      <ReanimatedAnimated.View
+        entering={
+          item._isNew
+            ? SlideInRight.duration(300).springify().damping(15)
+            : FadeInDown.delay(index * 30).duration(300)
+        }
+      >
         <TouchableOpacity
           style={styles.itemRow}
           onPress={() => toggleItem(item.name)}
           activeOpacity={0.9}
         >
-          {/* Custom Checkbox */}
-          <View style={[styles.checkbox, item.checked && styles.checkboxChecked]}>
-            {item.checked && (
-              <MaterialCommunityIcons
-                name="check"
-                size={14}
-                color={mangiaColors.white}
-              />
-            )}
-          </View>
+          {/* Animated Checkbox */}
+          <AnimatedCheckbox checked={item.checked} />
 
           {/* Item Details */}
           <View style={styles.itemContent}>
-            <Text style={[styles.itemName, item.checked && styles.itemNameChecked]}>
-              {item.name}
-            </Text>
+            <AnimatedItemName name={item.name} checked={item.checked} />
             <Text style={styles.itemQuantity}>
               {item.needToBuy > 0 ? item.needToBuy : item.totalQuantity}
               {item.unit ? ` ${item.unit}` : ""}
