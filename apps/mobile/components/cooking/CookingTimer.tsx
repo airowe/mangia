@@ -24,11 +24,15 @@ import { mangiaColors } from '../../theme/tokens/colors';
 interface CookingTimerProps {
   initialSeconds?: number;
   onTimerComplete?: () => void;
+  onTimerStart?: (endAtMs: number) => void;
+  onTimerPause?: () => void;
 }
 
 export const CookingTimer = React.memo<CookingTimerProps>(function CookingTimer({
   initialSeconds = 120,
   onTimerComplete,
+  onTimerStart,
+  onTimerPause,
 }) {
   const [seconds, setSeconds] = useState(initialSeconds);
   const [isRunning, setIsRunning] = useState(false);
@@ -79,7 +83,13 @@ export const CookingTimer = React.memo<CookingTimerProps>(function CookingTimer(
   };
 
   const handleToggle = () => {
-    setIsRunning(!isRunning);
+    const willRun = !isRunning;
+    setIsRunning(willRun);
+    if (willRun) {
+      onTimerStart?.(Date.now() + seconds * 1000);
+    } else {
+      onTimerPause?.();
+    }
   };
 
   return (

@@ -187,7 +187,7 @@ function ThemedPaperProvider({ children }: { children: React.ReactNode }) {
   return <PaperProvider theme={paperTheme}>{children}</PaperProvider>;
 }
 
-// Deep linking configuration for share extension
+// Deep linking configuration for share extension and Live Activities
 const linking = {
   prefixes: ['mangia://'],
   config: {
@@ -197,6 +197,7 @@ const linking = {
           Home: {
             screens: {
               ImportRecipeScreen: 'import',
+              CookingModeScreen: 'cooking/:recipeId',
             },
           },
         },

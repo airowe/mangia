@@ -47,7 +47,7 @@
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "15.1"
+            "deploymentTarget": "17.0"
           },
           "android": {
             "minSdkVersion": 25
@@ -72,6 +72,13 @@
             "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
             "NSExtensionActivationSupportsWebPageWithMaxCount": 1
           }
+        }
+      ],
+      [
+        "voltra",
+        {
+          "groupIdentifier": "group.com.airowe.mangia",
+          "deploymentTarget": "17.0"
         }
       ]
     ],

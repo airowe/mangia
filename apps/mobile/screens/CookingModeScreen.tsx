@@ -35,6 +35,7 @@ import { Feather } from '@expo/vector-icons';
 import { mangiaColors } from '../theme/tokens/colors';
 import { fetchRecipeById, RecipeWithIngredients, markAsCooked } from '../lib/recipeService';
 import { isAbortError } from '../hooks/useAbortableEffect';
+import { useCookingActivity } from '../live-activities/useCookingActivity';
 
 // Cooking components
 import {
@@ -80,6 +81,10 @@ export default function CookingModeScreen() {
   // Voice state
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(120);
+
+  // Live Activity state
+  const [timerEndAtMs, setTimerEndAtMs] = useState<number | null>(null);
+  const [timerPaused, setTimerPaused] = useState(false);
 
   // Speech hook for TTS
   const { speak, stop: stopSpeaking, isSpeaking, isAvailable: ttsAvailable } = useSpeech({
@@ -151,6 +156,41 @@ export default function CookingModeScreen() {
 
   const totalSteps = recipe?.instructions?.length || 0;
 
+  // Live Activity for lock screen / Dynamic Island timer
+  const { startActivity, endActivity } = useCookingActivity({
+    recipeName: recipe?.title || '',
+    recipeId,
+    currentStep,
+    totalSteps,
+    stepText: recipe?.instructions?.[currentStep] || '',
+    timerEndAtMs,
+    isPaused: timerPaused,
+  });
+
+  // Start Live Activity when cooking begins (after mise en place)
+  useEffect(() => {
+    if (!showMiseEnPlace && recipe) {
+      startActivity();
+    }
+  }, [showMiseEnPlace, recipe]);
+
+  // End Live Activity on unmount
+  useEffect(() => {
+    return () => {
+      endActivity();
+    };
+  }, [endActivity]);
+
+  // Timer callbacks for Live Activity
+  const handleTimerStart = useCallback((endAtMs: number) => {
+    setTimerEndAtMs(endAtMs);
+    setTimerPaused(false);
+  }, []);
+
+  const handleTimerPause = useCallback(() => {
+    setTimerPaused(true);
+  }, []);
+
   // Speak step when navigating (if voice enabled)
   useEffect(() => {
     if (voiceEnabled && ttsAvailable && recipe?.instructions?.[currentStep] && !showMiseEnPlace) {
@@ -210,15 +250,22 @@ export default function CookingModeScreen() {
       'Are you sure you want to exit? Your progress will not be saved.',
       [
         { text: 'Stay', style: 'cancel' },
-        { text: 'Exit', onPress: () => navigation.goBack() },
+        {
+          text: 'Exit',
+          onPress: () => {
+            endActivity();
+            navigation.goBack();
+          },
+        },
       ]
     );
-  }, [navigation, stopSpeaking, stopListening]);
+  }, [navigation, stopSpeaking, stopListening, endActivity]);
 
   const handleComplete = useCallback(async () => {
     // Stop voice
     stopSpeaking();
     stopListening();
+    endActivity();
 
     Alert.alert(
       'Cooking Complete!',
@@ -240,9 +287,11 @@ export default function CookingModeScreen() {
         },
       ]
     );
-  }, [navigation, recipe, stopSpeaking, stopListening]);
+  }, [navigation, recipe, stopSpeaking, stopListening, endActivity]);
 
   const handleTimerComplete = useCallback(() => {
+    setTimerEndAtMs(0);
+    setTimerPaused(false);
     if (voiceEnabled && ttsAvailable) {
       speak('Your timer is done!');
     }
@@ -295,11 +344,13 @@ export default function CookingModeScreen() {
           <CookingTimer
             initialSeconds={timerSeconds}
             onTimerComplete={handleTimerComplete}
+            onTimerStart={handleTimerStart}
+            onTimerPause={handleTimerPause}
           />
         </View>
       </View>
     ),
-    [handleTimerComplete, totalSteps, timerSeconds, recipe?.ingredients]
+    [handleTimerComplete, handleTimerStart, handleTimerPause, totalSteps, timerSeconds, recipe?.ingredients]
   );
 
   // Loading state
