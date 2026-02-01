@@ -7,6 +7,8 @@ import {
   RefreshControl,
   Alert,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Text, FAB, Portal, Modal, TextInput, Button } from 'react-native-paper';
@@ -382,6 +384,9 @@ export default function CollectionsScreen() {
           onDismiss={() => setModalVisible(false)}
           contentContainerStyle={styles.modalContent}
         >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
           <Text style={styles.modalTitle}>New Collection</Text>
 
           <TextInput
@@ -462,6 +467,7 @@ export default function CollectionsScreen() {
               Create
             </Button>
           </View>
+          </KeyboardAvoidingView>
         </Modal>
       </Portal>
     </Screen>

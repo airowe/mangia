@@ -12,6 +12,8 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import {
@@ -671,6 +673,9 @@ export default function PantryScreen() {
           onDismiss={() => setShowAddModal(false)}
           contentContainerStyle={styles.modal}
         >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
           <Text style={styles.modalTitle}>Add to Pantry</Text>
 
           <View style={styles.modalInputContainer}>
@@ -732,6 +737,7 @@ export default function PantryScreen() {
               )}
             </TouchableOpacity>
           </View>
+          </KeyboardAvoidingView>
         </Modal>
       </Portal>
     </Screen>

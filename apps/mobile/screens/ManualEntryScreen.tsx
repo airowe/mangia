@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, StyleSheet, ScrollView, Alert, TouchableWithoutFeedback, Keyboard } from "react-native";
+import { View, StyleSheet, ScrollView, Alert, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform } from "react-native";
 import {
   TextInput,
   Button,
@@ -182,8 +182,11 @@ export const ManualEntryScreen = ({
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={{ position: 'relative' }}>
           <TextInput
             label="Product Name"
@@ -399,7 +402,7 @@ export const ManualEntryScreen = ({
           ))}
         </Modal>
       </Portal>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

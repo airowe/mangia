@@ -6,6 +6,9 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { generateId } from "../utils/id";
@@ -39,45 +42,49 @@ export const ProductForm = ({ onAdded }: { onAdded: () => void }) => {
   };
 
   return (
-    <View>
-      <TextInput
-        placeholder="Name"
-        value={title}
-        onChangeText={setTitle}
-        style={styles.input}
-      />
-      <TouchableOpacity
-        onPress={() => setShowPicker(!showPicker)}
-        style={styles.pickerToggle}
-      >
-        <Text style={styles.pickerToggleText}>Location: {location} ▼</Text>
-      </TouchableOpacity>
-      {showPicker && (
-        <Picker
-          selectedValue={location}
-          onValueChange={(value) => setLocation(value)}
-          style={styles.picker}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView keyboardShouldPersistTaps="handled">
+        <TextInput
+          placeholder="Name"
+          value={title}
+          onChangeText={setTitle}
+          style={styles.input}
+        />
+        <TouchableOpacity
+          onPress={() => setShowPicker(!showPicker)}
+          style={styles.pickerToggle}
         >
-          {STORAGE_CATEGORIES.map((cat) => (
-            <Picker.Item key={cat} label={cat} value={cat} />
-          ))}
-        </Picker>
-      )}
-      <TextInput
-        placeholder="Quantity"
-        value={quantity}
-        onChangeText={setQuantity}
-        keyboardType="numeric"
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Unit"
-        value={unit}
-        onChangeText={setUnit}
-        style={styles.input}
-      />
-      <Button title="Add Product" onPress={handleSubmit} />
-    </View>
+          <Text style={styles.pickerToggleText}>Location: {location} ▼</Text>
+        </TouchableOpacity>
+        {showPicker && (
+          <Picker
+            selectedValue={location}
+            onValueChange={(value) => setLocation(value)}
+            style={styles.picker}
+          >
+            {STORAGE_CATEGORIES.map((cat) => (
+              <Picker.Item key={cat} label={cat} value={cat} />
+            ))}
+          </Picker>
+        )}
+        <TextInput
+          placeholder="Quantity"
+          value={quantity}
+          onChangeText={setQuantity}
+          keyboardType="numeric"
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Unit"
+          value={unit}
+          onChangeText={setUnit}
+          style={styles.input}
+        />
+        <Button title="Add Product" onPress={handleSubmit} />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

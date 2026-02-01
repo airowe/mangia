@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   Switch,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -139,11 +140,16 @@ export default function ManualItemEntryScreen() {
       </ReanimatedAnimated.View>
 
       {/* Form Content */}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoiding}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={0}
+      >
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: 100 + insets.bottom },
+          { paddingBottom: 24 },
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -299,6 +305,7 @@ export default function ManualItemEntryScreen() {
           )}
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
@@ -338,6 +345,11 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 60,
+  },
+
+  // Keyboard Avoiding
+  keyboardAvoiding: {
+    flex: 1,
   },
 
   // Scroll View
@@ -531,10 +543,6 @@ const styles = StyleSheet.create({
 
   // Footer
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     paddingHorizontal: 16,
     paddingTop: 16,
     backgroundColor: `${mangiaColors.cream}E6`,

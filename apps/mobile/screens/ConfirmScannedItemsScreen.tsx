@@ -12,6 +12,8 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -254,13 +256,19 @@ export default function ConfirmScannedItemsScreen() {
         </TouchableOpacity>
       </ReanimatedAnimated.View>
 
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoiding}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={0}
+      >
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: 100 + insets.bottom },
+          { paddingBottom: 24 },
         ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Hero Image */}
         <ReanimatedAnimated.View
@@ -356,6 +364,7 @@ export default function ConfirmScannedItemsScreen() {
           )}
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
@@ -640,11 +649,10 @@ const styles = StyleSheet.create({
   },
 
   // Footer
+  keyboardAvoiding: {
+    flex: 1,
+  },
   footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     paddingHorizontal: 16,
     paddingTop: 32,
   },

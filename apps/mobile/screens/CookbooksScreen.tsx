@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
@@ -346,6 +348,9 @@ export default function CookbooksScreen() {
           onDismiss={() => setShowAddModal(false)}
           contentContainerStyle={styles.modal}
         >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
           <Text style={styles.modalTitle}>Add Cookbook</Text>
 
           <TextInput
@@ -401,6 +406,7 @@ export default function CookbooksScreen() {
               Add
             </Button>
           </View>
+          </KeyboardAvoidingView>
         </Modal>
       </Portal>
     </Screen>
