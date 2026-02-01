@@ -48,6 +48,7 @@ import { fontFamily, editorialTextStyles } from "../theme/tokens/typography";
 
 type PantryStackParamList = {
   PantryMain: undefined;
+  AIPantryScannerScreen: undefined;
   WhatCanIMakeScreen: undefined;
   SubscriptionScreen: undefined;
 };
@@ -649,8 +650,7 @@ export default function PantryScreen() {
         {filteredItems.length === 0 ? (
           <EmptyPantryState
             onScanPantry={() => {
-              // TODO: Navigate to AI Scanner screen
-              Alert.alert("Coming Soon", "AI Pantry Scanner will be available soon!");
+              navigation.navigate("AIPantryScannerScreen");
             }}
             onAddManually={() => setShowAddModal(true)}
           />

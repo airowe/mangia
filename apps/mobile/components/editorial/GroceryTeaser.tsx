@@ -35,7 +35,11 @@ export function GroceryTeaser({ missingItemsCount, onPress }: GroceryTeaserProps
 
   return (
     <Animated.View entering={FadeInUp.delay(200).duration(300)}>
-      <View style={styles.container}>
+      <TouchableOpacity
+        onPress={handlePress}
+        activeOpacity={0.85}
+        style={styles.container}
+      >
         {/* Decorative Circle */}
         <View style={styles.decorativeCircle} />
 
@@ -48,14 +52,10 @@ export function GroceryTeaser({ missingItemsCount, onPress }: GroceryTeaserProps
         </View>
 
         {/* Button */}
-        <TouchableOpacity
-          onPress={handlePress}
-          activeOpacity={0.9}
-          style={styles.button}
-        >
+        <View style={styles.button}>
           <Text style={styles.buttonText}>View List</Text>
-        </TouchableOpacity>
-      </View>
+        </View>
+      </TouchableOpacity>
     </Animated.View>
   );
 }

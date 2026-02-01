@@ -18,8 +18,8 @@ export interface RecipeIngredient {
   id?: string;
   recipeId?: string;
   name: string;
-  quantity: number;
-  unit: string;
+  quantity?: number | null;
+  unit?: string | null;
   category?: IngredientCategory;
   notes?: string;
   isOptional?: boolean;

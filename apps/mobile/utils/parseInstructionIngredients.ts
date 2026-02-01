@@ -163,8 +163,8 @@ export function parseInstructionWithIngredients(
         content: matchedText, // Keep original casing from instruction
         ingredient: {
           name: ingredient.name,
-          quantity: ingredient.quantity,
-          unit: ingredient.unit,
+          quantity: ingredient.quantity ?? 0,
+          unit: ingredient.unit ?? '',
         },
       });
     } else {

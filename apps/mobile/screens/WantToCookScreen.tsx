@@ -39,6 +39,7 @@ import {
   createRecipe,
   RecipeWithIngredients,
 } from '../lib/recipeService';
+import { generateGroceryList, getItemsToBuy } from '../lib/groceryList';
 import { SAMPLE_RECIPES, SampleRecipe } from '../lib/sampleRecipes';
 import { isAbortError } from '../hooks/useAbortableEffect';
 
@@ -60,6 +61,7 @@ export const WantToCookScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingSamples, setIsLoadingSamples] = useState(false);
+  const [missingItemsCount, setMissingItemsCount] = useState(0);
 
   // Load recipes with status = 'want_to_cook'
   const loadRecipes = useCallback(async (signal?: AbortSignal) => {
@@ -163,8 +165,24 @@ export const WantToCookScreen: React.FC = () => {
   const featuredRecipe = recipes[0];
   const queueRecipes = recipes.slice(1);
 
-  // Placeholder missing items count (would come from pantry/shopping service)
-  const missingItemsCount = recipes.length > 0 ? 4 : 0;
+  // Compute missing grocery items count from recipe queue
+  useEffect(() => {
+    if (recipes.length === 0) {
+      setMissingItemsCount(0);
+      return;
+    }
+    let cancelled = false;
+    generateGroceryList(recipes)
+      .then((items) => {
+        if (!cancelled) {
+          setMissingItemsCount(getItemsToBuy(items).length);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setMissingItemsCount(0);
+      });
+    return () => { cancelled = true; };
+  }, [recipes]);
 
   // Render loading state
   if (isLoading) {

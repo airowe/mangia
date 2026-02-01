@@ -90,7 +90,7 @@ export function scaleIngredients(
 
   return ingredients.map((ingredient) => ({
     ...ingredient,
-    quantity: scaleQuantity(ingredient.quantity, scaleFactor),
+    quantity: scaleQuantity(ingredient.quantity ?? 0, scaleFactor),
   }));
 }
 
@@ -101,7 +101,7 @@ export function getScaledIngredientDisplay(
   ingredient: RecipeIngredient,
   scaleFactor: number
 ): string {
-  const scaledQuantity = scaleQuantity(ingredient.quantity, scaleFactor);
+  const scaledQuantity = scaleQuantity(ingredient.quantity ?? 0, scaleFactor);
   const quantityStr = formatQuantity(scaledQuantity);
 
   const parts: string[] = [];
