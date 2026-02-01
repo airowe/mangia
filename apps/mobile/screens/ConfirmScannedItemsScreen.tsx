@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 import ReanimatedAnimated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -47,7 +48,7 @@ interface ScannedItem {
 type ConfirmScreenRouteProp = RouteProp<PantryStackParamList, "ConfirmScannedItemsScreen">;
 
 export default function ConfirmScannedItemsScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<PantryStackParamList>>();
   const route = useRoute<ConfirmScreenRouteProp>();
   const insets = useSafeAreaInsets();
 
@@ -137,9 +138,8 @@ export default function ConfirmScannedItemsScreen() {
   }, [items, navigation]);
 
   const handleAddManually = useCallback(() => {
-    // Navigate to manual entry screen
-    // navigation.navigate("ManualItemEntryScreen");
-  }, []);
+    navigation.navigate("ManualItemEntryScreen");
+  }, [navigation]);
 
   const renderItem = useCallback((item: ScannedItem, index: number) => {
     const isReview = item.status === "review";

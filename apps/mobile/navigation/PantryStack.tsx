@@ -33,7 +33,7 @@ export type PantryStackParamList = {
     }[];
   };
   KitchenAlertsScreen: undefined;
-  WhatCanIMakeScreen: undefined;
+  WhatCanIMakeScreen: { initialIngredient?: string } | undefined;
   RecipeDetailScreen: { recipeId: string };
   SubscriptionScreen: undefined;
 };

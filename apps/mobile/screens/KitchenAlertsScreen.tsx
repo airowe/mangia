@@ -15,6 +15,8 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { PantryStackParamList } from "../navigation/PantryStack";
 import ReanimatedAnimated, { FadeIn, FadeInDown, FadeInRight } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -35,7 +37,7 @@ const FILTER_CATEGORIES: { label: string; value: string | null }[] = [
 ];
 
 export default function KitchenAlertsScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<PantryStackParamList>>();
   const insets = useSafeAreaInsets();
 
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -131,9 +133,8 @@ export default function KitchenAlertsScreen() {
   }, []);
 
   const handleFindRecipes = useCallback((item: AlertItem) => {
-    // TODO: Navigate to recipes using this ingredient
-    Alert.alert("Find Recipes", `Finding recipes for ${item.name}...`);
-  }, []);
+    navigation.navigate("WhatCanIMakeScreen", { initialIngredient: item.name });
+  }, [navigation]);
 
   const renderExpiredCard = useCallback((item: AlertItem, index: number) => (
     <ReanimatedAnimated.View

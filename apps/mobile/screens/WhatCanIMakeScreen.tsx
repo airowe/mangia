@@ -14,8 +14,9 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { FlashList } from "@shopify/flash-list";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { PantryStackParamList } from "../navigation/PantryStack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import ReanimatedAnimated, { FadeIn, FadeInDown, FadeInRight } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -44,8 +45,11 @@ const CARD_SHAPES = [
   { borderTopLeftRadius: 4, borderTopRightRadius: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 4 },
 ] as const;
 
+type WhatCanIMakeRouteProp = RouteProp<PantryStackParamList, "WhatCanIMakeScreen">;
+
 export const WhatCanIMakeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<WhatCanIMakeRouteProp>();
   const insets = useSafeAreaInsets();
   const { isPremium, requirePremium } = usePremiumFeature();
 
@@ -61,6 +65,13 @@ export const WhatCanIMakeScreen: React.FC = () => {
       requirePremium("what_can_i_make");
     }
   }, [isPremium, requirePremium]);
+
+  useEffect(() => {
+    const initialIngredient = route.params?.initialIngredient;
+    if (initialIngredient && !activeIngredients.includes(initialIngredient)) {
+      setActiveIngredients((prev) => [...prev, initialIngredient]);
+    }
+  }, [route.params?.initialIngredient]);
 
   const loadMatches = useCallback(async (signal?: AbortSignal) => {
     if (!isPremium) return;

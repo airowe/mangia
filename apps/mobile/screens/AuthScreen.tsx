@@ -42,6 +42,11 @@ export const AuthScreen = ({ navigation }: any) => {
   const [error, setError] = useState('');
   const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState('');
+  const [pendingPasswordReset, setPendingPasswordReset] = useState(false);
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetStep, setResetStep] = useState<'code' | 'password'>('code');
 
   const handleSignIn = useCallback(async () => {
     if (!signInLoaded || !signIn) return;
@@ -141,9 +146,112 @@ export const AuthScreen = ({ navigation }: any) => {
     }
   }, [signUp, signUpLoaded, setSignUpActive, code]);
 
+  const handleForgotPassword = useCallback(async () => {
+    if (!signInLoaded || !signIn) return;
+    if (!email) {
+      setError('Please enter your email address first.');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError('');
+
+      const signInAttempt = await signIn.create({ identifier: email });
+
+      const resetFactor = signInAttempt.supportedFirstFactors?.find(
+        (f) => f.strategy === 'reset_password_email_code',
+      ) as { strategy: 'reset_password_email_code'; emailAddressId: string } | undefined;
+
+      if (!resetFactor) {
+        setError('Password reset is not available for this account.');
+        return;
+      }
+
+      await signIn.prepareFirstFactor({
+        strategy: 'reset_password_email_code',
+        emailAddressId: resetFactor.emailAddressId,
+      });
+
+      setPendingPasswordReset(true);
+      setResetStep('code');
+      Alert.alert('Check Your Email', 'We sent a password reset code to your email.');
+    } catch (err: any) {
+      console.error('Forgot password error:', err);
+      const errorMessage = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Failed to send reset code';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [signIn, signInLoaded, email]);
+
+  const handleResetCodeVerification = useCallback(async () => {
+    if (!signInLoaded || !signIn) return;
+
+    try {
+      setIsLoading(true);
+      setError('');
+
+      const result = await signIn.attemptFirstFactor({
+        strategy: 'reset_password_email_code',
+        code: resetCode,
+      });
+
+      if (result.status === 'needs_new_password') {
+        setResetStep('password');
+      } else {
+        setError('Unexpected status. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Reset code verification error:', err);
+      const errorMessage = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Invalid reset code';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [signIn, signInLoaded, resetCode]);
+
+  const handleResetPassword = useCallback(async () => {
+    if (!signInLoaded || !signIn) return;
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError('');
+
+      const result = await signIn.resetPassword({ password: newPassword });
+
+      if (result.status === 'complete') {
+        await setSignInActive({ session: result.createdSessionId });
+      } else {
+        setError('Password reset incomplete. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Reset password error:', err);
+      const errorMessage = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Failed to reset password';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [signIn, signInLoaded, setSignInActive, newPassword, confirmPassword]);
+
   const handleSubmit = () => {
     Keyboard.dismiss();
-    if (pendingVerification) {
+    if (pendingPasswordReset) {
+      if (resetStep === 'code') {
+        handleResetCodeVerification();
+      } else {
+        handleResetPassword();
+      }
+    } else if (pendingVerification) {
       handleVerification();
     } else if (isSignUp) {
       handleSignUp();
@@ -151,6 +259,210 @@ export const AuthScreen = ({ navigation }: any) => {
       handleSignIn();
     }
   };
+
+  // Password reset screen
+  if (pendingPasswordReset) {
+    return (
+      <Screen noPadding style={{ backgroundColor: colors.background }}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+          >
+            <View style={styles.innerContainer}>
+              <Animated.View
+                entering={FadeInDown.duration(400)}
+                style={styles.logoContainer}
+              >
+                <View
+                  style={[
+                    styles.iconContainer,
+                    {
+                      backgroundColor: colors.primaryLight,
+                      borderRadius: borderRadius.xl,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={resetStep === 'code' ? 'key' : 'lock-closed'}
+                    size={40}
+                    color={colors.primary}
+                  />
+                </View>
+                <Text style={[styles.title, { color: colors.text }]}>
+                  {resetStep === 'code' ? 'Reset Password' : 'New Password'}
+                </Text>
+                <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                  {resetStep === 'code'
+                    ? `Enter the code sent to ${email}`
+                    : 'Choose a new password for your account'}
+                </Text>
+              </Animated.View>
+
+              {error ? (
+                <Animated.View
+                  entering={FadeIn.duration(200)}
+                  style={[
+                    styles.errorContainer,
+                    { backgroundColor: colors.errorBackground },
+                  ]}
+                >
+                  <Text style={[styles.errorText, { color: colors.error }]}>
+                    {error}
+                  </Text>
+                </Animated.View>
+              ) : null}
+
+              <Animated.View
+                entering={FadeInUp.delay(100).duration(400)}
+                style={styles.formContainer}
+              >
+                {resetStep === 'code' ? (
+                  <View style={styles.inputContainer}>
+                    <Text style={[styles.label, { color: colors.text }]}>
+                      Reset Code
+                    </Text>
+                    <View
+                      style={[
+                        styles.inputWrapper,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                          borderRadius: borderRadius.md,
+                        },
+                      ]}
+                    >
+                      <TextInput
+                        style={[styles.input, { color: colors.text }]}
+                        placeholder="Enter 6-digit code"
+                        placeholderTextColor={colors.textTertiary}
+                        value={resetCode}
+                        onChangeText={setResetCode}
+                        keyboardType="number-pad"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        editable={!isLoading}
+                        maxLength={6}
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <>
+                    <View style={styles.inputContainer}>
+                      <Text style={[styles.label, { color: colors.text }]}>
+                        New Password
+                      </Text>
+                      <View
+                        style={[
+                          styles.inputWrapper,
+                          {
+                            backgroundColor: colors.surface,
+                            borderColor: colors.border,
+                            borderRadius: borderRadius.md,
+                          },
+                        ]}
+                      >
+                        <TextInput
+                          style={[styles.input, { color: colors.text }]}
+                          placeholder="Enter new password"
+                          placeholderTextColor={colors.textTertiary}
+                          secureTextEntry={!isPasswordVisible}
+                          value={newPassword}
+                          onChangeText={setNewPassword}
+                          editable={!isLoading}
+                        />
+                        <TouchableOpacity
+                          style={styles.visibilityBtn}
+                          onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                          disabled={isLoading}
+                        >
+                          <Ionicons
+                            name={isPasswordVisible ? 'eye-off' : 'eye'}
+                            size={20}
+                            color={colors.textTertiary}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    <View style={styles.inputContainer}>
+                      <Text style={[styles.label, { color: colors.text }]}>
+                        Confirm Password
+                      </Text>
+                      <View
+                        style={[
+                          styles.inputWrapper,
+                          {
+                            backgroundColor: colors.surface,
+                            borderColor: colors.border,
+                            borderRadius: borderRadius.md,
+                          },
+                        ]}
+                      >
+                        <TextInput
+                          style={[styles.input, { color: colors.text }]}
+                          placeholder="Confirm new password"
+                          placeholderTextColor={colors.textTertiary}
+                          secureTextEntry={!isPasswordVisible}
+                          value={confirmPassword}
+                          onChangeText={setConfirmPassword}
+                          onSubmitEditing={handleSubmit}
+                          editable={!isLoading}
+                        />
+                      </View>
+                    </View>
+                  </>
+                )}
+
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    {
+                      backgroundColor: colors.primary,
+                      borderRadius: borderRadius.md,
+                    },
+                    isLoading && styles.buttonDisabled,
+                  ]}
+                  onPress={handleSubmit}
+                  disabled={isLoading}
+                  activeOpacity={0.8}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color={colors.textOnPrimary} />
+                  ) : (
+                    <Text
+                      style={[styles.buttonText, { color: colors.textOnPrimary }]}
+                    >
+                      {resetStep === 'code' ? 'Verify Code' : 'Set New Password'}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+
+                <View style={styles.footer}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setPendingPasswordReset(false);
+                      setResetCode('');
+                      setNewPassword('');
+                      setConfirmPassword('');
+                      setResetStep('code');
+                      setError('');
+                    }}
+                    disabled={isLoading}
+                  >
+                    <Text style={[styles.footerLink, { color: colors.primary }]}>
+                      Back to Sign In
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </Animated.View>
+            </View>
+          </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
+      </Screen>
+    );
+  }
 
   // Verification code screen
   if (pendingVerification) {
@@ -396,9 +708,7 @@ export const AuthScreen = ({ navigation }: any) => {
               {!isSignUp && (
                 <TouchableOpacity
                   style={styles.forgotPassword}
-                  onPress={() => {
-                    /* TODO: Add forgot password with Clerk */
-                  }}
+                  onPress={handleForgotPassword}
                   disabled={isLoading}
                 >
                   <Text
