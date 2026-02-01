@@ -39,6 +39,7 @@ import { useTheme } from '../../theme';
 import { QuickAddMenu, QuickAddOption } from './QuickAddMenu';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { mangiaColors } from '../../theme/tokens/colors';
+import { useSetTabBarLayout } from '../../contexts/TabBarLayoutContext';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -70,6 +71,7 @@ export function CustomTabBar({
   const insets = useSafeAreaInsets();
   const quickAddRef = useRef<BottomSheet>(null);
   const navRef = useNavigation();
+  const setTabBarLayout = useSetTabBarLayout();
 
   // LiquidGlassView is iOS only, fallback to solid bg on Android
 
@@ -132,7 +134,13 @@ export function CustomTabBar({
   return (
     <>
       {/* Tab bar container */}
-      <View style={[styles.container, { bottom: bottomOffset }]}>
+      <View
+        style={[styles.container, { bottom: bottomOffset }]}
+        onLayout={(e) => {
+          const { height } = e.nativeEvent.layout;
+          setTabBarLayout(bottomOffset + height);
+        }}
+      >
         {/* Main tab pill - liquid glass */}
         <LiquidGlassView
           style={[

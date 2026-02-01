@@ -18,37 +18,40 @@ import ShoppingStack from './ShoppingStack';
 import RecipeLibraryStack from './RecipeLibraryStack';
 import PantryStack from './PantryStack';
 import { CustomTabBar } from '../components/navigation';
+import { TabBarLayoutProvider } from '../contexts/TabBarLayoutContext';
 
 const Tab = createBottomTabNavigator();
 
 export default function TabNavigator() {
   return (
-    <Tab.Navigator
-      tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Tab.Screen
-        name="Home"
-        component={HomeStack}
-        options={{ title: 'Home' }}
-      />
-      <Tab.Screen
-        name="Pantry"
-        component={PantryStack}
-        options={{ title: 'Pantry' }}
-      />
-      <Tab.Screen
-        name="Shopping"
-        component={ShoppingStack}
-        options={{ title: 'Shopping' }}
-      />
-      <Tab.Screen
-        name="Recipes"
-        component={RecipeLibraryStack}
-        options={{ title: 'Recipes' }}
-      />
-    </Tab.Navigator>
+    <TabBarLayoutProvider>
+      <Tab.Navigator
+        tabBar={(props) => <CustomTabBar {...props} />}
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Tab.Screen
+          name="Home"
+          component={HomeStack}
+          options={{ title: 'Home' }}
+        />
+        <Tab.Screen
+          name="Pantry"
+          component={PantryStack}
+          options={{ title: 'Pantry' }}
+        />
+        <Tab.Screen
+          name="Shopping"
+          component={ShoppingStack}
+          options={{ title: 'Shopping' }}
+        />
+        <Tab.Screen
+          name="Recipes"
+          component={RecipeLibraryStack}
+          options={{ title: 'Recipes' }}
+        />
+      </Tab.Navigator>
+    </TabBarLayoutProvider>
   );
 }

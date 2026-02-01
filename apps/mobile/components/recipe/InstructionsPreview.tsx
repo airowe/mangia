@@ -1,8 +1,8 @@
 /**
  * InstructionsPreview Component
  *
- * Editorial instructions preview with terracotta left border.
- * Shows first step of the recipe.
+ * Editorial instructions list with terracotta left border.
+ * Shows all recipe steps on the detail screen.
  */
 
 import React from 'react';
@@ -23,12 +23,6 @@ export const InstructionsPreview = React.memo<InstructionsPreviewProps>(function
     return null;
   }
 
-  const firstStep = instructions[0];
-  // Truncate if too long
-  const previewText = firstStep.length > 150
-    ? firstStep.slice(0, 150) + '...'
-    : firstStep;
-
   return (
     <Animated.View
       entering={FadeInDown.delay(300).duration(300)}
@@ -36,10 +30,12 @@ export const InstructionsPreview = React.memo<InstructionsPreviewProps>(function
     >
       <Text style={styles.sectionTitle}>Preparation</Text>
 
-      <View style={styles.stepCard}>
-        <Text style={styles.stepLabel}>Step 1</Text>
-        <Text style={styles.stepText}>{previewText}</Text>
-      </View>
+      {instructions.map((step, index) => (
+        <View key={index} style={styles.stepCard}>
+          <Text style={styles.stepLabel}>Step {index + 1}</Text>
+          <Text style={styles.stepText}>{step}</Text>
+        </View>
+      ))}
     </Animated.View>
   );
 });
@@ -64,6 +60,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderLeftWidth: 4,
     borderLeftColor: mangiaColors.terracotta,
+    marginBottom: 12,
   },
   stepLabel: {
     fontFamily: 'System',

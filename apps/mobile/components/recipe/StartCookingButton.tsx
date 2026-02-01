@@ -16,6 +16,7 @@ import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { mangiaColors } from '../../theme/tokens/colors';
+import { useTabBarLayout } from '../../contexts/TabBarLayoutContext';
 
 interface StartCookingButtonProps {
   onPress: () => void;
@@ -23,14 +24,16 @@ interface StartCookingButtonProps {
 }
 
 export const StartCookingButton = React.memo<StartCookingButtonProps>(function StartCookingButton({ onPress, disabled }) {
+  const { topOffset } = useTabBarLayout();
+
   return (
     <Animated.View
       entering={FadeInUp.delay(400).duration(300)}
-      style={styles.container}
+      style={[styles.container, { bottom: topOffset }]}
     >
       {/* Gradient fade background */}
       <LinearGradient
-        colors={['transparent', 'white', 'white']}
+        colors={['transparent', mangiaColors.cream, mangiaColors.cream]}
         locations={[0, 0.3, 1]}
         style={styles.gradient}
       />
@@ -58,7 +61,6 @@ StartCookingButton.displayName = 'StartCookingButton';
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
   },

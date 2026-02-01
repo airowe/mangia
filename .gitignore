@@ -60,6 +60,7 @@ package-lock.json
 
 # Fastlane
 **/fastlane/report.xml
+**/fastlane/api_key.json
 
 # Test images
 *.png

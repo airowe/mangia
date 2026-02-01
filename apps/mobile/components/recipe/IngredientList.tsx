@@ -104,8 +104,10 @@ export const IngredientList = React.memo<IngredientListProps>(function Ingredien
           <TouchableOpacity
             onPress={() => setScaleModalVisible(true)}
             style={styles.scaleButtonContainer}
+            activeOpacity={0.7}
           >
-            <Text style={styles.scaleButton}>Scale: {getScaleDisplay()}</Text>
+            <Text style={styles.scaleButton}>{getScaleDisplay()}</Text>
+            <Feather name="chevron-down" size={14} color={mangiaColors.terracotta} />
           </TouchableOpacity>
         )}
       </View>
@@ -205,16 +207,23 @@ const styles = StyleSheet.create({
     color: mangiaColors.dark,
   },
   scaleButtonContainer: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingLeft: 12,
+    paddingRight: 8,
+    borderRadius: 16,
+    backgroundColor: `${mangiaColors.terracotta}15`,
+    borderWidth: 1,
+    borderColor: `${mangiaColors.terracotta}30`,
   },
   scaleButton: {
     fontFamily: 'System',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: mangiaColors.terracotta,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   list: {
     gap: 12,

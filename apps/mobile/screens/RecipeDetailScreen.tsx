@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   footerSpacer: {
-    height: 100,
+    height: 200,
   },
 
   // More Menu Modal
