@@ -15,9 +15,9 @@
     "@clerk/backend": "^1.21.0",
     "@hono/node-server": "^1.19.9",
     "@mangia/shared": "workspace:*",
-    "@neondatabase/serverless": "^0.10.4",
     "drizzle-orm": "^0.38.3",
     "hono": "^4.11.7",
+    "postgres": "^3.4.8",
     "zod": "^3.24.1"
   },
   "devDependencies": {

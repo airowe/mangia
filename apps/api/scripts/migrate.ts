@@ -1,9 +1,9 @@
 // scripts/migrate.ts
 // Run database migrations
 
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-import { migrate } from "drizzle-orm/neon-http/migrator";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
@@ -15,12 +15,13 @@ async function main() {
 
   console.log("Running migrations...");
 
-  const sql = neon(process.env.DATABASE_URL);
-  const db = drizzle(sql);
+  const client = postgres(process.env.DATABASE_URL, { max: 1 });
+  const db = drizzle(client);
 
   await migrate(db, { migrationsFolder: "./drizzle" });
 
   console.log("Migrations complete!");
+  await client.end();
 }
 
 main().catch((err) => {

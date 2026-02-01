@@ -4,8 +4,8 @@
 // Usage: npx tsx scripts/backfill-ingredient-categories.ts
 // Requires: DATABASE_URL environment variable
 
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import { eq, or, isNull } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { categorizeIngredient } from "../lib/grocery-generator";
@@ -17,8 +17,8 @@ async function main() {
     process.exit(1);
   }
 
-  const sql = neon(databaseUrl);
-  const db = drizzle(sql, { schema });
+  const client = postgres(databaseUrl);
+  const db = drizzle(client, { schema });
 
   // Fetch all ingredients with no category or 'other'
   const uncategorized = await db.query.ingredients.findMany({
