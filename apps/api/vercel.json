@@ -1,6 +1,5 @@
 {
   "version": 2,
   "buildCommand": "cd ../../packages/shared && npx tsc",
-  "outputDirectory": ".",
-  "maxDuration": 60
+  "outputDirectory": "."
 }
