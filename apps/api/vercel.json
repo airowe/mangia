@@ -3,7 +3,7 @@
   "buildCommand": "cd ../../packages/shared && npx tsc",
   "outputDirectory": ".",
   "functions": {
-    "api/[[...route]].ts": {
+    "app.ts": {
       "maxDuration": 60
     }
   }
